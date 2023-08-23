@@ -1,0 +1,7 @@
+import os
+
+POSTGRES_USER = os.environ["POSTGRES_USER"]
+POSTGRES_PASSWORD = os.environ["POSTGRES_PASSWORD"]
+SECRET_KEY = os.environ["SECRET_KEY"].encode()
+
+print(POSTGRES_USER, POSTGRES_PASSWORD)
