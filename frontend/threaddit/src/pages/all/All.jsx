@@ -1,7 +1,5 @@
 export function All() {
-    return (
-        <></>
-    )
+  return <></>;
 }
 
 export default All;

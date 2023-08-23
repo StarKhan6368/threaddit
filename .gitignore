@@ -30,3 +30,4 @@ backend/threaddit/auth/__pycache__/decorators.cpython-310.pyc
 backend/threaddit/users/__pycache__/__init__.cpython-310.pyc
 backend/threaddit/users/__pycache__/models.cpython-310.pyc
 backend/threaddit/users/__pycache__/routes.cpython-310.pyc
+.env

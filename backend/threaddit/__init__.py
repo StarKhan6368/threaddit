@@ -24,6 +24,7 @@ def index():
     return "Hello World!"
 
 
+# flake8: noqa
 from threaddit.users.routes import user
 from threaddit.subthreads.routes import subthread
 app.register_blueprint(user)

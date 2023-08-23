@@ -1,7 +1,5 @@
-import os
+from dotenv import dotenv_values
 
-POSTGRES_USER = os.environ["POSTGRES_USER"]
-POSTGRES_PASSWORD = os.environ["POSTGRES_PASSWORD"]
-SECRET_KEY = os.environ["SECRET_KEY"].encode()
-
-print(POSTGRES_USER, POSTGRES_PASSWORD)
+POSTGRES_USER = dotenv_values(".env")["POSTGRES_USER"]
+POSTGRES_PASSWORD = dotenv_values(".env")["POSTGRES_PASSWORD"]
+SECRET_KEY = dotenv_values(".env")["SECRET_KEY"]
