@@ -6,6 +6,7 @@ import All from "./pages/all/All.jsx";
 import Inbox from "./pages/inbox/Inbox.jsx";
 import Profile from "./pages/profile/Profile.jsx";
 import Notifications from "./pages/notifications/Notifications.jsx";
+import SubThread from "./pages/thread/SubThread.jsx";
 import Login, { userLoginAction } from "./pages/login/Login.jsx";
 import Register, { userRegisterAction } from "./pages/register/Register.jsx";
 import RequireAuth from "./components/PrivateRoute.jsx";
@@ -21,6 +22,10 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <All />,
+      },
+      {
+        path: "/t/:threadName",
+        element: <SubThread />,
       },
       {
         path: "/popular",

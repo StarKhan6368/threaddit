@@ -1,5 +1,11 @@
+import ThreadsSidebar from "../../components/ThreadsSidebar";
+
 export function Popular() {
-  return <></>;
+  return (
+    <>
+      <ThreadsSidebar />
+    </>
+  );
 }
 
 export default Popular;

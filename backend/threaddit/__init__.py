@@ -26,6 +26,6 @@ def index():
 
 # flake8: noqa
 from threaddit.users.routes import user
-from threaddit.subthreads.routes import subthread
+from threaddit.subthreads.routes import threads
 app.register_blueprint(user)
-app.register_blueprint(subthread)
+app.register_blueprint(threads) 

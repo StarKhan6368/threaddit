@@ -1,5 +1,11 @@
+import ThreadsSidebar from "../../components/ThreadsSidebar";
+
 export function All() {
-  return <></>;
+  return (
+    <>
+      <ThreadsSidebar />
+    </>
+  );
 }
 
 export default All;
