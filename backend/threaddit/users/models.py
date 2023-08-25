@@ -21,12 +21,17 @@ class User(db.Model, UserMixin):
     password_hash: str = db.Column(db.Text, nullable=False)
     avatar: str = db.Column(db.Text)
     bio: str = db.Column(db.Text)
-    registration_date = db.Column(db.DateTime(timezone=True), nullable=False,
-                                  default=db.func.now())
+    registration_date = db.Column(
+        db.DateTime(timezone=True), nullable=False, default=db.func.now()
+    )
     subthread = db.relationship("Subthread", back_populates="user")
     user_role = db.relationship("UserRole", back_populates="user")
     subscription = db.relationship("Subscription", back_populates="user")
     user_karma = db.relationship("UsersKarma", back_populates="user")
+    post = db.relationship("Posts", back_populates="user")
+    post_info = db.relationship("PostInfo", back_populates="user")
+    comment = db.relationship("Comments", back_populates="user")
+    reaction = db.relationship("Reactions", back_populates="user")
 
     def __init__(self, username: str, email: str, password_hash: str):
         self.username = username
@@ -55,12 +60,12 @@ class User(db.Model, UserMixin):
 
     def has_role(self, role):
         return bool(
-                    UserRole.query
-                    .join(Role)
-                    .filter(Role.slug == role)
-                    .filter(UserRole.user_id == self.id)
-                    .count() == 1
-                    )
+            UserRole.query.join(Role)
+            .filter(Role.slug == role)
+            .filter(UserRole.user_id == self.id)
+            .count()
+            == 1
+        )
 
     @classmethod
     def get_all(cls):
@@ -70,20 +75,27 @@ class User(db.Model, UserMixin):
         return all_users
 
     def as_dict(self, include_all=False) -> dict:
-        return {
-            "username": self.username,
-            "email": self.email,
-            "avatar": self.avatar,
-            "bio": self.bio,
-            "registrationDate": self.registration_date,
-            "roles": [r.role.slug for r in self.user_role],
-            "karma": self.user_karma[0].as_dict()
-        } if not include_all else {"id": self.id, **self.as_dict()}
+        return (
+            {
+                "username": self.username,
+                "email": self.email,
+                "avatar": self.avatar,
+                "bio": self.bio,
+                "registrationDate": self.registration_date,
+                "roles": [r.role.slug for r in self.user_role],
+                "karma": self.user_karma[0].as_dict(),
+            }
+            if not include_all
+            else {"id": self.id, **self.as_dict()}
+        )
 
 
 def username_validator(username: str):
-    if db.session.query(User).filter(func.lower(User.username) ==
-                                     username.lower()).first():
+    if (
+        db.session.query(User)
+        .filter(func.lower(User.username) == username.lower())
+        .first()
+    ):
         raise ValidationError("Username already exists")
 
 
@@ -97,8 +109,7 @@ class UserLoginValidator(ma.SQLAlchemySchema):
         model = User
 
     email = fields.Email(required=True)
-    password = fields.Str(required=True,
-                          validate=[fields.validate.Length(min=8)])
+    password = fields.Str(required=True, validate=[fields.validate.Length(min=8)])
 
 
 class UserRegisterValidator(ma.SQLAlchemySchema):
@@ -109,37 +120,36 @@ class UserRegisterValidator(ma.SQLAlchemySchema):
         required=True,
         validate=[
             fields.validate.Length(
-                min=4,
-                max=15,
-                error="Username must be between 1 and 50 characters"
+                min=4, max=15, error="Username must be between 1 and 50 characters"
             ),
             fields.validate.Regexp(
                 "^[a-zA-Z][a-zA-Z0-9_]*$",
                 error="Username must start with a letter, and contain only \
                 letters, numbers, and underscores.",
             ),
-            username_validator
+            username_validator,
         ],
     )
     email = fields.Email(required=True, validate=[email_validator])
-    password = fields.Str(required=True,
-                          validate=[fields.validate.Length(min=8)])
+    password = fields.Str(required=True, validate=[fields.validate.Length(min=8)])
 
 
 class UsersPatchValidator(ma.SQLAlchemySchema):
     class Meta:
         model = User
 
-    username = fields.Str(validate=[fields.validate.Length(min=4, max=15),
-                                    username_validator])
+    username = fields.Str(
+        validate=[fields.validate.Length(min=4, max=15), username_validator]
+    )
     avatar = fields.Str()
     bio = fields.Str()
 
 
 class UsersKarma(db.Model):
     __tablename__: str = "users_karma"
-    user_id: int = db.Column(db.Integer, db.ForeignKey("users.id"),
-                             nullable=False, primary_key=True)
+    user_id: int = db.Column(
+        db.Integer, db.ForeignKey("users.id"), nullable=False, primary_key=True
+    )
     user_karma: int = db.Column(db.Integer, nullable=False)
     comments_count: int = db.Column(db.Integer, nullable=False)
     comments_karma: int = db.Column(db.Integer, nullable=False)
@@ -153,5 +163,5 @@ class UsersKarma(db.Model):
             "comments_count": self.comments_count,
             "comments_karma": self.comments_karma,
             "posts_count": self.posts_count,
-            "posts_karma": self.posts_karma
+            "posts_karma": self.posts_karma,
         }

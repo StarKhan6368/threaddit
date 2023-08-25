@@ -1,8 +1,6 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import AppLayout from "./components/AppLayout.jsx";
-import HomePage from "./pages/home/HomePage.jsx";
-import Popular from "./pages/popular/Popular.jsx";
-import All from "./pages/all/All.jsx";
+import Feed from "./pages/feed/Feed.jsx";
 import Inbox from "./pages/inbox/Inbox.jsx";
 import Profile from "./pages/profile/Profile.jsx";
 import Notifications from "./pages/notifications/Notifications.jsx";
@@ -21,23 +19,15 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <All />,
+        element: <Navigate to="/all" />,
+      },
+      {
+        path: "/:feedName",
+        element: <Feed />,
       },
       {
         path: "/t/:threadName",
         element: <SubThread />,
-      },
-      {
-        path: "/popular",
-        element: <Popular />,
-      },
-      {
-        path: "/home",
-        element: (
-          <RequireAuth>
-            <HomePage />
-          </RequireAuth>
-        ),
       },
       {
         path: "/inbox",

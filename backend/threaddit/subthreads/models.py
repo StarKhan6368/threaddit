@@ -15,6 +15,8 @@ class Subthread(db.Model):
     user_role = db.relationship("UserRole", back_populates="subthread")
     subscription = db.relationship("Subscription", back_populates="subthread")
     subthread_info = db.relationship("SubthreadInfo", back_populates="subthread")
+    post = db.relationship("Posts", back_populates="subthread")
+    post_info = db.relationship("PostInfo", back_populates="subthread")
 
     def as_dict(self):
         return {
@@ -53,7 +55,7 @@ class SubthreadInfo(db.Model):
         return {
             "name": self.name,
             "logo": self.logo,
-            "members_count": self.members_count,
-            "posts_count": self.posts_count,
-            "comments_count": self.comments_count,
+            "subscriberCount": self.members_count,
+            "PostsCount": self.posts_count,
+            "CommentsCount": self.comments_count,
         }

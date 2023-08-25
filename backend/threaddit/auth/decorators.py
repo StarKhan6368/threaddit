@@ -11,5 +11,7 @@ def auth_role(role):
             if not any(current_user.has_role(r) for r in roles):
                 return jsonify({"message": "Unauthorized"}), 401
             return func(*args, **kwargs)
+
         return decorated
+
     return wrapper

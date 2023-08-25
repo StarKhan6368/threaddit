@@ -23,11 +23,7 @@ export function AuthProvider({ children }) {
       setIsAuthenticated(false);
     });
   }
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>{children}</AuthContext.Provider>;
 }
 
 export default function AuthConsumer() {

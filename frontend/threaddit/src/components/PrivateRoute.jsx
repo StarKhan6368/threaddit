@@ -9,11 +9,7 @@ RequireAuth.propTypes = {
 
 function RequireAuth({ children, redirectTo = "/login" }) {
   const { isAuthenticated } = AuthConsumer();
-  return isAuthenticated ? (
-    children
-  ) : (
-    <Navigate replace={true} to={redirectTo} />
-  );
+  return isAuthenticated ? children : <Navigate replace={true} to={redirectTo} />;
 }
 
 export default RequireAuth;

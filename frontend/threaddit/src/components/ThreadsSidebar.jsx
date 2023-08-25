@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import * as PropType from "prop-types";
 import { Link } from "react-router-dom";
 
@@ -6,11 +7,11 @@ export function ThreadsSidebar() {
   const { data } = useQuery({
     queryKey: ["threads/all"],
     queryFn: async () => {
-      return await fetch("/api/threads/all").then((res) => res.json());
+      return await axios.get("/api/threads").then((res) => res.data);
     },
   });
   return (
-    <aside className="flex-col hidden w-56 md:flex">
+    <aside className="hidden flex-col w-56 md:flex">
       {data?.subscribed.length !== 0 && (
         <>
           <div className="flex flex-col m-5 space-y-4">
@@ -25,7 +26,7 @@ export function ThreadsSidebar() {
       )}
       <div className="flex flex-col m-5 space-y-4">
         <div className="flex justify-between w-48 cursor-pointer">
-          <h2 className="font-semibold uppercase">Favourites</h2>
+          <h2 className="font-semibold uppercase">Top Threads</h2>
           <span className="pr-1">ALL</span>
         </div>
         <SideBarComponent threadList={data?.all} />
@@ -33,7 +34,7 @@ export function ThreadsSidebar() {
       <span className="mx-5 border border-theme-silver-chalice"></span>
       <div className="flex flex-col m-5 space-y-4">
         <div className="flex justify-between w-48 cursor-pointer">
-          <h2 className="font-semibold uppercase">Favourites</h2>
+          <h2 className="font-semibold uppercase">Popular Threads</h2>
           <span className="pr-1">ALL</span>
         </div>
         <SideBarComponent threadList={data?.popular} />
@@ -47,9 +48,9 @@ SideBarComponent.propTypes = {
 };
 function SideBarComponent({ threadList }) {
   return (
-    <ul className="flex flex-col w-48 space-y-4 list-none">
+    <ul className="flex flex-col space-y-4 w-48 list-none">
       {threadList?.slice(0, 10).map((thread) => (
-        <Link to={`/${thread.name}`} className="flex justify-between w-48 cursor-pointer">
+        <Link to={`/${thread.name}`} className="flex justify-between w-48 cursor-pointer" key={thread.name}>
           <div className="flex items-center space-x-3">
             <img src={thread.logo} alt="" className="w-6 h-6 rounded-full" />
             <span className="">{thread.name}</span>

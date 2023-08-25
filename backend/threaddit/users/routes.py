@@ -1,13 +1,19 @@
 from flask import Blueprint, request, jsonify
 from marshmallow.exceptions import ValidationError
-from threaddit.users.models import UserLoginValidator,\
-    UserRegisterValidator, User, UsersPatchValidator
+from threaddit.users.models import (
+    UserLoginValidator,
+    UserRegisterValidator,
+    User,
+    UsersPatchValidator,
+)
+
 # from threaddit.config import SECRET_KEY
 from threaddit.auth.decorators import auth_role
+
 # from bcrypt import hashpw, checkpw
 from flask_login import login_user, logout_user, current_user, login_required
 
-user = Blueprint('users', __name__, url_prefix="/api")
+user = Blueprint("users", __name__, url_prefix="/api")
 
 
 @user.route("/user/login", methods=["POST"])
@@ -41,8 +47,11 @@ def user_register():
     # new_user=User(register_form.get("username"), register_form.get("email"),
     # hashpw(register_form.get("password").encode(),
     # SECRET_KEY).decode("utf-8")): IN DEV MODE
-    new_user = User(register_form.get("username"), register_form.get("email"),
-                    register_form.get("password"))
+    new_user = User(
+        register_form.get("username"),
+        register_form.get("email"),
+        register_form.get("password"),
+    )
     new_user.add()
     return jsonify(new_user.as_dict()), 201
 
@@ -72,8 +81,12 @@ def user_get():
 @user.route("/user/<user_name>", methods=["GET"])
 @auth_role(["admin", "sup-admin", "owner"])
 def user_get_by_username(user_name):
-    return jsonify(User.query.filter_by(username=user_name).first()
-                   .as_dict(include_all=True)), 200
+    return (
+        jsonify(
+            User.query.filter_by(username=user_name).first().as_dict(include_all=True)
+        ),
+        200,
+    )
 
 
 @user.route("/users", methods=["GET"])
