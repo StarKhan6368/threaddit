@@ -1,0 +1,2 @@
+# Threaddit
+Threaddit is a Full Stack Reddit Clone, A comprehensive web application inspired by Reddit, built using Flask and its diverse libraries for the backend, combined with PostgreSQL for robust database management. The frontend is developed using React.js and its rich set of libraries, offering a seamless and dynamic user experience. Join the conversation, create threads, engage in discussions, and upvote your favorite posts on Threaddit!
