@@ -1,15 +1,16 @@
-import ThreadsSidebar from "../../components/ThreadsSidebar";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import axios from "axios";
-import Post from "../../components/Post";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
+import Post from "../../components/Post";
+import ThreadsSidebar from "../../components/ThreadsSidebar";
+import Spinner from "../../components/Spinner";
 
 export function Feed() {
   const params = useParams();
   const [sortBy, setSortBy] = useState("top");
   const [duration, setDuration] = useState("alltime");
-  const { data } = useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: ["posts", params.feedName, sortBy, duration],
     queryFn: async () => {
       return await axios
@@ -104,11 +105,15 @@ export function Feed() {
             </li>
           </ul>
         </header>
-        <ul className="flex flex-col flex-1 space-y-5 w-full h-full">
-          {data?.map((post) => (
-            <Post post={post} key={post.post_info.id} />
-          ))}
-        </ul>
+        {isFetching ? (
+          <Spinner />
+        ) : (
+          <ul className="flex flex-col flex-1 space-y-5 w-full h-full">
+            {data?.map((post) => (
+              <Post post={post} key={post.post_info.id} />
+            ))}
+          </ul>
+        )}
       </div>
     </main>
   );

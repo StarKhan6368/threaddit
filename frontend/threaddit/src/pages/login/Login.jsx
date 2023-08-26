@@ -14,11 +14,11 @@ export function Login() {
     setClear(actionData?.errors === undefined);
   }, [actionData]);
   if (authData.isAuthenticated) {
-    return navigate("/home");
+    navigate("/home");
   }
   if (actionData?.user) {
     authData.login(actionData.user);
-    return navigate("/home", { replace: true });
+    navigate("/home", { replace: true });
   }
   return (
     <div className="flex justify-center items-center min-h-screen md:space-x-10 bg-theme-cultured">

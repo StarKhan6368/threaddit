@@ -2,6 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import PropTypes from "prop-types";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import useAuthContext from "../components/AuthContext";
 import Svg from "./Svg";
 
@@ -44,23 +45,25 @@ export function Post({ post }) {
     setVote(newVote);
   }
   return (
-    <div className="flex flex-col items-center rounded-xl border hover:shadow-sm md:flex-row border-theme-gray-blue p-0.5">
-      <div className="flex flex-col flex-1 p-5 space-y-5 h-full md:space-y-0 md:space-x-4 md:flex-row">
+    <div className="flex flex-col items-center rounded-xl border-2 hover:shadow-sm md:flex-row border-theme-gray-blue p-1">
+      <Link
+        to={`/post/${post.post_info.id}`}
+        className="h-full flex flex-col flex-1 w-full p-3 space-y-5 md:space-y-0 md:space-x-4 md:flex-row">
         {post.post_info.media && (
           <img
             src={post.post_info.media}
             alt=""
-            className="w-full h-full rounded-md duration-500 md:h-28 md:w-28 hover:scale-110"
+            className="w-full h-full rounded-md duration-500 md:h-32 md:w-32 hover:scale-110"
           />
         )}
-        <div className="flex flex-col flex-1 justify-between space-y-3 h-full cursor-pointer">
+        <div className="flex flex-col flex-1 justify-between space-y-3 cursor-pointer">
           <h3 className="text-lg font-semibold text-ellipsis">{post.post_info.title}</h3>
           <div className="flex justify-between">
             <div className="flex items-center text-sm font-medium md:space-x-2">
-              <p>Posted by u/{post.user_info.user_name}</p>
+              <Link to={`/u/${post.user_info.user_name}`}>Posted by u/{post.user_info.user_name}</Link>
               <img src={post.user_info.user_avatar} alt="" className="w-5 h-5 rounded-full" />
               <p>
-                in <span>{post.thread_info.thread_name}</span>
+                in <Link to={`/${post.thread_info.thread_name}`}>{post.thread_info.thread_name}</Link>
               </p>
               <img src={post.thread_info.logo} alt="" className="w-5 h-5 rounded-full" />
             </div>
@@ -68,15 +71,15 @@ export function Post({ post }) {
           </div>
           <p className="text-sm font-light md:hidden">{post.post_info.created_at}</p>
         </div>
-      </div>
-      <div className="flex justify-evenly m-5 w-full h-full md:flex-col md:w-fit">
-        <div className="flex items-center space-x-2 cursor-pointer group">
+      </Link>
+      <div className="flex justify-evenly md:mx-5 w-full h-full md:flex-col md:w-fit">
+        <Link to={`/post/${post.post_info.id}`} className="flex items-center space-x-2 cursor-pointer group">
           <Svg type="comment" className="w-5 h-5" />
           <div className="flex space-x-1">
             <span>{post.post_info.comments_count}</span>
             <p>Comments</p>
           </div>
-        </div>
+        </Link>
         <div className="hidden md:flex items-center space-x-2 cursor-pointer group">
           <Svg type="share" className="w-5 h-5" />
           <div className="flex space-x-1">
@@ -110,8 +113,8 @@ export function Post({ post }) {
           />
         </div>
       </div>
-      <div className="hidden flex-col justify-around items-center my-3 w-28 h-full border-l md:flex border-theme-gray-blue">
-        <div className="px-5 py-1 bg-orange-100 rounded-md">
+      <div className="hidden flex-col justify-around items-center my-2 space-y-1 w-28 border-l md:flex border-theme-gray-blue">
+        <div className="px-5 py-0.5 bg-orange-100 rounded-md">
           <Svg
             type="down-arrow"
             defaultStyle={true}
@@ -123,7 +126,7 @@ export function Post({ post }) {
         <p className="text-lg font-semibold">
           <span>{voteCount}</span>
         </p>
-        <div className="px-5 py-1 bg-blue-50 rounded-md group">
+        <div className="px-5 py-0.5 bg-blue-50 rounded-md group">
           <Svg
             type="down-arrow"
             className="w-10 h-10"

@@ -77,3 +77,16 @@ def get_posts(feed_name):
         .all()
     ]
     return jsonify(post_list), 200
+
+
+@posts.route("/post/<pid>", methods=["GET"])
+def get_post(pid):
+    post_info = PostInfo.query.filter_by(post_id=pid).first()
+    return (
+        jsonify(
+            post_info.as_dict(
+                current_user.id if current_user.is_authenticated else None
+            )
+        ),
+        200,
+    )
