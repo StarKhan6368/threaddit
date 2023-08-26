@@ -67,9 +67,8 @@ def get_posts(feed_name):
             sortBy = PostInfo.comments_count.desc()
         case _:
             return jsonify({"message": "Invalid Request"}), 400
-
     post_list = [
-        post.as_dict(current_user.id)
+        post.as_dict(current_user.id if current_user.is_authenticated else None)
         for post in PostInfo.query.filter(PostInfo.thread_id.in_(threads))
         .order_by(sortBy)
         .filter(durationBy)
@@ -77,5 +76,4 @@ def get_posts(feed_name):
         .offset(offset)
         .all()
     ]
-
     return jsonify(post_list), 200

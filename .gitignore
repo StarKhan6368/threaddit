@@ -52,3 +52,6 @@ backend/threaddit/users/__pycache__/__init__.cpython-311.pyc
 backend/threaddit/users/__pycache__/models.cpython-311.pyc
 backend/threaddit/users/__pycache__/routes.cpython-311.pyc
 frontend/threaddit/test.jsx
+backend/threaddit/reactions/__pycache__/__init__.cpython-311.pyc
+backend/threaddit/reactions/__pycache__/models.cpython-311.pyc
+backend/threaddit/reactions/__pycache__/routes.cpython-311.pyc

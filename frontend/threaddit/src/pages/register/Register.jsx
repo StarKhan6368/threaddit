@@ -1,19 +1,13 @@
 import { useState } from "react";
 import { Form, Link, useActionData, useNavigate } from "react-router-dom";
-import Svg from "../../components/Svg.jsx";
-import AuthConsumer from "../../components/AuthContext.jsx";
 import { AppLogo } from "../../components/Navbar.jsx";
+import Svg from "../../components/Svg.jsx";
 
 export function Register() {
   const actionData = useActionData();
   const navigate = useNavigate();
-  const authData = AuthConsumer();
-  if (authData.isAuthenticated) {
-    navigate("/home");
-  }
-  console.log(actionData);
-  if (actionData?.user) {
-    authData.login(actionData.user);
+  if (!actionData?.errors) {
+    navigate("/login");
   }
   const [showPass, setShowPass] = useState(false);
   return (
@@ -115,9 +109,9 @@ export async function userRegisterAction({ request }) {
     body: JSON.stringify({ username: dataForm.username, email: dataForm.email, password: dataForm.password }),
   });
   const data = await response.json();
-  if (response.status === 201) {
-    return { user: data };
+  if (response.status !== 201) {
+    return { errors: data.errors };
   }
-  return { errors: data.errors };
+  return null;
 }
 export default Register;

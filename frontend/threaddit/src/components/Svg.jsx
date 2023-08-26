@@ -4,7 +4,8 @@ Svg.propTypes = {
   type: PropTypes.string,
   className: PropTypes.string,
   onClick: PropTypes.func,
-  hoverColor: PropTypes.string,
+  active: PropTypes.bool,
+  defaultStyle: PropTypes.bool,
 };
 
 const svgTypes = {
@@ -69,15 +70,19 @@ const svgTypes = {
   comment: (
     <path d="M20 2H4c-1.103 0-2 .897-2 2v18l5.333-4H20c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zm0 14H6.667L4 18V4h16v12z"></path>
   ),
+  mobileVote: <path d="M13 18v-6h5l-6-7-6 7h5v6z"></path>,
 };
-
-export function Svg({ type, className, onClick, hoverColor = "theme-red-coral" }) {
+export function Svg({ type, className, onClick, active, defaultStyle = true }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       onClick={onClick}
-      className={`cursor-pointer fill-current group-hover:text-${hoverColor} hover:text-${hoverColor} text-inherit ${className}`}>
+      className={`${active && (defaultStyle ? "text-theme-red-coral" : "text-sky-600")} cursor-pointer fill-current ${
+        defaultStyle
+          ? "group-hover:text-theme-red-coral hover:text-theme-red-coral"
+          : "group-hover:text-sky-600 hover:text-sky-600"
+      }  text-inherit ${className}`}>
       {svgTypes[type]}
     </svg>
   );

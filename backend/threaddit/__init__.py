@@ -29,8 +29,10 @@ from threaddit.users.routes import user
 from threaddit.subthreads.routes import threads
 from threaddit.posts.routes import posts
 from threaddit.comments.routes import comments
+from threaddit.reactions.routes import reactions
 
 app.register_blueprint(user)
 app.register_blueprint(threads)
 app.register_blueprint(posts)
 app.register_blueprint(comments)
+app.register_blueprint(reactions)

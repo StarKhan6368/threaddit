@@ -1,6 +1,7 @@
 from threaddit import db
 from flask_login import current_user
 from threaddit.comments.models import Comments
+from threaddit.reactions.models import Reactions
 
 
 class Posts(db.Model):
@@ -85,7 +86,7 @@ class PostInfo(db.Model):
                 post_id=self.post_id, user_id=current_user_id
             ).first()
             p_info["current_user"] = {
-                "has_upvoted": has_reaction.is_upvote if has_reaction else False,
+                "has_upvoted": has_reaction.is_upvote if has_reaction else None,
                 "has_commented": bool(
                     Comments.query.filter_by(
                         post_id=self.post_id, user_id=current_user_id
@@ -94,27 +95,3 @@ class PostInfo(db.Model):
             }
         return p_info
 
-
-class Reactions(db.Model):
-    __tablename__ = "reactions"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"))
-    comment_id = db.Column(db.Integer, db.ForeignKey("comments.id"))
-    is_upvote = db.Column(db.Boolean)
-    created_at = db.Column(
-        db.DateTime(timezone=True), nullable=False, default=db.func.now()
-    )
-    user = db.relationship("User", back_populates="reaction")
-    comment = db.relationship("Comments", back_populates="reaction")
-    post = db.relationship("Posts", back_populates="reaction")
-
-    def as_dict(self):
-        return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "post_id": self.post_id,
-            "comment_id": self.comment_id,
-            "is_upvote": self.is_upvote,
-            "created_at": self.created_at,
-        }

@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { useRef, useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import avatar from "../assets/avatar.png";
-import axios from "axios"
+import axios from "axios";
 import threads from "../assets/threads.png";
 import AuthConsumer from "../components/AuthContext.jsx";
 import Svg from "../components/Svg.jsx";
@@ -12,7 +12,7 @@ import useClickOutside from "../hooks/useClickOutside";
 export function Navbar() {
   const { isAuthenticated, user, logout } = AuthConsumer();
   return (
-    <nav className="flex justify-between items-center mx-3 h-16 md:p-5">
+    <nav className={`flex justify-between items-center ${isAuthenticated ? "mx-3" : "ml-3"} h-16 md:p-5`}>
       <AppLogo />
       <div className="flex items-center md:space-x-10">
         <ul
@@ -68,8 +68,8 @@ export function Navbar() {
         </div>
       ) : (
         <>
-          <Link to="/login" className="flex font-semibold cursor-pointer hover:text-theme-orange group">
-            Log in
+          <Link to="/login" className=" flex font-semibold cursor-pointer hover:text-theme-orange group">
+            Login
             <Svg
               type="arrow-right"
               className="invisible w-6 h-6 duration-200 group-hover:visible text-theme-orange group-hover:translate-x-1"></Svg>
@@ -119,14 +119,16 @@ function ThreadSearch() {
     queryKey: ["threads/search", search],
     queryFn: async ({ signal }) => {
       const promise = new Promise((resolve) => setTimeout(resolve, 500)).then(async () => {
-        return await axios.get(`/api/threads/search/${search}`, {
-          signal,
-        }).then((data) => data.data)
+        return await axios
+          .get(`/api/threads/search/${search}`, {
+            signal,
+          })
+          .then((data) => data.data);
       });
       return promise;
     },
     enabled: search.length > 0,
-  })
+  });
   useClickOutside(searchRef, () => {
     setSearch("");
   });
@@ -144,7 +146,7 @@ function ThreadSearch() {
       />
       {queryData?.data && (
         <ul
-          className="flex absolute right-0 top-full flex-col p-5 mt-3 space-y-5 w-full list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue"
+          className="flex absolute right-0 top-full w-full flex-col p-5 mt-3 space-y-5 list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue"
           ref={searchRef}>
           {queryData?.data?.slice(0, 5).map((subthread) => (
             <Link to={`/${subthread.name}`} className="flex space-x-5 cursor-pointer" key={subthread.name}>
