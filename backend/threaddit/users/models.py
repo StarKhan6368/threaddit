@@ -146,7 +146,7 @@ class UsersPatchValidator(ma.SQLAlchemySchema):
 
 
 class UsersKarma(db.Model):
-    __tablename__: str = "users_karma"
+    __tablename__: str = "user_info"
     user_id: int = db.Column(
         db.Integer, db.ForeignKey("users.id"), nullable=False, primary_key=True
     )

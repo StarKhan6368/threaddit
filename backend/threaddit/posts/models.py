@@ -20,6 +20,7 @@ class Posts(db.Model):
     post_info = db.relationship("PostInfo", back_populates="post")
     reaction = db.relationship("Reactions", back_populates="post")
     comment = db.relationship("Comments", back_populates="post")
+    comment_info = db.relationship("CommentInfo", back_populates="post")
 
     def __init__(self, user_id, subthread_id, title, media=None, content=None):
         self.user_id = user_id
@@ -59,7 +60,8 @@ class PostInfo(db.Model):
     subthread = db.relationship("Subthread", back_populates="post_info")
     user = db.relationship("User", back_populates="post_info")
 
-    def as_dict(self, current_user_id=None):
+    def as_dict(self):
+        cur_user = current_user.id if current_user.is_authenticated else None
         p_info = {
             "user_info": {
                 "user_name": self.user_name,
@@ -79,19 +81,18 @@ class PostInfo(db.Model):
                 "comments_count": self.comments_count,
             },
         }
-        if not current_user:
+        if not cur_user:
             return p_info
         else:
             has_reaction = Reactions.query.filter_by(
-                post_id=self.post_id, user_id=current_user_id
+                post_id=self.post_id, user_id=cur_user
             ).first()
             p_info["current_user"] = {
                 "has_upvoted": has_reaction.is_upvote if has_reaction else None,
                 "has_commented": bool(
                     Comments.query.filter_by(
-                        post_id=self.post_id, user_id=current_user_id
+                        post_id=self.post_id, user_id=cur_user
                     ).first()
                 ),
             }
         return p_info
-

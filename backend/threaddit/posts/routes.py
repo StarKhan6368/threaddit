@@ -68,7 +68,7 @@ def get_posts(feed_name):
         case _:
             return jsonify({"message": "Invalid Request"}), 400
     post_list = [
-        post.as_dict(current_user.id if current_user.is_authenticated else None)
+        post.as_dict()
         for post in PostInfo.query.filter(PostInfo.thread_id.in_(threads))
         .order_by(sortBy)
         .filter(durationBy)
@@ -83,10 +83,6 @@ def get_posts(feed_name):
 def get_post(pid):
     post_info = PostInfo.query.filter_by(post_id=pid).first()
     return (
-        jsonify(
-            post_info.as_dict(
-                current_user.id if current_user.is_authenticated else None
-            )
-        ),
+        jsonify({"post": post_info.as_dict()}),
         200,
     )

@@ -1,53 +1,18 @@
-import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
 import PropTypes from "prop-types";
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import useAuthContext from "../components/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
 import Svg from "./Svg";
+import Vote from "./Vote";
 
 Post.propTypes = {
   post: PropTypes.object,
 };
 
 export function Post({ post }) {
-  const [vote, setVote] = useState(post.current_user.has_upvoted);
-  const [voteCount, setVoteCount] = useState(post.post_info.post_karma);
-  const { isAuthenticated } = useAuthContext();
-  const { mutate } = useMutation({
-    mutationFn: ({ vote, method, postId }) => {
-      switch (method) {
-        case "put":
-          return axios.put(`/api/reactions/post/${postId}`, { is_upvote: vote }).then((res) => res.data);
-        case "patch":
-          return axios.patch(`/api/reactions/post/${postId}`, { is_upvote: vote }).then((res) => res.data);
-        case "delete":
-          return axios.delete(`/api/reactions/post/${postId}`).then((res) => res.data);
-        default:
-          break;
-      }
-    },
-  });
-  function handleVote(newVote) {
-    if (!isAuthenticated) {
-      return alert("You must be logged in to vote.");
-    }
-    if (vote === null) {
-      mutate({ vote: newVote, method: "put", postId: post.post_info.id });
-      setVoteCount((voteCount) => voteCount + (newVote ? 1 : -1));
-    } else if (newVote === null) {
-      mutate({ vote: newVote, method: "delete", postId: post.post_info.id });
-      setVoteCount((voteCount) => voteCount - (vote ? 1 : -1));
-    } else {
-      mutate({ vote: newVote, method: "patch", postId: post.post_info.id });
-      setVoteCount((voteCount) => voteCount + (newVote ? 2 : -2));
-    }
-    setVote(newVote);
-  }
+  const navigate = useNavigate();
   return (
-    <div className="flex flex-col items-center rounded-xl border-2 hover:shadow-sm md:flex-row border-theme-gray-blue p-1">
-      <Link
-        to={`/post/${post.post_info.id}`}
+    <div className="flex bg-white flex-col items-center rounded-xl border-2 hover:shadow-sm md:flex-row border-theme-gray-blue p-1">
+      <div
+        onClick={() => navigate(`/post/${post.post_info.id}`)}
         className="h-full flex flex-col flex-1 w-full p-3 space-y-5 md:space-y-0 md:space-x-4 md:flex-row">
         {post.post_info.media && (
           <img
@@ -71,7 +36,7 @@ export function Post({ post }) {
           </div>
           <p className="text-sm font-light md:hidden">{post.post_info.created_at}</p>
         </div>
-      </Link>
+      </div>
       <div className="flex justify-evenly md:mx-5 w-full h-full md:flex-col md:w-fit">
         <Link to={`/post/${post.post_info.id}`} className="flex items-center space-x-2 cursor-pointer group">
           <Svg type="comment" className="w-5 h-5" />
@@ -94,47 +59,27 @@ export function Post({ post }) {
           </div>
         </div>
         <div className="flex items-center md:hidden space-x-3">
-          <Svg
-            className="w-8 h-8"
-            type="mobileVote"
-            defaultStyle={true}
-            onClick={() => handleVote(!vote ? true : null)}
-            active={vote === true}
-          />
-          <p className="text-lg font-semibold">
-            <span>{voteCount}</span>
-          </p>
-          <Svg
-            className="w-8 h-8 rotate-180"
-            type="mobileVote"
-            defaultStyle={false}
-            onClick={() => handleVote(vote === false ? null : false)}
-            active={vote === false}
+          <Vote
+            {...{
+              intitalVote: post.current_user?.has_upvoted,
+              initialCount: post.post_info.post_karma,
+              url: "/api/reactions/post",
+              contentID: post.post_info.id,
+              type: "mobile",
+            }}
           />
         </div>
       </div>
       <div className="hidden flex-col justify-around items-center my-2 space-y-1 w-28 border-l md:flex border-theme-gray-blue">
-        <div className="px-5 py-0.5 bg-orange-100 rounded-md">
-          <Svg
-            type="down-arrow"
-            defaultStyle={true}
-            className="w-10 h-10 rotate-180"
-            onClick={() => handleVote(!vote ? true : null)}
-            active={vote === true}
-          />
-        </div>
-        <p className="text-lg font-semibold">
-          <span>{voteCount}</span>
-        </p>
-        <div className="px-5 py-0.5 bg-blue-50 rounded-md group">
-          <Svg
-            type="down-arrow"
-            className="w-10 h-10"
-            defaultStyle={false}
-            onClick={() => handleVote(vote === false ? null : false)}
-            active={vote === false}
-          />
-        </div>
+        <Vote
+          {...{
+            intitalVote: post.current_user?.has_upvoted,
+            initialCount: post.post_info.post_karma,
+            url: "/api/reactions/post",
+            contentID: post.post_info.id,
+            type: "full",
+          }}
+        />
       </div>
     </div>
   );
