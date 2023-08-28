@@ -67,7 +67,7 @@ export default function Comment({ children, comment }) {
           <Link to={`/u/${comment.user_info.user_name}`}>{comment.user_info.user_name}</Link>
           <p>{timePassed}</p>
         </div>
-        <p className="">{comment.comment_info.content}</p>
+        <p className="ml-2">{comment.comment_info.content}</p>
         <div className="flex justify-between items-center space-x-10 md:justify-start">
           <div className="flex items-center space-x-2">
             <Vote

@@ -29,7 +29,7 @@ export function SubThread() {
     return <Spinner />;
   }
   return (
-    <div className="flex flex-col flex-1 items-center p-5 max-w-full bg-theme-cultured">
+    <div className="flex flex-col flex-1 items-center p-2 max-w-full bg-theme-cultured">
       <div className="w-full bg-white rounded-md">
         <p>{threadData.name}</p>
         <p>{threadData.subscriberCount}</p>

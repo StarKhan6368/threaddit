@@ -16,9 +16,9 @@ export function FullPost() {
   return (
     <div className="flex">
       <ThreadsSidebar />
-      <div className="flex flex-col p-5 space-y-2 w-full">
+      <div className="flex flex-col p-2 space-y-2 w-full">
         <Post post={data.post_info} isExapaned={true} />
-        <ul className="flex-1 p-1 space-y-4 rounded-xl border-2 hover:shadow-sm border-theme-gray-blue">
+        <ul className="space-y-4 rounded-xl border-2 hover:shadow-sm border-theme-gray-blue">
           {data.comment_info.map((comment) => (
             <Comment key={comment.comment.comment_info.id} {...comment} />
           ))}

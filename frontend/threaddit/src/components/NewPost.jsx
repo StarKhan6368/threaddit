@@ -22,7 +22,7 @@ export default function NewPost({ setShowModal }) {
   const [media, setMedia] = useState("");
   const [mediaType, setMediaType] = useState("image");
   const [imageUrl, setImageUrl] = useState("");
-  const [thread, setThread] = useState(1);
+  const [thread, setThread] = useState(0);
   const { user } = AuthConsumer();
   async function handleSubmit(e) {
     e?.preventDefault();
@@ -42,7 +42,7 @@ export default function NewPost({ setShowModal }) {
   }
   if (isLoading) return <Spinner />;
   return (
-    <div className="flex flex-col p-5 space-y-5 w-5/6 h-4/6 rounded-md md:w-3/4 md:h-5/6 md:p-10 bg-theme-cultured">
+    <div className="flex flex-col p-5 space-y-5 w-5/6 rounded-md min-h-4/6 md:w-3/4 md:h-5/6 md:p-10 bg-theme-cultured">
       <div className="flex flex-col justify-between items-center p-4 space-y-3 bg-white rounded-xl md:flex-row md:space-y-0">
         <div className="flex space-x-3">
           <p>Posting as</p>
