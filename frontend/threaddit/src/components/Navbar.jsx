@@ -155,7 +155,11 @@ function ThreadSearch() {
           className="flex absolute right-0 top-full flex-col p-5 mt-3 space-y-5 w-full list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue"
           ref={searchRef}>
           {queryData?.data?.slice(0, 5).map((subthread) => (
-            <Link to={`/${subthread.name}`} className="flex space-x-5 cursor-pointer" key={subthread.name}>
+            <Link
+              to={`/${subthread.name}`}
+              className="flex space-x-5 cursor-pointer"
+              key={subthread.name}
+              onClick={() => setSearch("")}>
               <img src={subthread.logo} className="w-10 h-10 rounded-full" />
               <div className="flex flex-col">
                 <p className="font-semibold tracking-wide">{subthread.name}</p>

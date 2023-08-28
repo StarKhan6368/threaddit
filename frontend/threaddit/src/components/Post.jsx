@@ -50,7 +50,7 @@ export function Post({ post, isExapaned = false }) {
             {isExapaned && <p className="text-sm">{post.post_info.content}</p>}
           </div>
           <div className="flex justify-between w-full md:space-x-2">
-            <div className="flex flex-col md:flex-row">
+            <div className="flex flex-col space-y-1 md:space-y-0 md:flex-row">
               <div className="flex items-center text-sm font-medium md:space-x-2">
                 <Link to={`/u/${post.user_info.user_name}`}>Posted by u/{post.user_info.user_name}</Link>
                 <img src={post.user_info.user_avatar || avatar} alt="" className="w-5 h-5 rounded-full" />
