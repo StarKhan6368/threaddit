@@ -84,7 +84,6 @@ export function Post({ post, isExapaned = false }) {
         <div className="hidden items-center space-x-2 cursor-pointer md:flex group">
           <Svg type="share" className="w-5 h-5" />
           <div className="flex space-x-1">
-            <span></span>
             <p>Share</p>
           </div>
         </div>
@@ -94,17 +93,17 @@ export function Post({ post, isExapaned = false }) {
             <p>More</p>
           </div>
         </div>
-        <div className="flex items-center space-x-3 md:hidden">
-          <Vote
-            {...{
-              intitalVote: post.current_user?.has_upvoted,
-              initialCount: post.post_info.post_karma,
-              url: "/api/reactions/post",
-              contentID: post.post_info.id,
-              type: "mobile",
-            }}
-          />
-        </div>
+      </div>
+      <div className="flex items-center space-x-3 md:hidden">
+        <Vote
+          {...{
+            intitalVote: post.current_user?.has_upvoted,
+            initialCount: post.post_info.post_karma,
+            url: "/api/reactions/post",
+            contentID: post.post_info.id,
+            type: "mobile",
+          }}
+        />
       </div>
       <div className="hidden flex-col justify-around items-center my-2 space-y-1 w-28 border-l md:flex border-theme-gray-blue">
         <Vote

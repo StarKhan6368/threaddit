@@ -59,15 +59,15 @@ export function Navbar() {
             <img
               src={user.profile ? user.profile : avatar}
               alt="profile-picture"
-              className="hidden w-10 h-10 rounded-full duration-500 cursor-pointer hover:scale-125 md:block"
+              className="w-10 h-10 rounded-full duration-500 cursor-pointer hover:scale-125 md:block"
             />
-            <div className="hidden text-sm font-semibold md:block">
+            <div className="text-sm font-semibold md:block">
               <p className="text-gray-700">{user.username}</p>
               <p className="text-gray-500 truncate">karma: {user.karma.user_karma}</p>
             </div>
           </Link>
           <button onClick={logout} className="hidden flex-col items-center md:flex">
-            <Svg type="circle-logout" className="hidden w-6 h-6 duration-300 rotate-180 md:block hover:scale-110" />
+            <Svg type="circle-logout" className="w-6 h-6 duration-300 rotate-180 md:block hover:scale-110" />
             <span className="text-sm font-semibold">Logout</span>
           </button>
           <Svg type="down-arrow" className="w-9 h-9 md:w-6 md:h-6 md:hidden" />

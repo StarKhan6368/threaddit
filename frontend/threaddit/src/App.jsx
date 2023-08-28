@@ -1,18 +1,17 @@
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
-import AppLayout from "./components/AppLayout.jsx";
-import Feed from "./pages/feed/Feed.jsx";
-import Inbox from "./pages/inbox/Inbox.jsx";
-import Profile from "./pages/profile/Profile.jsx";
-import FullPost from "./pages/fullPost/FullPost.jsx";
-import Notifications from "./pages/notifications/Notifications.jsx";
-import SubThread from "./pages/thread/SubThread.jsx";
-import Login, { userLoginAction } from "./pages/login/Login.jsx";
-import Register, { userRegisterAction } from "./pages/register/Register.jsx";
-import RequireAuth from "./components/PrivateRoute.jsx";
-import { AuthProvider } from "./components/AuthContext.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import Spinner from "./components/Spinner.jsx";
+import { Navigate, RouterProvider, createBrowserRouter } from "react-router-dom";
+import AppLayout from "./components/AppLayout.jsx";
+import { AuthProvider } from "./components/AuthContext.jsx";
+import RequireAuth from "./components/PrivateRoute.jsx";
+import Feed from "./pages/feed/Feed.jsx";
+import FullPost from "./pages/fullPost/FullPost.jsx";
+import Inbox from "./pages/inbox/Inbox.jsx";
+import Login, { userLoginAction } from "./pages/login/Login.jsx";
+import Notifications from "./pages/notifications/Notifications.jsx";
+import Profile from "./pages/profile/Profile.jsx";
+import Register, { userRegisterAction } from "./pages/register/Register.jsx";
+import SubThread from "./pages/thread/SubThread.jsx";
 
 const router = createBrowserRouter([
   {
@@ -74,10 +73,6 @@ const router = createBrowserRouter([
     path: "/register",
     element: <Register />,
     action: userRegisterAction,
-  },
-  {
-    path: "/test",
-    element: <Spinner />,
   },
 ]);
 

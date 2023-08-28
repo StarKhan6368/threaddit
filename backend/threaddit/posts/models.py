@@ -1,6 +1,7 @@
 from threaddit import db, ma, app
 import base64
-from flask import send_file
+from flask import send_file, jsonify
+from datetime import datetime, timedelta
 from threaddit.subthreads.models import Subthread
 from flask_marshmallow.fields import fields
 from marshmallow.exceptions import ValidationError
@@ -121,3 +122,38 @@ class PostValidator(ma.SQLAlchemySchema):
     subthread_id = fields.Int(required=True, validate=[doesSubthreadExist])
     title = fields.Str(required=True, validate=[fields.validate.Length(min=1, max=50)])
     content = fields.Str(required=False)
+
+
+def get_filters(sortby, duration):
+    sortBy, durationBy = None, None
+    match sortby:
+        case "top":
+            sortBy = PostInfo.post_karma.desc()
+        case "new":
+            sortBy = PostInfo.created_at.desc()
+        case "hot":
+            sortBy = PostInfo.comments_count.desc()
+        case _:
+            raise Exception("Invalid Sortby Request")
+    match duration:
+        case "day":
+            durationBy = PostInfo.created_at.between(
+                datetime.now() - timedelta(days=1), datetime.now()
+            )
+        case "week":
+            durationBy = PostInfo.created_at.between(
+                datetime.now() - timedelta(days=7), datetime.now()
+            )
+        case "month":
+            durationBy = PostInfo.created_at.between(
+                datetime.now() - timedelta(days=30), datetime.now()
+            )
+        case "year":
+            durationBy = PostInfo.created_at.between(
+                datetime.now() - timedelta(days=365), datetime.now()
+            )
+        case "alltime":
+            durationBy = True
+        case _:
+            raise Exception("Invalid Duration Request")
+    return sortBy, durationBy

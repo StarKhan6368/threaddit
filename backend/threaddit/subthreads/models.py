@@ -18,19 +18,43 @@ class Subthread(db.Model):
     post = db.relationship("Posts", back_populates="subthread")
     post_info = db.relationship("PostInfo", back_populates="subthread")
 
-    def as_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "description": self.description,
-            "created_at": self.created_at,
-            "logo": self.logo,
-            "created_by": self.user.username,
-            "subscriberCount": len(self.subscription),
-            "modList": [
-                r.user.username for r in self.user_role if r.role.slug == "moderator"
-            ],
-        }
+    def as_dict(self, cur_user_id=None):
+        return (
+            {
+                "id": self.id,
+                "name": self.name,
+                "description": self.description,
+                "created_at": self.created_at,
+                "logo": self.logo,
+                "created_by": self.user.username,
+                "subscriberCount": len(self.subscription),
+                "modList": [
+                    r.user.username
+                    for r in self.user_role
+                    if r.role.slug == "moderator"
+                ],
+            }
+            if not cur_user_id
+            else {
+                "has_subscribed": bool(
+                    Subscription.query.filter_by(
+                        user_id=cur_user_id, subthread_id=self.id
+                    ).first()
+                ),
+                "id": self.id,
+                "name": self.name,
+                "description": self.description,
+                "created_at": self.created_at,
+                "logo": self.logo,
+                "created_by": self.user.username,
+                "subscriberCount": len(self.subscription),
+                "modList": [
+                    r.user.username
+                    for r in self.user_role
+                    if r.role.slug == "moderator"
+                ],
+            }
+        )
 
 
 class Subscription(db.Model):
@@ -54,6 +78,7 @@ class SubthreadInfo(db.Model):
 
     def as_dict(self):
         return {
+            "id": self.id,
             "name": self.name,
             "logo": self.logo,
             "subscriberCount": self.members_count,

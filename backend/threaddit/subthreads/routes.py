@@ -60,3 +60,22 @@ def subthread_search(thread_name):
 def get_all_thread():
     threads = Subthread.query.all()
     return jsonify([t.as_dict() for t in threads]), 200
+
+
+@threads.route("/threads/<thread_name>")
+def get_thread_by_name(thread_name):
+    thread_info = SubthreadInfo.query.filter_by(name=f"t/{thread_name}").first()
+    subthread = Subthread.query.filter_by(name=f"t/{thread_name}").first()
+    if not thread_info:
+        return jsonify({"message": "Thread not found"}), 404
+    return (
+        jsonify(
+            {
+                "subthreadInfo": thread_info.as_dict(),
+                "subthreadData": subthread.as_dict(
+                    current_user.id if current_user.is_authenticated else None
+                ),
+            }
+        ),
+        200,
+    )

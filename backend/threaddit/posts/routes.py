@@ -2,8 +2,13 @@ import os
 from flask import Blueprint, jsonify, request
 from threaddit import db, app
 from flask_login import current_user, login_required
-from threaddit.posts.models import PostInfo, Posts, Reactions, PostValidator
-from datetime import datetime, timedelta
+from threaddit.posts.models import (
+    PostInfo,
+    Posts,
+    Reactions,
+    PostValidator,
+    get_filters,
+)
 from threaddit.subthreads.models import Subscription, SubthreadInfo
 from werkzeug.utils import secure_filename
 
@@ -16,7 +21,10 @@ def get_posts(feed_name):
     offset = request.args.get("offset", default=0, type=int)
     sortby = request.args.get("sortby", default="top", type=str)
     duration = request.args.get("duration", default="alltime", type=str)
-
+    try:
+        sortBy, durationBy = get_filters(sortby=sortby, duration=duration)
+    except Exception:
+        return jsonify({"message": "Invalid Request"}), 400
     if feed_name == "home" and current_user.is_authenticated:
         threads = [
             thread.id
@@ -38,38 +46,6 @@ def get_posts(feed_name):
         )
     else:
         return jsonify({"message": "Invalid Request"}), 400
-
-    match duration:
-        case "day":
-            durationBy = PostInfo.created_at.between(
-                datetime.now() - timedelta(days=1), datetime.now()
-            )
-        case "week":
-            durationBy = PostInfo.created_at.between(
-                datetime.now() - timedelta(days=7), datetime.now()
-            )
-        case "month":
-            durationBy = PostInfo.created_at.between(
-                datetime.now() - timedelta(days=30), datetime.now()
-            )
-        case "year":
-            durationBy = PostInfo.created_at.between(
-                datetime.now() - timedelta(days=365), datetime.now()
-            )
-        case "alltime":
-            durationBy = True
-        case _:
-            return jsonify({"message": "Invalid Request"}), 400
-
-    match sortby:
-        case "top":
-            sortBy = PostInfo.post_karma.desc()
-        case "new":
-            sortBy = PostInfo.created_at.desc()
-        case "hot":
-            sortBy = PostInfo.comments_count.desc()
-        case _:
-            return jsonify({"message": "Invalid Request"}), 400
     post_list = [
         post.as_dict()
         for post in PostInfo.query.filter(PostInfo.thread_id.in_(threads))
@@ -120,3 +96,25 @@ def new_post():
     db.session.add(new_post)
     db.session.commit()
     return jsonify({"message": "Post created"}), 200
+
+
+@posts.route("/posts/thread/<tid>", methods=["GET"])
+def get_posts_of_thread(tid):
+    limit = request.args.get("limit", default=20, type=int)
+    offset = request.args.get("offset", default=0, type=int)
+    sortby = request.args.get("sortby", default="top", type=str)
+    duration = request.args.get("duration", default="alltime", type=str)
+    try:
+        sortBy, durationBy = get_filters(sortby=sortby, duration=duration)
+    except Exception:
+        return jsonify({"message": "Invalid Request"}), 400
+    post_list = [
+        post.as_dict()
+        for post in PostInfo.query.filter(PostInfo.thread_id == tid)
+        .order_by(sortBy)
+        .filter(durationBy)
+        .limit(limit)
+        .offset(offset)
+        .all()
+    ]
+    return jsonify(post_list), 200
