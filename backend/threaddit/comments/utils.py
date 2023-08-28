@@ -12,5 +12,4 @@ def create_comment_tree(comments):
             root_comments.append(comment_data)
         elif comment.parent_id in comment_dict:
             comment_dict[comment.parent_id]["children"].append(comment_data)
-
     return root_comments

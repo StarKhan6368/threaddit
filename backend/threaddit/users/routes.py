@@ -94,8 +94,3 @@ def user_get_by_username(user_name):
 @auth_role(["admin", "sup-admin", "owner"])
 def users_get():
     return jsonify(User.get_all()), 200
-
-
-@user.errorhandler(ValidationError)
-def handle_marshmallow_validation(err):
-    return jsonify({"errors": err.messages}), 400

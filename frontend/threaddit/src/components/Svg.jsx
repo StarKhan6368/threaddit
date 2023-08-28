@@ -71,6 +71,7 @@ const svgTypes = {
     <path d="M20 2H4c-1.103 0-2 .897-2 2v18l5.333-4H20c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zm0 14H6.667L4 18V4h16v12z"></path>
   ),
   mobileVote: <path d="M13 18v-6h5l-6-7-6 7h5v6z"></path>,
+  add: <path d="M19 11h-6V5h-2v6H5v2h6v6h2v-6h6z"></path>,
 };
 export function Svg({ type, className, onClick, active, defaultStyle = true }) {
   return (

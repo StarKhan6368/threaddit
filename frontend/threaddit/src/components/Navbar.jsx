@@ -28,13 +28,17 @@ export function Navbar() {
           </NavLink>
           <NavLink
             to="/popular"
-            className={({ isActive }) => `group flex space-x-1 group cursor-pointer ${isActive && "text-theme-red-coral"}`}>
+            className={({ isActive }) =>
+              `group flex space-x-1 group cursor-pointer ${isActive && "text-theme-red-coral"}`
+            }>
             <Svg type="popular" className="w-6 h-6" />
             <h2 className="font-semibold group-hover:text-theme-red-coral">Popular</h2>
           </NavLink>
           <NavLink
             to="/all"
-            className={({ isActive }) => `group flex space-x-1 group cursor-pointer ${isActive && "text-theme-red-coral"}`}>
+            className={({ isActive }) =>
+              `group flex space-x-1 group cursor-pointer ${isActive && "text-theme-red-coral"}`
+            }>
             <Svg type="all" className="w-6 h-6" />
             <h2 className="font-semibold group-hover:text-theme-red-coral">All</h2>
           </NavLink>
@@ -49,7 +53,9 @@ export function Navbar() {
           <NavLink to="/notifications" className={({ isActive }) => `${isActive && "text-theme-red-coral"}`}>
             <Svg type="notifications" className="hidden w-6 h-6 md:block" />
           </NavLink>
-          <Link to="/profile" className="hidden md:flex items-center space-x-2 bg-theme-cultured rounded-3xl pr-3 py-0.5">
+          <Link
+            to="/profile"
+            className="hidden md:flex items-center space-x-2 bg-theme-cultured rounded-3xl pr-3 py-0.5">
             <img
               src={user.profile ? user.profile : avatar}
               alt="profile-picture"
@@ -68,7 +74,7 @@ export function Navbar() {
         </div>
       ) : (
         <>
-          <Link to="/login" className=" flex font-semibold cursor-pointer hover:text-theme-orange group">
+          <Link to="/login" className="flex font-semibold cursor-pointer hover:text-theme-orange group">
             Login
             <Svg
               type="arrow-right"
@@ -146,7 +152,7 @@ function ThreadSearch() {
       />
       {queryData?.data && (
         <ul
-          className="flex absolute right-0 top-full w-full flex-col p-5 mt-3 space-y-5 list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue"
+          className="flex absolute right-0 top-full flex-col p-5 mt-3 space-y-5 w-full list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue"
           ref={searchRef}>
           {queryData?.data?.slice(0, 5).map((subthread) => (
             <Link to={`/${subthread.name}`} className="flex space-x-5 cursor-pointer" key={subthread.name}>

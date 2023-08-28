@@ -19,6 +19,13 @@ class Comments(db.Model):
     post = db.relationship("Posts", back_populates="comment")
     comment_info = db.relationship("CommentInfo", back_populates="comment")
 
+    def __init__(self, user_id, content, post_id=None, has_parent=None, parent_id=None):
+        self.user_id = user_id
+        self.post_id = post_id
+        self.content = content
+        self.has_parent = has_parent
+        self.parent_id = parent_id
+
 
 class CommentInfo(db.Model):
     __tablename__ = "comment_info"

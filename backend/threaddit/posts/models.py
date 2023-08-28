@@ -1,4 +1,9 @@
-from threaddit import db
+from threaddit import db, ma, app
+import base64
+from flask import send_file
+from threaddit.subthreads.models import Subthread
+from flask_marshmallow.fields import fields
+from marshmallow.exceptions import ValidationError
 from flask_login import current_user
 from threaddit.comments.models import Comments
 from threaddit.reactions.models import Reactions
@@ -61,6 +66,11 @@ class PostInfo(db.Model):
     user = db.relationship("User", back_populates="post_info")
 
     def as_dict(self):
+        if self.media and not str(self.media).startswith("http"):
+            data = open(f"{app.config['UPLOAD_FOLDER']}/{self.media}", "rb").read()
+            media = f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
+        else:
+            media = self.media
         cur_user = current_user.id if current_user.is_authenticated else None
         p_info = {
             "user_info": {
@@ -74,7 +84,7 @@ class PostInfo(db.Model):
             "post_info": {
                 "id": self.post_id,
                 "title": self.title,
-                "media": self.media,
+                "media": media,
                 "content": self.content,
                 "created_at": self.created_at,
                 "post_karma": self.post_karma,
@@ -96,3 +106,18 @@ class PostInfo(db.Model):
                 ),
             }
         return p_info
+
+
+def doesSubthreadExist(subthread_id):
+    subthread = Subthread.query.filter_by(id=subthread_id).first()
+    if not Subthread:
+        raise ValidationError("Subthread does not exist")
+
+
+class PostValidator(ma.SQLAlchemySchema):
+    class Meta:
+        model = Posts
+
+    subthread_id = fields.Int(required=True, validate=[doesSubthreadExist])
+    title = fields.Str(required=True, validate=[fields.validate.Length(min=1, max=50)])
+    content = fields.Str(required=False)

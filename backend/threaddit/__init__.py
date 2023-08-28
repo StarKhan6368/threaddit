@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
+from marshmallow import ValidationError
 from flask_login import LoginManager
 from threaddit.config import POSTGRES_USER, POSTGRES_PASSWORD, SECRET_KEY
 
@@ -9,6 +10,7 @@ app.config[
     "SQLALCHEMY_DATABASE_URI"
 ] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost/threaddit_test"
 app.config["SECRET_KEY"] = SECRET_KEY
+app.config["UPLOAD_FOLDER"] = "./backend/threaddit/uploaded_media/"
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 ma = Marshmallow(app)
@@ -22,6 +24,11 @@ def callback():
 @app.route("/")
 def index():
     return "Hello World!"
+
+
+@app.errorhandler(ValidationError)
+def handle_marshmallow_validation(err):
+    return jsonify({"errors": err.messages}), 400
 
 
 # flake8: noqa

@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 
-const AuthContext = createContext(null);
+const AuthContext = createContext();
 
 AuthProvider.propTypes = {
   children: PropTypes.any,
@@ -20,9 +20,13 @@ export function AuthProvider({ children }) {
     },
     onSuccess: (data) => {
       localStorage.setItem("user", JSON.stringify(data));
+      setIsAuthenticated(true);
       setUser(data);
     },
-    enabled: user.isAuthenticated,
+    onError: () => {
+      setIsAuthenticated(false);
+    },
+    enabled: isAuthenticated === true,
   });
   function login(userInfo) {
     localStorage.setItem("user", JSON.stringify(userInfo));

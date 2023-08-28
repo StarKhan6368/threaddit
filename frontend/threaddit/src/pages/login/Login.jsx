@@ -18,7 +18,7 @@ export function Login() {
   }
   if (actionData?.user) {
     authData.login(actionData.user);
-    navigate("/home", { replace: true });
+    setTimeout(navigate("/home", { replace: true }), 1000);
   }
   return (
     <div className="flex justify-center items-center min-h-screen md:space-x-10 bg-theme-cultured">
@@ -65,7 +65,9 @@ export function Login() {
               )}
             </div>
           </label>
-          <button type="submit" className="py-2 w-full font-semibold text-white rounded-md bg-theme-orange active:scale-95">
+          <button
+            type="submit"
+            className="py-2 w-full font-semibold text-white rounded-md bg-theme-orange active:scale-95">
             Log in
           </button>
         </Form>

@@ -9,14 +9,13 @@ Vote.propTypes = {
   url: PropTypes.string,
   initialCount: PropTypes.number,
   intitalVote: PropTypes.bool,
-  contentID: PropTypes.string,
+  contentID: PropTypes.number,
   type: PropTypes.string,
 };
 
 export default function Vote({ url, intitalVote, initialCount, contentID, type }) {
   const [vote, setVote] = useState(intitalVote);
   const [voteCount, setVoteCount] = useState(initialCount);
-  console.log(vote, voteCount);
   const { isAuthenticated } = useAuthContext();
   const { mutate } = useMutation({
     mutationFn: async ({ vote, method, contentID }) => {
@@ -52,15 +51,15 @@ export default function Vote({ url, intitalVote, initialCount, contentID, type }
     <>
       <Svg
         type="mobileVote"
-        className="w-8 h-8"
+        className="w-6 h-6"
         defaultStyle={true}
         active={vote === true}
         onClick={() => handleVote(!vote ? true : null)}
       />
-      <p>{voteCount}</p>
+      <p className={vote === true ? "text-theme-red-coral" : vote === false ? "text-sky-600" : ""}>{voteCount}</p>
       <Svg
         type="mobileVote"
-        className="w-8 h-8 rotate-180"
+        className="w-6 h-6 rotate-180"
         defaultStyle={false}
         active={vote === false}
         onClick={() => handleVote(vote === false ? null : false)}
@@ -78,7 +77,7 @@ export default function Vote({ url, intitalVote, initialCount, contentID, type }
         />
       </div>
       <p className="text-lg font-semibold">
-        <span>{voteCount}</span>
+        <span className={vote === true ? "text-theme-red-coral" : vote === false ? "text-sky-600" : ""}>{voteCount}</span>
       </p>
       <div className="px-5 py-0.5 bg-blue-50 rounded-md group">
         <Svg

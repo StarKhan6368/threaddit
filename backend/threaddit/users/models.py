@@ -1,5 +1,4 @@
 from sqlalchemy import func
-
 from threaddit import db, login_manager
 from flask_login import UserMixin
 from threaddit import ma

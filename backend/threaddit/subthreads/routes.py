@@ -54,3 +54,9 @@ def subthread_search(thread_name):
         ).all()
     ]
     return jsonify(subthread_list), 200
+
+
+@threads.route("/threads/get/all")
+def get_all_thread():
+    threads = Subthread.query.all()
+    return jsonify([t.as_dict() for t in threads]), 200
