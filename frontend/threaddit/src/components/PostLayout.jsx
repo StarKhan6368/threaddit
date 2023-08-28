@@ -13,7 +13,7 @@ PostLayout.propTypes = {
 
 export default function PostLayout({ duration, sortBy, setSortBy, setDuration, isFetching, data }) {
   return (
-    <div id="main-content" className="flex flex-col flex-1 p-5 m-3 space-y-3 w-full bg-white rounded-lg">
+    <div id="main-content" className="flex flex-col flex-1 p-3 space-y-3 w-full bg-white rounded-lg md:m-3">
       <header className="flex justify-between items-center w-full">
         <div className="flex items-center space-x-2 md:hidden">
           <span>Sort by</span>
