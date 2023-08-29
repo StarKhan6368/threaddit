@@ -72,7 +72,7 @@ export function Post({ post, isExpanded = false }) {
           <p className="text-sm font-light md:hidden">{post.post_info.created_at}</p>
         </div>
       </div>
-      <div className="flex justify-evenly w-full h-full md:mx-5 md:flex-col md:w-fit">
+      <div className="flex justify-evenly w-full h-full md:px-10 md:flex-col md:w-fit">
         {isExpanded ? (
           <div className="flex items-center space-x-1">
             <Svg type="comment" className="w-5 h-5" onClick={() => onReplyClick()} />

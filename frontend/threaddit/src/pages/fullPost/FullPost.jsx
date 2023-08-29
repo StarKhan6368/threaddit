@@ -19,7 +19,7 @@ export function FullPost() {
       <div className="flex flex-col p-2 space-y-2 w-full">
         <Post post={data.post_info} isExpanded={true} />
         {data.comment_info.length > 0 ? (
-          <ul className="space-y-4 rounded-xl border-2 hover:shadow-sm border-theme-gray-blue">
+          <ul className="space-y-4 rounded-xl md:border-2 md:p-2 hover:shadow-sm border-theme-gray-blue">
             {data.comment_info.map((comment) => (
               <Comment key={comment.comment.comment_info.id} {...comment} />
             ))}

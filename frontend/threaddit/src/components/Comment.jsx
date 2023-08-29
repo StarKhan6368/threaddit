@@ -29,6 +29,7 @@ export default function Comment({ children, comment }) {
   const { isAuthenticated } = AuthConsumer();
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModaData] = useState(<></>);
+  const [expandChildren, setExpandChildren] = useState(false);
   function onReplyClick() {
     if (isAuthenticated) {
       setShowModal(true);
@@ -46,59 +47,56 @@ export default function Comment({ children, comment }) {
     return borderColors[curColor++];
   }
   const timePassed = timeAgo(new Date(comment.comment_info.created_at));
-  if (children.length > 0) {
-    {
-      return (
-        <div className={`space-y-2 rounded-t-2xl border-l-2 ${colorSquence()}`}>
-          <Comment key={comment.comment_info.id} {...{ children: [], comment }} />
-          <ul className="ml-2 space-y-1">
-            {children.map((child) => (
-              <Comment key={child.comment.comment_info.id} {...child} />
-            ))}
-          </ul>
-        </div>
-      );
-    }
-  } else {
-    return (
-      <div className="px-1 py-2 space-y-2 w-full bg-white rounded-xl border-2 md:space-y-3 md:text-base">
-        <div className="flex items-center space-x-2 text-sm font-medium">
-          <img src={comment.user_info.user_avatar || avatar} alt="" className="w-5 h-5 rounded-full" />
-          <Link to={`/u/${comment.user_info.user_name}`}>{comment.user_info.user_name}</Link>
-          <p>{timePassed}</p>
-        </div>
-        <p className="ml-1 text-sm md:text-base">{comment.comment_info.content}</p>
-        <div className="flex justify-around items-center space-x-5 md:justify-between md:mx-10">
-          <div className="flex items-center space-x-1">
-            <Svg type="share" className="w-5 h-5" />
-            <p>Share</p>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Svg type="down-arrow" className="w-5 h-5" onClick={onReplyClick} />
-            <p>Expand</p>
-          </div>
-          <div className="flex items-center space-x-1">
-            <Svg type="comment" className="w-5 h-5" onClick={onReplyClick} />
-            <p>Reply</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Vote
-              {...{
-                url: "/api/reactions/comment",
-                intitalVote: comment.current_user?.has_upvoted,
-                initialCount: comment.comment_info.comment_karma,
-                contentID: comment.comment_info.id,
-                type: "mobile",
-              }}
-            />
-          </div>
-        </div>
-        {showModal && isAuthenticated && (
-          <Modal showModal={showModal} setShowModal={setShowModal}>
-            {modalData}
-          </Modal>
-        )}
+  return (
+    <div
+      className={`pl-2 py-3 space-y-2 w-full bg-white rounded-xl ${
+        children.length > 0 && expandChildren ? "border-l-2 rounded-s-xl rounded-b-none" : ""
+      } md:text-base ${colorSquence()}`}>
+      <div className="flex items-center space-x-2 text-sm font-medium">
+        <img src={comment.user_info.user_avatar || avatar} alt="" className="w-5 h-5 rounded-full" />
+        <Link to={`/u/${comment.user_info.user_name}`}>{comment.user_info.user_name}</Link>
+        <p>{timePassed}</p>
       </div>
-    );
-  }
+      <p className="ml-1 text-sm md:text-base">{comment.comment_info.content}</p>
+      <div className="flex justify-around items-center md:justify-between md:mx-10">
+        <div className="flex items-center space-x-1">
+          <Svg type="share" className="w-5 h-5" />
+          <p className="cursor-pointer">Share</p>
+        </div>
+        <div
+          className={`${!children.length && "invisible"} flex items-center space-x-1`}
+          onClick={() => setExpandChildren(!expandChildren)}>
+          <Svg type="down-arrow" className={`w-5 h-5 ${expandChildren && "rotate-180"}`} />
+          <p className="cursor-pointer">{expandChildren ? "Hide" : "Show"}</p>
+        </div>
+        <div className="flex items-center space-x-1" onClick={() => onReplyClick()}>
+          <Svg type="comment" className="w-5 h-5" />
+          <p className="cursor-pointer">Reply</p>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Vote
+            {...{
+              url: "/api/reactions/comment",
+              intitalVote: comment.current_user?.has_upvoted,
+              initialCount: comment.comment_info.comment_karma,
+              contentID: comment.comment_info.id,
+              type: "mobile",
+            }}
+          />
+        </div>
+      </div>
+      {expandChildren && (
+        <ul className="space-y-2">
+          {children.map((child) => (
+            <Comment key={child.comment.comment_info.id} {...child} />
+          ))}
+        </ul>
+      )}
+      {showModal && isAuthenticated && (
+        <Modal showModal={showModal} setShowModal={setShowModal}>
+          {modalData}
+        </Modal>
+      )}
+    </div>
+  );
 }
