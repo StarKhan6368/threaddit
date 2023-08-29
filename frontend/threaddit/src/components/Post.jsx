@@ -21,7 +21,7 @@ export function Post({ post, isExpanded = false }) {
     if (post.post_info.media) {
       setShowModal(true);
       setModalData(
-        <img className="w-4/5 md:w-max md:max-h-screen md:max-w-screen" src={post.post_info.media} alt="" />
+        <img className="w-11/12 max-h-5/6 md:w-max md:max-h-screen md:max-w-screen" src={post.post_info.media} alt="" />
       );
     }
   }
@@ -41,10 +41,10 @@ export function Post({ post, isExpanded = false }) {
             onClick={() => onImageClick()}
             src={post.post_info.media}
             alt=""
-            className="max-w-xs rounded-md duration-500 cursor-pointer md:h-32 md:w-32 hover:scale-110"
+            className="rounded-md duration-500 cursor-pointer md:h-32 md:w-32 hover:scale-110"
           />
         )}
-        <div className="flex flex-col justify-between space-y-3 cursor-pointer">
+        <div className="flex flex-col justify-between space-y-1 cursor-pointer">
           <div className={`flex flex-col  space-y-2 ${!isExpanded && "flex-1"}`}>
             <Link to={`/post/${post.post_info.id}`} className="flex-1 text-lg font-semibold text-ellipsis">
               {post.post_info.title}
