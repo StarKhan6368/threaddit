@@ -57,23 +57,23 @@ export default function Comment({ children, comment }) {
         <Link to={`/u/${comment.user_info.user_name}`}>{comment.user_info.user_name}</Link>
         <p>{timePassed}</p>
       </div>
-      <p className="ml-1 text-sm md:text-base">{comment.comment_info.content}</p>
+      <p className="mr-2 ml-1">{comment.comment_info.content}</p>
       <div className="flex justify-around items-center md:justify-between md:mx-10">
         <div className="flex items-center space-x-1">
-          <Svg type="share" className="w-5 h-5" />
-          <p className="cursor-pointer">Share</p>
+          <Svg type="share" className="w-4 h-4" />
+          <p className="text-sm cursor-pointer md:text-base">Share</p>
         </div>
         <div
           className={`${!children.length && "invisible"} flex items-center space-x-1`}
           onClick={() => setExpandChildren(!expandChildren)}>
-          <Svg type="down-arrow" className={`w-5 h-5 ${expandChildren && "rotate-180"}`} />
-          <p className="cursor-pointer">{expandChildren ? "Hide" : "Show"}</p>
+          <Svg type="down-arrow" className={`w-4 h-4 ${expandChildren && "rotate-180"}`} />
+          <p className="text-sm cursor-pointer md:text-base">{expandChildren ? "Hide" : "Show"}</p>
         </div>
         <div className="flex items-center space-x-1" onClick={() => onReplyClick()}>
-          <Svg type="comment" className="w-5 h-5" />
+          <Svg type="comment" className="w-4 h-4" />
           <p className="cursor-pointer">Reply</p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 text-sm md:text-base">
           <Vote
             {...{
               url: "/api/reactions/comment",

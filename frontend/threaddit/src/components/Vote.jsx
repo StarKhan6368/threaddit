@@ -67,7 +67,7 @@ export default function Vote({ url, intitalVote, initialCount, contentID, type }
     </>
   ) : (
     <>
-      <div className="bg-orange-100 rounded-md">
+      <div className="px-5 py-0.5 bg-orange-100 rounded-md">
         <Svg
           type="down-arrow"
           defaultStyle={true}
@@ -81,7 +81,7 @@ export default function Vote({ url, intitalVote, initialCount, contentID, type }
           {voteCount}
         </span>
       </p>
-      <div className="bg-blue-50 rounded-md group">
+      <div className="px-5 py-0.5 bg-blue-50 rounded-md group">
         <Svg
           type="down-arrow"
           className="w-10 h-10"

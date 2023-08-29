@@ -46,7 +46,7 @@ export function Post({ post, isExpanded = false }) {
         )}
         <div className="flex flex-col justify-between space-y-1 cursor-pointer">
           <div className={`flex flex-col  space-y-2 ${!isExpanded && "flex-1"}`}>
-            <Link to={`/post/${post.post_info.id}`} className="flex-1 text-lg font-semibold text-ellipsis">
+            <Link to={`/post/${post.post_info.id}`} className="flex-1 font-semibold md:text-lg text-ellipsis">
               {post.post_info.title}
             </Link>
             {isExpanded && <p className="text-sm">{post.post_info.content}</p>}
@@ -72,7 +72,7 @@ export function Post({ post, isExpanded = false }) {
           <p className="text-sm font-light md:hidden">{post.post_info.created_at}</p>
         </div>
       </div>
-      <div className="flex justify-evenly w-full h-full md:px-10 md:flex-col md:w-fit">
+      <div className="flex justify-around w-full h-full md:justify-evenly md:px-10 md:flex-col md:w-fit">
         {isExpanded ? (
           <div className="flex items-center space-x-1">
             <Svg type="comment" className="w-5 h-5" onClick={() => onReplyClick()} />
@@ -82,7 +82,7 @@ export function Post({ post, isExpanded = false }) {
           <Link to={`/post/${post.post_info.id}`} className="flex items-center space-x-2 cursor-pointer group">
             <Svg type="comment" className="w-5 h-5" />
             <div className="flex space-x-1">
-              <span>{post.post_info.comments_count}</span>
+              <span className="text-sm cursor-pointer md:text-base">{post.post_info.comments_count}</span>
               <p className="hidden md:block">Comments</p>
             </div>
           </Link>
@@ -90,13 +90,13 @@ export function Post({ post, isExpanded = false }) {
         <div className="hidden items-center space-x-2 cursor-pointer md:flex group">
           <Svg type="share" className="w-5 h-5" />
           <div className="flex space-x-1">
-            <p>Share</p>
+            <p className="text-sm cursor-pointer md:text-base">Share</p>
           </div>
         </div>
         <div className="flex items-center space-x-2 cursor-pointer group">
           <Svg className="w-5 h-5" type="more" />
           <div className="flex space-x-1">
-            <p>More</p>
+            <p className="text-sm cursor-pointer md:text-base">More</p>
           </div>
         </div>
         <div className="flex items-center space-x-3 md:hidden">
