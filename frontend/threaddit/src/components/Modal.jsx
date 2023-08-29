@@ -22,7 +22,7 @@ export default function Modal({ children, setShowModal }) {
     <div
       ref={ref}
       style={{ margin: 0 }}
-      className=" z-20 fixed inset-0 min-h-screen min-w-screen flex justify-center items-center bg-black/[0.7]">
+      className="z-20 fixed inset-0 min-h-screen min-w-screen flex justify-center items-center bg-black/[0.7]">
       {children}
     </div>
   );

@@ -14,15 +14,23 @@ export function FullPost() {
   });
   if (isLoading) return <Spinner />;
   return (
-    <div className="flex">
+    <div className="flex pb-20 md:pb-0">
       <ThreadsSidebar />
       <div className="flex flex-col p-2 space-y-2 w-full">
-        <Post post={data.post_info} isExapaned={true} />
-        <ul className="space-y-4 rounded-xl border-2 hover:shadow-sm border-theme-gray-blue">
-          {data.comment_info.map((comment) => (
-            <Comment key={comment.comment.comment_info.id} {...comment} />
-          ))}
-        </ul>
+        <Post post={data.post_info} isExpanded={true} />
+        {data.comment_info.length > 0 ? (
+          <ul className="space-y-4 rounded-xl border-2 hover:shadow-sm border-theme-gray-blue">
+            {data.comment_info.map((comment) => (
+              <Comment key={comment.comment.comment_info.id} {...comment} />
+            ))}
+          </ul>
+        ) : (
+          <div>
+            <p className="p-5 text-sm bg-white rounded-xl border-2 md:text-base hover:shadow-sm border-theme-gray-blue">
+              This post has no comments, be the first to reply!
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

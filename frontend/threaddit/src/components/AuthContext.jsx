@@ -18,6 +18,7 @@ export function AuthProvider({ children }) {
     queryFn: async () => {
       return await axios.get("/api/user").then((res) => res.data);
     },
+    retry: false,
     onSuccess: (data) => {
       localStorage.setItem("user", JSON.stringify(data));
       setIsAuthenticated(true);
@@ -25,6 +26,8 @@ export function AuthProvider({ children }) {
     },
     onError: () => {
       setIsAuthenticated(false);
+      setUser({});
+      localStorage.removeItem("user");
     },
     enabled: isAuthenticated === true,
   });

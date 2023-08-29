@@ -65,6 +65,10 @@ class Subscription(db.Model):
     user = db.relationship("User", back_populates="subscription")
     subthread = db.relationship("Subthread", back_populates="subscription")
 
+    def __init__(self, user_id, subthread_id):
+        self.user_id = user_id
+        self.subthread_id = subthread_id
+
 
 class SubthreadInfo(db.Model):
     __tablename__ = "subthread_info"

@@ -1,6 +1,6 @@
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, ScrollRestoration } from "react-router-dom";
 import avatar from "../assets/avatar.png";
 import Modal from "./Modal";
 import Svg from "./Svg";
@@ -10,17 +10,19 @@ import AuthConsumer from "./AuthContext";
 
 Post.propTypes = {
   post: PropTypes.object,
-  isExapaned: PropTypes.bool,
+  isExpanded: PropTypes.bool,
 };
 
-export function Post({ post, isExapaned = false }) {
+export function Post({ post, isExpanded = false }) {
   const { isAuthenticated } = AuthConsumer();
   const [modalShow, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(<></>);
   function onImageClick() {
     if (post.post_info.media) {
       setShowModal(true);
-      setModalData(<img className="w-11/12" src={post.post_info.media} alt="" />);
+      setModalData(
+        <img className="w-4/5 md:w-max md:max-h-screen md:max-w-screen" src={post.post_info.media} alt="" />
+      );
     }
   }
   function onReplyClick() {
@@ -39,25 +41,29 @@ export function Post({ post, isExapaned = false }) {
             onClick={() => onImageClick()}
             src={post.post_info.media}
             alt=""
-            className="w-full h-full rounded-md border-8 duration-500 cursor-pointer md:border-none border-theme-gray-blue md:h-32 md:w-32 hover:scale-110"
+            className="max-w-xs rounded-md duration-500 cursor-pointer md:h-32 md:w-32 hover:scale-110"
           />
         )}
-        <div className="flex flex-col flex-1 justify-between space-y-3 cursor-pointer">
-          <div className="flex flex-col flex-1 space-y-5">
+        <div className="flex flex-col justify-between space-y-3 cursor-pointer">
+          <div className={`flex flex-col  space-y-2 ${!isExpanded && "flex-1"}`}>
             <Link to={`/post/${post.post_info.id}`} className="flex-1 text-lg font-semibold text-ellipsis">
               {post.post_info.title}
             </Link>
-            {isExapaned && <p className="text-sm">{post.post_info.content}</p>}
+            {isExpanded && <p className="text-sm">{post.post_info.content}</p>}
           </div>
           <div className="flex justify-between w-full md:space-x-2">
-            <div className="flex flex-col space-y-1 md:space-y-0 md:flex-row">
-              <div className="flex items-center text-sm font-medium md:space-x-2">
-                <Link to={`/u/${post.user_info.user_name}`}>Posted by u/{post.user_info.user_name}</Link>
+            <div className="flex space-x-2">
+              <div className="flex items-center space-x-2 text-xs md:text-sm">
+                <Link to={`/u/${post.user_info.user_name}`}>
+                  By <span className="font-medium">u/{post.user_info.user_name}</span>
+                </Link>
                 <img src={post.user_info.user_avatar || avatar} alt="" className="w-5 h-5 rounded-full" />
               </div>
-              <div className="flex items-center space-x-1">
-                <p>in</p>
-                <Link to={`/${post.thread_info.thread_name}`}>{` ${post.thread_info.thread_name}`}</Link>
+              <div className="flex items-center space-x-2">
+                <p className="text-xs md:text-sm">in</p>
+                <Link
+                  className="text-xs font-medium md:text-sm"
+                  to={`/${post.thread_info.thread_name}`}>{` ${post.thread_info.thread_name}`}</Link>
                 <img src={post.thread_info.logo} alt="" className="w-5 h-5 rounded-full" />
               </div>
             </div>
@@ -67,7 +73,7 @@ export function Post({ post, isExapaned = false }) {
         </div>
       </div>
       <div className="flex justify-evenly w-full h-full md:mx-5 md:flex-col md:w-fit">
-        {isExapaned ? (
+        {isExpanded ? (
           <div className="flex items-center space-x-1">
             <Svg type="comment" className="w-5 h-5" onClick={() => onReplyClick()} />
             <p>Reply</p>
@@ -121,6 +127,7 @@ export function Post({ post, isExapaned = false }) {
           {modalData}
         </Modal>
       )}
+      <ScrollRestoration />
     </div>
   );
 }

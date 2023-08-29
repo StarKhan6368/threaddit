@@ -27,8 +27,8 @@ def get_posts(feed_name):
         return jsonify({"message": "Invalid Request"}), 400
     if feed_name == "home" and current_user.is_authenticated:
         threads = [
-            thread.id
-            for thread in Subscription.query.filter_by(user_id=current_user.id)
+            subscription.subthread.id
+            for subscription in Subscription.query.filter_by(user_id=current_user.id)
         ]
     elif feed_name == "all":
         threads = (

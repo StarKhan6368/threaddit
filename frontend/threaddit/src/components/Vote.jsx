@@ -77,7 +77,9 @@ export default function Vote({ url, intitalVote, initialCount, contentID, type }
         />
       </div>
       <p className="text-lg font-semibold">
-        <span className={vote === true ? "text-theme-red-coral" : vote === false ? "text-sky-600" : ""}>{voteCount}</span>
+        <span className={vote === true ? "text-theme-red-coral" : vote === false ? "text-sky-600" : ""}>
+          {voteCount}
+        </span>
       </p>
       <div className="px-5 py-0.5 bg-blue-50 rounded-md group">
         <Svg

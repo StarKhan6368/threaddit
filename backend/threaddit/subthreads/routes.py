@@ -1,6 +1,7 @@
 from threaddit.subthreads.models import Subthread, SubthreadInfo, Subscription
-from flask_login import current_user
+from flask_login import current_user, login_required
 from flask import Blueprint, jsonify, request
+from threaddit import db
 
 threads = Blueprint("threads", __name__, url_prefix="/api")
 
@@ -12,8 +13,8 @@ def get_subthreads():
     subscribed_threads = []
     if current_user.is_authenticated:
         subscribed_threads = [
-            thread.as_dict()
-            for thread in Subscription.query.filter_by(user_id=current_user.id)
+            subscription.subthread.as_dict()
+            for subscription in Subscription.query.filter_by(user_id=current_user.id)
             .limit(limit)
             .offset(offset)
             .all()
@@ -71,11 +72,34 @@ def get_thread_by_name(thread_name):
     return (
         jsonify(
             {
-                "subthreadInfo": thread_info.as_dict(),
-                "subthreadData": subthread.as_dict(
+                "threadData": thread_info.as_dict()
+                | subthread.as_dict(
                     current_user.id if current_user.is_authenticated else None
-                ),
+                )
             }
         ),
         200,
     )
+
+
+@threads.route("threads/subscription/<tid>", methods=["POST"])
+@login_required
+def new_subscription(tid):
+    new_sub = Subscription(current_user.id, tid)
+    db.session.add(new_sub)
+    db.session.commit()
+    return jsonify({"message": "Subscribed"}), 200
+
+
+@threads.route("threads/subscription/<tid>", methods=["DELETE"])
+@login_required
+def del_subscription(tid):
+    subscription = Subscription.query.filter_by(
+        user_id=current_user.id, subthread_id=tid
+    )
+    if subscription:
+        subscription.delete()
+        db.session.commit()
+    else:
+        return jsonify({"message": "Invalid Subscription"}), 400
+    return jsonify({"message": "UnSubscribed"}), 200

@@ -18,17 +18,19 @@ export function Feed() {
     },
   });
   return (
-    <main className="flex flex-1 max-w-full bg-theme-cultured">
-      <ThreadsSidebar />
-      <PostLayout
-        data={data}
-        isFetching={isFetching}
-        setSortBy={setSortBy}
-        setDuration={setDuration}
-        sortBy={sortBy}
-        duration={duration}
-      />
-    </main>
+    <>
+      <main className="flex flex-1 max-w-full bg-theme-cultured">
+        <ThreadsSidebar />
+        <PostLayout
+          data={data}
+          isFetching={isFetching}
+          setSortBy={setSortBy}
+          setDuration={setDuration}
+          sortBy={sortBy}
+          duration={duration}
+        />
+      </main>
+    </>
   );
 }
 

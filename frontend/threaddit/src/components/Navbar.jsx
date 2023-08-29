@@ -139,7 +139,7 @@ function ThreadSearch() {
     setSearch("");
   });
   return (
-    <div className="flex items-center p-2.5 space-x-3 rounded-md bg-neutral-100 relative">
+    <div className="flex items-center p-2.5 space-x-3 rounded-md bg-neutral-100 relative" ref={searchRef}>
       <Svg type="search" className="w-6 h-6" />
       <input
         value={search}
@@ -151,9 +151,7 @@ function ThreadSearch() {
         placeholder="Find community"
       />
       {queryData?.data && (
-        <ul
-          className="flex absolute right-0 top-full flex-col p-5 mt-3 space-y-5 w-full list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue"
-          ref={searchRef}>
+        <ul className="flex absolute right-0 top-full flex-col p-5 mt-3 space-y-5 w-full list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue">
           {queryData?.data?.slice(0, 5).map((subthread) => (
             <Link
               to={`/${subthread.name}`}
