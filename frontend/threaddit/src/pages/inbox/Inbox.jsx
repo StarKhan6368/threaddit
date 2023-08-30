@@ -125,7 +125,7 @@ function Chat({ sender, setCurChat }) {
     return <></>;
   }
   return (
-    <div className="flex flex-col justify-between">
+    <div className="flex flex-col justify-between w-full">
       <div className="flex items-center p-3 mx-2 border-b-2 justify-between">
         <div className="flex space-x-4 items-center">
           <img src={sender.avatar || avatar} alt="" className="w-14 h-14 rounded-full" />
@@ -148,10 +148,10 @@ function Chat({ sender, setCurChat }) {
           e.preventDefault();
           mutate({ message, sender });
         }}
-        className="p-2 py-4 bg-blue-200 flex justify-between items-center pr-10">
+        className="p-4 bg-blue-200 w-full flex justify-between items-center ">
         <input
           type="text"
-          className="font-medium p-2 px-4 focus:outline-none mx-3 w-11/12 rounded-full"
+          className="font-medium p-2 px-4 focus:outline-none mx-3 w-full rounded-full"
           placeholder="Type a message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
