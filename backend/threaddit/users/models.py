@@ -31,6 +31,12 @@ class User(db.Model, UserMixin):
     post_info = db.relationship("PostInfo", back_populates="user")
     comment = db.relationship("Comments", back_populates="user")
     reaction = db.relationship("Reactions", back_populates="user")
+    sender = db.relationship(
+        "Messages", back_populates="user_sender", foreign_keys="Messages.sender_id"
+    )
+    receiver = db.relationship(
+        "Messages", back_populates="user_receiver", foreign_keys="Messages.receiver_id"
+    )
 
     def __init__(self, username: str, email: str, password_hash: str):
         self.username = username

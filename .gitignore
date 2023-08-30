@@ -62,3 +62,6 @@ backend/threaddit/uploaded_media/Screenshot_20230824-145438_Firefox.jpg
 backend/threaddit/uploaded_media/Screenshot_from_2023-08-27_13-54-36.png
 backend/threaddit/uploaded_media/IMG-20230822-WA0000.jpg
 backend/threaddit/uploaded_media/
+backend/threaddit/messages/__pycache__/__init__.cpython-311.pyc
+backend/threaddit/messages/__pycache__/models.cpython-311.pyc
+backend/threaddit/messages/__pycache__/routes.cpython-311.pyc

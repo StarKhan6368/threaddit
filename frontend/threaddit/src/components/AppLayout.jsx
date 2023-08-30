@@ -1,21 +1,22 @@
-import { Outlet } from "react-router-dom";
-import Navbar from "./Navbar.jsx";
-import Svg from "./Svg.jsx";
 import { useState } from "react";
-import Modal from "./Modal.jsx";
-import NewComment from "./NewPost.jsx";
+import { Outlet, useLocation } from "react-router-dom";
 import AuthConsumer from "./AuthContext.jsx";
+import Modal from "./Modal.jsx";
+import Navbar from "./Navbar.jsx";
+import NewComment from "./NewPost.jsx";
+import Svg from "./Svg.jsx";
 
 export function AppLayout() {
   const [showModal, setShowModal] = useState(false);
   const { isAuthenticated } = AuthConsumer();
+  const location = useLocation();
   return (
     <div className="flex flex-col min-h-screen min-w-screen">
       <Navbar />
-      <main className="flex-1 bg-theme-cultured">
+      <main className="flex flex-col flex-1 bg-theme-cultured">
         <Outlet />
       </main>
-      {isAuthenticated && (
+      {isAuthenticated && !location.pathname == "/inbox" && (
         <div
           className="fixed right-5 bottom-5 w-14 h-14 rounded-xl bg-theme-orange active:scale-90"
           onClick={() => setShowModal(true)}>

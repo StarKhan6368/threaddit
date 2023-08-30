@@ -48,10 +48,7 @@ export default function Comment({ children, comment }) {
   }
   const timePassed = timeAgo(new Date(comment.comment_info.created_at));
   return (
-    <div
-      className={`pl-2 py-3 space-y-2 w-full bg-white rounded-xl ${
-        children.length > 0 && expandChildren ? "border-l-2 rounded-s-xl rounded-b-none" : ""
-      } md:text-base ${colorSquence()}`}>
+    <div className="py-3 pl-2 space-y-2 w-full bg-white rounded-xl md:text-base">
       <div className="flex items-center space-x-2 text-sm font-medium">
         <img src={comment.user_info.user_avatar || avatar} alt="" className="w-5 h-5 rounded-full" />
         <Link to={`/u/${comment.user_info.user_name}`}>{comment.user_info.user_name}</Link>
@@ -86,7 +83,7 @@ export default function Comment({ children, comment }) {
         </div>
       </div>
       {expandChildren && (
-        <ul className="space-y-2">
+        <ul className={`space-y-2 ${children.length > 0 && expandChildren && "border-l-2 " + colorSquence()}`}>
           {children.map((child) => (
             <Comment key={child.comment.comment_info.id} {...child} />
           ))}
