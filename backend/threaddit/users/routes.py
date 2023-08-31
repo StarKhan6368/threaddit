@@ -79,11 +79,10 @@ def user_get():
 
 
 @user.route("/user/<user_name>", methods=["GET"])
-@auth_role(["admin", "sup-admin", "owner"])
 def user_get_by_username(user_name):
     return (
         jsonify(
-            User.query.filter_by(username=user_name).first().as_dict(include_all=True)
+            User.query.filter_by(username=user_name).first().as_dict(include_all=False)
         ),
         200,
     )

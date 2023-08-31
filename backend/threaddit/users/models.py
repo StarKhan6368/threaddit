@@ -83,7 +83,6 @@ class User(db.Model, UserMixin):
         return (
             {
                 "username": self.username,
-                "email": self.email,
                 "avatar": self.avatar,
                 "bio": self.bio,
                 "registrationDate": self.registration_date,
@@ -91,7 +90,7 @@ class User(db.Model, UserMixin):
                 "karma": self.user_karma[0].as_dict(),
             }
             if not include_all
-            else {"id": self.id, **self.as_dict()}
+            else {"id": self.id, "email": self.email, **self.as_dict()}
         )
 
 

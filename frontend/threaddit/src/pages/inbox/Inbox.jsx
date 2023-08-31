@@ -35,7 +35,7 @@ export function Inbox() {
               onClick={() => setCurChat(message.sender)}>
               <img src={message.sender.avatar || avatar} className="w-14 h-14 rounded-full" alt="" />
               <div className="flex flex-col space-y-1 w-full">
-                <div className="flex justify-between items-center w-full ">
+                <div className="flex justify-between items-center w-full">
                   <p className="font-medium">{message.sender.name}</p>
                   {!message.latest_from_user && !message.seen && (
                     <Svg type="mail" className="w-4 h-4 text-theme-orange" />
@@ -64,7 +64,7 @@ export function Inbox() {
             onClick={() => setCurChat(message.sender)}>
             <img src={message.sender.avatar || avatar} className="w-14 h-14 rounded-full" alt="" />
             <div className="flex flex-col space-y-1 w-full">
-              <div className="flex justify-between items-center w-full ">
+              <div className="flex justify-between items-center w-full">
                 <p className="font-medium">{message.receiver.name}</p>
                 {!message.latest_from_user && !message.seen && (
                   <Svg type="mail" className="w-4 h-4 text-theme-orange" />
@@ -94,8 +94,9 @@ Chat.propTypes = {
     name: PropTypes.string,
   }),
   setCurChat: PropTypes.func,
+  newChat: PropTypes.bool,
 };
-function Chat({ sender, setCurChat }) {
+export function Chat({ sender, setCurChat, newChat = false }) {
   const myRef = useRef(null);
   const queryClient = useQueryClient();
   const { user } = AuthConsumer();
@@ -125,19 +126,19 @@ function Chat({ sender, setCurChat }) {
     return <></>;
   }
   return (
-    <div className="flex flex-col justify-between w-full">
-      <div className="flex items-center p-3 mx-2 border-b-2 justify-between">
-        <div className="flex space-x-4 items-center">
+    <div className={`flex flex-col justify-between w-full ${newChat && "bg-white w-10/12 md:w-1/2"}`}>
+      <div className="flex justify-between items-center p-3 mx-2 border-b-2">
+        <div className="flex items-center space-x-4">
           <img src={sender.avatar || avatar} alt="" className="w-14 h-14 rounded-full" />
           <p className="text-xl font-semibold">{sender.name}</p>
         </div>
         <button
           onClick={() => setCurChat(false)}
-          className="ml-auto justify-self-end p-2 rounded-md text-white bg-blue-600">
+          className="justify-self-end p-2 ml-auto text-white bg-blue-600 rounded-md">
           Close
         </button>
       </div>
-      <ul className="p-3 space-y-3 rounded-md md:h-[63vh] h-[70vh] overflow-auto">
+      <ul className={`p-3 space-y-3 rounded-md md:h-[63vh] h-[70vh] overflow-auto ${newChat && "h-[20vh]"}`}>
         {data?.map((message) => (
           <Message message={message} toUser={message.sender.name == user.username} key={message.message_id} />
         ))}
@@ -148,15 +149,15 @@ function Chat({ sender, setCurChat }) {
           e.preventDefault();
           mutate({ message, sender });
         }}
-        className="p-4 bg-blue-200 w-full flex justify-between items-center ">
+        className="flex justify-between items-center p-4 w-full bg-blue-200">
         <input
           type="text"
-          className="font-medium p-2 px-4 focus:outline-none mx-3 w-full rounded-full"
+          className="p-2 px-4 mx-3 w-full font-medium rounded-full focus:outline-none"
           placeholder="Type a message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
-        <Svg onClick={() => mutate({ message, sender })} type="send" className="w-8 h-8 bg-inherit text-white" />
+        <Svg onClick={() => mutate({ message, sender })} type="send" className="w-8 h-8 text-white bg-inherit" />
       </form>
     </div>
   );

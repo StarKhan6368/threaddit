@@ -16,7 +16,7 @@ export default function PostLayout({ duration, sortBy, setSortBy, setDuration, i
     <>
       <div
         id="main-content"
-        className="flex flex-col flex-1 p-2 m-2 space-y-3 w-full rounded-lg bg-theme-cultured md:bg-white md:m-3">
+        className="flex flex-col flex-1 p-2 m-2 space-y-3 w-full h-full rounded-lg bg-theme-cultured md:bg-white md:m-3">
         <header className="flex justify-between items-center w-full">
           <div className="flex items-center space-x-2 md:hidden">
             <span>Sort by</span>

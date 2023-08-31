@@ -68,7 +68,7 @@ export default function Comment({ children, comment }) {
         </div>
         <div className="flex items-center space-x-1" onClick={() => onReplyClick()}>
           <Svg type="comment" className="w-4 h-4" />
-          <p className="cursor-pointer">Reply</p>
+          <p className="text-sm cursor-pointer md:text-base">Reply</p>
         </div>
         <div className="flex items-center space-x-2 text-sm md:text-base">
           <Vote

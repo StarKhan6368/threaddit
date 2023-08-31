@@ -118,3 +118,25 @@ def get_posts_of_thread(tid):
         .all()
     ]
     return jsonify(post_list), 200
+
+
+@posts.route("/posts/user/<user_name>", methods=["GET"])
+def get_posts_of_user(user_name):
+    limit = request.args.get("limit", default=20, type=int)
+    offset = request.args.get("offset", default=0, type=int)
+    sortby = request.args.get("sortby", default="top", type=str)
+    duration = request.args.get("duration", default="alltime", type=str)
+    try:
+        sortBy, durationBy = get_filters(sortby=sortby, duration=duration)
+    except Exception:
+        return jsonify({"message": "Invalid Request"}), 400
+    post_list = [
+        post.as_dict()
+        for post in PostInfo.query.filter(PostInfo.user_name == user_name)
+        .order_by(sortBy)
+        .filter(durationBy)
+        .limit(limit)
+        .offset(offset)
+        .all()
+    ]
+    return jsonify(post_list), 200

@@ -51,7 +51,7 @@ export default function Vote({ url, intitalVote, initialCount, contentID, type }
     <>
       <Svg
         type="mobileVote"
-        className="w-6 h-6"
+        className="w-5 h-5 md:w-6 md:h-6"
         defaultStyle={true}
         active={vote === true}
         onClick={() => handleVote(!vote ? true : null)}
@@ -59,7 +59,7 @@ export default function Vote({ url, intitalVote, initialCount, contentID, type }
       <p className={vote === true ? "text-theme-red-coral" : vote === false ? "text-sky-600" : ""}>{voteCount}</p>
       <Svg
         type="mobileVote"
-        className="w-6 h-6 rotate-180"
+        className="w-5 h-5 rotate-180 md:w-6 md:h-6"
         defaultStyle={false}
         active={vote === false}
         onClick={() => handleVote(vote === false ? null : false)}

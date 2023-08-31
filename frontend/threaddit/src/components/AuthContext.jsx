@@ -23,7 +23,8 @@ export function AuthProvider({ children }) {
       login(data);
     },
     onError: () => {
-      logout();
+      setUser({});
+      setIsAuthenticated(false);
     },
     enabled: isAuthenticated,
   });
