@@ -65,7 +65,7 @@ export function Inbox() {
             <img src={message.sender.avatar || avatar} className="w-14 h-14 rounded-full" alt="" />
             <div className="flex flex-col space-y-1 w-full">
               <div className="flex justify-between items-center w-full">
-                <p className="font-medium">{message.receiver.name}</p>
+                <p className="font-medium">{message.sender.name}</p>
                 {!message.latest_from_user && !message.seen && (
                   <Svg type="mail" className="w-4 h-4 text-theme-orange" />
                 )}
@@ -117,6 +117,7 @@ export function Chat({ sender, setCurChat, newChat = false }) {
     onSuccess: () => {
       setMessage("");
       queryClient.invalidateQueries({ queryKey: ["chat", sender.name] });
+      queryClient.invalidateQueries({ queryKey: ["inbox"] });
     },
   });
   useEffect(() => {

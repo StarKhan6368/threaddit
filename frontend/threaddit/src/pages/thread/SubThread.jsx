@@ -48,7 +48,7 @@ export function SubThread() {
           <img src={threadData.logo} className="w-24 h-24 rounded-full md:w-36 md:h-36" alt="" />
           <div className="flex flex-col flex-1 justify-around items-center p-2">
             <h1 className="text-lg font-semibold">{threadData.name}</h1>
-            <p className="text-sm">{threadData.description}</p>
+            <p className="hidden text-sm md:block">{threadData.description}</p>
             <div className="flex space-x-3">
               <p className="text-sm">{threadData.subscriberCount} subscribers</p>
               <p className="text-sm">{threadData.PostsCount} posts</p>

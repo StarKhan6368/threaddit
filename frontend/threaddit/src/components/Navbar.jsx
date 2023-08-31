@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import PropTypes from "prop-types";
 import { useRef, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import avatar from "../assets/avatar.png";
 import axios from "axios";
 import threads from "../assets/threads.png";
@@ -11,6 +11,8 @@ import useClickOutside from "../hooks/useClickOutside";
 
 export function Navbar() {
   const { isAuthenticated, user, logout } = AuthConsumer();
+  const location = useLocation();
+  const navigate = useNavigate();
   return (
     <nav className={`flex justify-between items-center ${isAuthenticated ? "mx-3" : "ml-3"} h-16 md:p-5`}>
       <AppLogo />
@@ -50,11 +52,8 @@ export function Navbar() {
           <NavLink to="/inbox" className={({ isActive }) => `${isActive && "text-theme-red-coral"}`}>
             <Svg type="message" className="hidden w-6 h-6 md:block" />
           </NavLink>
-          <NavLink to="/notifications" className={({ isActive }) => `${isActive && "text-theme-red-coral"}`}>
-            <Svg type="notifications" className="hidden w-6 h-6 md:block" />
-          </NavLink>
           <Link
-            to="/profile"
+            to={`/u/${user.username}`}
             className="hidden md:flex items-center space-x-2 bg-theme-cultured rounded-3xl pr-3 py-0.5">
             <img
               src={user.profile ? user.profile : avatar}
@@ -70,7 +69,25 @@ export function Navbar() {
             <Svg type="circle-logout" className="w-6 h-6 duration-300 rotate-180 md:block hover:scale-110" />
             <span className="text-sm font-semibold">Logout</span>
           </button>
-          <Svg type="down-arrow" className="w-9 h-9 md:w-6 md:h-6 md:hidden" />
+          {/* <Svg type="down-arrow" className="w-9 h-9 md:w-6 md:h-6 md:hidden" /> */}
+          <select
+            name="page"
+            id="page"
+            className="p-1 py-3 ml-1 rounded-md md:hidden bg-theme-cultured"
+            onChange={(e) => navigate(e.target.value)}
+            value={location.pathname}>
+            <optgroup label="Feeds">
+              <option value="/home">Home</option>
+              <option value="/popular">Popular</option>
+              <option value="/all" selected>
+                All
+              </option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="/inbox">Inbox</option>
+              <option value={`/u/${user.username}`}>Profile</option>
+            </optgroup>
+          </select>
         </div>
       ) : (
         <>
@@ -139,7 +156,9 @@ function ThreadSearch() {
     setSearch("");
   });
   return (
-    <div className="flex items-center p-2.5 space-x-3 rounded-md bg-neutral-100 relative" ref={searchRef}>
+    <div
+      className="flex items-center py-2.5 pl-0.5 md:p-2.5 space-x-3 rounded-md bg-neutral-100 relative"
+      ref={searchRef}>
       <Svg type="search" className="w-6 h-6" />
       <input
         value={search}
@@ -147,7 +166,7 @@ function ThreadSearch() {
         type="search"
         name="search"
         id="search"
-        className="py-0.5 bg-neutral-100 focus:outline-none md:pr-20"
+        className="py-0.5 w-44 md:w-full bg-neutral-100 focus:outline-none md:pr-20"
         placeholder="Find community"
       />
       {queryData?.data && (
@@ -167,7 +186,7 @@ function ThreadSearch() {
           ))}
           <span className="w-full border border-theme-orange"></span>
           <li className="flex justify-center items-center m-0 font-semibold cursor-pointer group">
-            <p>Search For &quot;{search}&quot;</p>
+            <p className="text-sm md:text-base">Search For &quot;{search}&quot;</p>
             <Svg type="arrow-right" className="w-6 h-6 duration-500 group-hover:translate-x-1" />
           </li>
         </ul>

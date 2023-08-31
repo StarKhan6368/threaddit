@@ -8,7 +8,6 @@ import Feed from "./pages/feed/Feed.jsx";
 import FullPost from "./pages/fullPost/FullPost.jsx";
 import Inbox from "./pages/inbox/Inbox.jsx";
 import Login, { userLoginAction } from "./pages/login/Login.jsx";
-import Notifications from "./pages/notifications/Notifications.jsx";
 import Profile from "./pages/profile/Profile.jsx";
 import Register, { userRegisterAction } from "./pages/register/Register.jsx";
 import SubThread from "./pages/thread/SubThread.jsx";
@@ -43,22 +42,6 @@ const router = createBrowserRouter([
         element: (
           <RequireAuth>
             <Inbox />
-          </RequireAuth>
-        ),
-      },
-      {
-        path: "/notifications",
-        element: (
-          <RequireAuth>
-            <Notifications />
-          </RequireAuth>
-        ),
-      },
-      {
-        path: "/profile",
-        element: (
-          <RequireAuth>
-            <Profile />
           </RequireAuth>
         ),
       },
