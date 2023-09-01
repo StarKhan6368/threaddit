@@ -1,7 +1,9 @@
 from threaddit.subthreads.models import Subthread, SubthreadInfo, Subscription
 from flask_login import current_user, login_required
 from flask import Blueprint, jsonify, request
-from threaddit import db
+from threaddit import db, app
+from werkzeug.utils import secure_filename
+import os
 
 threads = Blueprint("threads", __name__, url_prefix="/api")
 
@@ -103,3 +105,29 @@ def del_subscription(tid):
     else:
         return jsonify({"message": "Invalid Subscription"}), 400
     return jsonify({"message": "UnSubscribed"}), 200
+
+
+@threads.route("/thread", methods=["POST"])
+@login_required
+def new_thread():
+    image = request.files.get("media")
+    form_data = request.form.to_dict()
+    if form_data.get("content_type") == "image" and image:
+        filename = secure_filename(image.filename)
+        image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        media = filename
+    elif form_data.get("content_type") == "url":
+        media = form_data.get("content_url")
+    else:
+        media = None
+    new_sub = Subthread(
+        name=form_data.get("name")
+        if form_data.get("name").startswith("t/")
+        else f"t/{form_data.get('name')}",
+        description=form_data.get("description"),
+        logo=media,
+        created_by=current_user.id,
+    )
+    db.session.add(new_sub)
+    db.session.commit()
+    return jsonify({"message": "Thread created"}), 200

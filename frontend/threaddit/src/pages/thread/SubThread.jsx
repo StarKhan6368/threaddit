@@ -47,16 +47,21 @@ export function SubThread() {
         <div className="flex pr-3 rounded-full bg-theme-cultured">
           <img src={threadData.logo} className="w-24 h-24 rounded-full md:w-36 md:h-36" alt="" />
           <div className="flex flex-col flex-1 justify-around items-center p-2">
-            <h1 className="text-lg font-semibold">{threadData.name}</h1>
+            <div className="flex space-x-5 items-center">
+              <h1 className="text-lg font-semibold">{threadData.name}</h1>
+              <p className="text-xs hidden md:block">Since: {threadData.created_at}</p>
+            </div>
+            <p className="text-xs md:hidden">Since: {new Date(threadData.created_at).toDateString()}</p>
             <p className="hidden text-sm md:block">{threadData.description}</p>
             <div className="flex space-x-3">
               <p className="text-sm">{threadData.subscriberCount} subscribers</p>
               <p className="text-sm">{threadData.PostsCount} posts</p>
+              <p className="text-sm">{threadData.CommentsCount} comments</p>
             </div>
           </div>
         </div>
         {isAuthenticated && (
-          <div className="flex justify-around space-x-10">
+          <div className="flex justify-around md:space-x-10 flex-col md:flex-row space-y-3 md:space-y-0">
             <button
               className={`px-32 py-2 text-white rounded-full active:scale-90 ${
                 threadData.has_subscribed ? "bg-blue-400" : "bg-theme-red-coral"
@@ -64,11 +69,15 @@ export function SubThread() {
               onClick={() => mutate(threadData.has_subscribed)}>
               {threadData.has_subscribed ? "Leave" : "Join"}
             </button>
-            <select name="mods" id="mods" className="hidden px-10 rounded-md md:block bg-theme-cultured">
+            <select
+              name="mods"
+              id="mods"
+              className="px-10 py-2 rounded-md md:block bg-theme-cultured"
+              defaultValue={"ModList"}>
               <option value="ModList">ModList</option>
               {threadData.modList.map((mod) => (
-                <option key={mod.name} value={mod.name}>
-                  {mod.name}
+                <option key={mod} value={mod}>
+                  {mod}
                 </option>
               ))}
             </select>

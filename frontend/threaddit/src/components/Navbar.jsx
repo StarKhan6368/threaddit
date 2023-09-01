@@ -8,6 +8,8 @@ import threads from "../assets/threads.png";
 import AuthConsumer from "../components/AuthContext.jsx";
 import Svg from "../components/Svg.jsx";
 import useClickOutside from "../hooks/useClickOutside";
+import Modal from "./Modal";
+import { NewThread } from "./NewThread";
 
 export function Navbar() {
   const { isAuthenticated, user, logout } = AuthConsumer();
@@ -49,6 +51,9 @@ export function Navbar() {
       </div>
       {isAuthenticated ? (
         <div className="flex items-center md:space-x-6">
+          <NavLink to="/saved" className={({ isActive }) => `${isActive && "text-theme-red-coral"}`}>
+            <Svg type="save" className="hidden w-6 h-6 md:block" />
+          </NavLink>
           <NavLink to="/inbox" className={({ isActive }) => `${isActive && "text-theme-red-coral"}`}>
             <Svg type="message" className="hidden w-6 h-6 md:block" />
           </NavLink>
@@ -69,7 +74,6 @@ export function Navbar() {
             <Svg type="circle-logout" className="w-6 h-6 duration-300 rotate-180 md:block hover:scale-110" />
             <span className="text-sm font-semibold">Logout</span>
           </button>
-          {/* <Svg type="down-arrow" className="w-9 h-9 md:w-6 md:h-6 md:hidden" /> */}
           <select
             name="page"
             id="page"
@@ -85,6 +89,7 @@ export function Navbar() {
             </optgroup>
             <optgroup label="Other">
               <option value="/inbox">Inbox</option>
+              <option value="/saved">Saved</option>
               <option value={`/u/${user.username}`}>Profile</option>
             </optgroup>
           </select>
@@ -136,6 +141,7 @@ export function AppLogo({ forBanner = false, children }) {
 }
 
 function ThreadSearch() {
+  const [showModal, setShowModal] = useState(false);
   const searchRef = useRef();
   const [search, setSearch] = useState("");
   const queryData = useQuery({
@@ -155,6 +161,7 @@ function ThreadSearch() {
   useClickOutside(searchRef, () => {
     setSearch("");
   });
+  const threadNames = queryData?.data?.map((thread) => thread.name);
   return (
     <div
       className="flex items-center py-2.5 pl-0.5 md:p-2.5 space-x-3 rounded-md bg-neutral-100 relative"
@@ -184,12 +191,25 @@ function ThreadSearch() {
               </div>
             </Link>
           ))}
-          <span className="w-full border border-theme-orange"></span>
-          <li className="flex justify-center items-center m-0 font-semibold cursor-pointer group">
-            <p className="text-sm md:text-base">Search For &quot;{search}&quot;</p>
-            <Svg type="arrow-right" className="w-6 h-6 duration-500 group-hover:translate-x-1" />
-          </li>
+          {!threadNames.includes(`t/${search}`) && (
+            <>
+              <span className="w-full border border-theme-orange"></span>
+              <li
+                className="flex justify-center items-center m-0 font-semibold cursor-pointer group"
+                onClick={() => {
+                  setShowModal(true);
+                }}>
+                <p className="text-sm md:text-base">Create subthread &quot;{search}&quot;</p>
+                <Svg type="arrow-right" className="w-6 h-6 duration-500 group-hover:translate-x-1" />
+              </li>
+            </>
+          )}
         </ul>
+      )}
+      {showModal && (
+        <Modal setShowModal={setShowModal} showModal={showModal}>
+          <NewThread subThreadName={search} setShowModal={setShowModal} />
+        </Modal>
       )}
     </div>
   );

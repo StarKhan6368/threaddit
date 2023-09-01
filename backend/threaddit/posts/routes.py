@@ -8,6 +8,7 @@ from threaddit.posts.models import (
     Reactions,
     PostValidator,
     get_filters,
+    SavedPosts,
 )
 from threaddit.subthreads.models import Subscription, SubthreadInfo
 from werkzeug.utils import secure_filename
@@ -98,6 +99,33 @@ def new_post():
     return jsonify({"message": "Post created"}), 200
 
 
+@posts.route("/post/<pid>", methods=["DELETE"])
+@login_required
+def delete_post(pid):
+    post = Posts.query.filter_by(id=pid).first()
+    if not post:
+        return jsonify({"message": "Invalid Post"}), 400
+    if not (
+        post.user_id == current_user.id
+        or current_user.has_role("admin")
+        or current_user.has_role("mod")
+    ):
+        return jsonify({"message": "Unauthorized"}), 401
+    elif post.user_id == current_user.id:
+        Posts.query.filter_by(id=pid).delete()
+        db.session.commit()
+        return jsonify({"message": "Post deleted"}), 200
+    current_user_mod_in = [
+        r.subthread_id for r in current_user.user_role if r.role.slug == "mod"
+    ]
+    if post.subthread_id in current_user_mod_in:
+        Posts.query.filter_by(id=pid).delete()
+        db.session.commit()
+    else:
+        return jsonify({"message": "Unauthorized"}), 401
+    return jsonify({"message": "Post deleted"}), 200
+
+
 @posts.route("/posts/thread/<tid>", methods=["GET"])
 def get_posts_of_thread(tid):
     limit = request.args.get("limit", default=20, type=int)
@@ -140,3 +168,31 @@ def get_posts_of_user(user_name):
         .all()
     ]
     return jsonify(post_list), 200
+
+
+@posts.route("/posts/saved", methods=["GET"])
+@login_required
+def get_saved():
+    saved_posts = SavedPosts.query.filter_by(user_id=current_user.id).all()
+    post_infos = [PostInfo.query.filter_by(post_id=pid.post_id) for pid in saved_posts]
+    return jsonify([p.first().as_dict() for p in post_infos]), 200
+
+
+@posts.route("/posts/saved/<pid>", methods=["DELETE"])
+@login_required
+def delete_saved(pid):
+    saved_post = SavedPosts.query.filter_by(user_id=current_user.id, post_id=pid)
+    if not saved_post:
+        return jsonify({"message": "Invalid Post ID"}), 400
+    saved_post.delete()
+    db.session.commit()
+    return jsonify({"message": "Saved Post deleted"}), 200
+
+
+@posts.route("/posts/saved/<pid>", methods=["PUT"])
+@login_required
+def new_saved(pid):
+    new_saved = SavedPosts(user_id=current_user.id, post_id=pid)
+    db.session.add(new_saved)
+    db.session.commit()
+    return jsonify({"message": "Saved"}), 200

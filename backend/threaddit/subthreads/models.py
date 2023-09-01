@@ -1,4 +1,5 @@
-from threaddit import db
+from threaddit import db, app
+import base64
 
 
 class Subthread(db.Model):
@@ -19,19 +20,22 @@ class Subthread(db.Model):
     post_info = db.relationship("PostInfo", back_populates="subthread")
 
     def as_dict(self, cur_user_id=None):
+        if self.logo and not str(self.logo).startswith("http"):
+            data = open(f"{app.config['UPLOAD_FOLDER']}/{self.logo}", "rb").read()
+            logo = f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
+        else:
+            logo = self.logo
         return (
             {
                 "id": self.id,
                 "name": self.name,
                 "description": self.description,
                 "created_at": self.created_at,
-                "logo": self.logo,
+                "logo": logo,
                 "created_by": self.user.username,
                 "subscriberCount": len(self.subscription),
                 "modList": [
-                    r.user.username
-                    for r in self.user_role
-                    if r.role.slug == "moderator"
+                    r.user.username for r in self.user_role if r.role.slug == "mod"
                 ],
             }
             if not cur_user_id
@@ -45,16 +49,20 @@ class Subthread(db.Model):
                 "name": self.name,
                 "description": self.description,
                 "created_at": self.created_at,
-                "logo": self.logo,
+                "logo": logo,
                 "created_by": self.user.username,
                 "subscriberCount": len(self.subscription),
                 "modList": [
-                    r.user.username
-                    for r in self.user_role
-                    if r.role.slug == "moderator"
+                    r.user.username for r in self.user_role if r.role.slug == "mod"
                 ],
             }
         )
+
+    def __init__(self, name, description, logo, created_by):
+        self.name = name
+        self.description = description
+        self.logo = logo
+        self.created_by = created_by
 
 
 class Subscription(db.Model):
@@ -81,11 +89,16 @@ class SubthreadInfo(db.Model):
     subthread = db.relationship("Subthread", back_populates="subthread_info")
 
     def as_dict(self):
+        if self.logo and not str(self.logo).startswith("http"):
+            data = open(f"{app.config['UPLOAD_FOLDER']}/{self.logo}", "rb").read()
+            logo = f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
+        else:
+            logo = self.logo
         return {
             "id": self.id,
             "name": self.name,
-            "logo": self.logo,
-            "subscriberCount": self.members_count,
-            "PostsCount": self.posts_count,
-            "CommentsCount": self.comments_count,
+            "logo": logo,
+            "subscriberCount": self.members_count or 0,
+            "PostsCount": self.posts_count or 0,
+            "CommentsCount": self.comments_count or 0,
         }

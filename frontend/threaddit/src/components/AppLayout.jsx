@@ -16,7 +16,7 @@ export function AppLayout() {
       <main className="flex flex-col flex-1 bg-theme-cultured">
         <Outlet />
       </main>
-      {isAuthenticated && !location.pathname == "/inbox" && (
+      {isAuthenticated && location.pathname != "/inbox" && (
         <div
           className="fixed right-5 bottom-5 w-14 h-14 rounded-xl bg-theme-orange active:scale-90"
           onClick={() => setShowModal(true)}>

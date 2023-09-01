@@ -7,6 +7,7 @@ import Svg from "./Svg";
 import Vote from "./Vote";
 import Reply from "./Reply";
 import AuthConsumer from "./AuthContext";
+import PostMoreOptions from "./PostMoreOptions";
 
 Post.propTypes = {
   post: PropTypes.object,
@@ -91,10 +92,7 @@ export function Post({ post, isExpanded = false }) {
             <Svg type="share" className="w-4 h-4 md:w-6 md:h-6" />
             <p className="text-sm cursor-pointer md:text-base">Share</p>
           </div>
-          <div className="flex items-center space-x-2 cursor-pointer group">
-            <Svg className="w-4 h-4 md:w-6 md:h-6" type="more" />
-            <p className="text-sm cursor-pointer md:text-base">More</p>
-          </div>
+          <PostMoreOptions creatorInfo={post.user_info} threadInfo={post.thread_info} postInfo={post.post_info} />
           <div className="flex items-center space-x-3 md:hidden">
             <Vote
               {...{

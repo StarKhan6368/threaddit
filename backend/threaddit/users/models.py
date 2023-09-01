@@ -31,6 +31,7 @@ class User(db.Model, UserMixin):
     post_info = db.relationship("PostInfo", back_populates="user")
     comment = db.relationship("Comments", back_populates="user")
     reaction = db.relationship("Reactions", back_populates="user")
+    saved_post = db.relationship("SavedPosts", back_populates="user")
     sender = db.relationship(
         "Messages", back_populates="user_sender", foreign_keys="Messages.sender_id"
     )
@@ -88,6 +89,9 @@ class User(db.Model, UserMixin):
                 "registrationDate": self.registration_date,
                 "roles": [r.role.slug for r in self.user_role],
                 "karma": self.user_karma[0].as_dict(),
+                "mod_in": [
+                    r.subthread_id for r in self.user_role if r.role.slug == "mod"
+                ],
             }
             if not include_all
             else {"id": self.id, "email": self.email, **self.as_dict()}

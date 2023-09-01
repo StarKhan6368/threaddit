@@ -11,6 +11,7 @@ import Login, { userLoginAction } from "./pages/login/Login.jsx";
 import Profile from "./pages/profile/Profile.jsx";
 import Register, { userRegisterAction } from "./pages/register/Register.jsx";
 import SubThread from "./pages/thread/SubThread.jsx";
+import SavedPosts from "./pages/saved/SavedPosts.jsx";
 
 const router = createBrowserRouter([
   {
@@ -36,6 +37,14 @@ const router = createBrowserRouter([
       {
         path: "/t/:threadName",
         element: <SubThread />,
+      },
+      {
+        path: "/saved",
+        element: (
+          <RequireAuth>
+            <SavedPosts />
+          </RequireAuth>
+        ),
       },
       {
         path: "/inbox",

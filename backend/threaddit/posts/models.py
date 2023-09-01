@@ -27,6 +27,7 @@ class Posts(db.Model):
     reaction = db.relationship("Reactions", back_populates="post")
     comment = db.relationship("Comments", back_populates="post")
     comment_info = db.relationship("CommentInfo", back_populates="post")
+    saved_post = db.relationship("SavedPosts", back_populates="post")
 
     def __init__(self, user_id, subthread_id, title, media=None, content=None):
         self.user_id = user_id
@@ -45,6 +46,22 @@ class Posts(db.Model):
             "content": self.content,
             "created_at": self.created_at,
         }
+
+
+class SavedPosts(db.Model):
+    __tablename__ = "saved"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"))
+    created_at = db.Column(
+        db.DateTime(timezone=True), nullable=False, default=db.func.now()
+    )
+    user = db.relationship("User", back_populates="saved_post")
+    post = db.relationship("Posts", back_populates="saved_post")
+
+    def __init__(self, user_id, post_id):
+        self.user_id = user_id
+        self.post_id = post_id
 
 
 class PostInfo(db.Model):
@@ -79,6 +96,7 @@ class PostInfo(db.Model):
                 "user_avatar": self.user_avatar,
             },
             "thread_info": {
+                "thread_id": self.thread_id,
                 "thread_name": self.thread_name,
                 "thread_logo": self.thread_logo,
             },
@@ -105,6 +123,13 @@ class PostInfo(db.Model):
                         post_id=self.post_id, user_id=cur_user
                     ).first()
                 ),
+            }
+            p_info["post_info"] = p_info["post_info"] | {
+                "saved": bool(
+                    SavedPosts.query.filter_by(
+                        user_id=cur_user, post_id=self.post_id
+                    ).first()
+                )
             }
         return p_info
 
