@@ -82,6 +82,7 @@ export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShow
                 Edit
               </li>
             )}
+            <li className="p-1 text-sm cursor-pointer md:hidden md:text-base hover:bg-theme-cultured">Share</li>
           </ul>
         )}
       </div>

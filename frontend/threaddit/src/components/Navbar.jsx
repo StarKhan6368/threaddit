@@ -77,7 +77,7 @@ export function Navbar() {
           <select
             name="page"
             id="page"
-            className="py-3 ml-1 rounded-md  md:hidden bg-theme-cultured"
+            className="py-3 ml-1 text-center rounded-md md:hidden bg-theme-cultured"
             onChange={(e) => {
               if (e.target.value !== "logout") {
                 navigate(e.target.value);
@@ -179,7 +179,7 @@ function ThreadSearch() {
         type="search"
         name="search"
         id="search"
-        className="py-0.5 w-46 md:w-full bg-neutral-100 focus:outline-none md:pr-20"
+        className="py-0.5 w-44 md:w-full bg-neutral-100 focus:outline-none md:pr-20"
         placeholder="Find community"
       />
       {queryData?.data && (
@@ -192,8 +192,8 @@ function ThreadSearch() {
               onClick={() => setSearch("")}>
               {subthread.logo && <img src={subthread.logo} className="w-10 h-10 rounded-full" />}
               <div className="flex flex-col">
-                <p className="font-semibold tracking-wide">{subthread.name}</p>
-                <span className="text-sm font-light">{subthread.subscriberCount} Members</span>
+                <p className="text-sm font-semibold tracking-wide md:text-base">{subthread.name}</p>
+                <span className="text-xs font-light md:text-sm">{subthread.subscriberCount} Members</span>
               </div>
             </Link>
           ))}

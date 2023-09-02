@@ -65,12 +65,20 @@ export function Post({ post, isExpanded = false }) {
                   <Link
                     className="text-xs font-medium md:text-sm"
                     to={`/${post.thread_info.thread_name}`}>{` ${post.thread_info.thread_name}`}</Link>
-                  {post.thread_info.logo && <img src={post.thread_info.logo} alt="" className="w-5 h-5 rounded-full" />}
+                  {post.thread_info.thread_logo && (
+                    <img src={post.thread_info.thread_logo} alt="" className="w-5 h-5 rounded-full" />
+                  )}
                 </div>
               </div>
-              <p className="hidden text-sm font-light md:block">{post.post_info.created_at}</p>
+              <div className="hidden space-x-1 md:flex">
+                <p className="text-xs font-light">{post.post_info.created_at}</p>
+                <p className="text-xs">{post.post_info.is_edited && "Edited"}</p>
+              </div>
             </div>
-            <p className="text-xs font-light md:hidden">{post.post_info.created_at}</p>
+            <div className="flex space-x-1 md:hidden">
+              <p className="text-xs font-light">{post.post_info.created_at}</p>
+              <p className="text-xs">{post.post_info.is_edited && "Edited"}</p>
+            </div>
           </div>
         </div>
         <div className="flex justify-around w-full md:justify-evenly md:px-10 md:flex-col md:w-fit">
@@ -122,7 +130,7 @@ export function Post({ post, isExpanded = false }) {
             }}
           />
         </div>
-        <ScrollRestoration />
+        {isExpanded && <ScrollRestoration />}
       </div>
       {modalShow && (
         <Modal setShowModal={setShowModal} showModal={modalShow}>

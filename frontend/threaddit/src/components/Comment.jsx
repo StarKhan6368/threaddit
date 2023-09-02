@@ -15,7 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 Comment.propTypes = {
   children: PropTypes.array,
   comment: PropTypes.object,
-  postId: PropTypes.string,
+  threadID: PropTypes.string,
 };
 
 const borderColors = [
@@ -29,7 +29,7 @@ const borderColors = [
 
 let curColor = 0;
 
-export default function Comment({ children, comment, postId }) {
+export default function Comment({ children, comment, threadID }) {
   const { isAuthenticated, user } = AuthConsumer();
   const listRef = useRef();
   const queryClient = useQueryClient();
@@ -62,7 +62,7 @@ export default function Comment({ children, comment, postId }) {
       } else if (value === "delete") {
         if (window.confirm("Are you sure you want to delete this comment?")) {
           axios.delete(`/api/comments/${comment.comment_info.id}`).then(() => {
-            queryClient.invalidateQueries({ queryKey: ["post/comment", postId] });
+            queryClient.invalidateQueries({ queryKey: ["post/comment", threadID] });
           });
         }
       }
@@ -84,25 +84,34 @@ export default function Comment({ children, comment, postId }) {
         <img src={comment.user_info.user_avatar || avatar} alt="" className="w-5 h-5 rounded-full" />
         <Link to={`/u/${comment.user_info.user_name}`}>{comment.user_info.user_name}</Link>
         <p>{timePassed}</p>
+        <p>{comment.comment_info.is_edited && "Edited"}</p>
       </div>
       <p className="mr-2 ml-1">{comment.comment_info.content}</p>
       <div className="flex justify-around items-center md:justify-between md:mx-10">
-        <select
-          ref={listRef}
-          name="more-options"
-          id="more-options"
-          className="bg-white"
-          onChange={(e) => onEdit(e.target.value)}>
-          <option value="more" selected>
-            More
-          </option>
-          <option value="share">Share</option>
-          {isAuthenticated && user.username === comment.user_info.user_name && <option value="edit">edit</option>}
-          {isAuthenticated &&
-            (user.username === comment.user_info.user_name ||
-              user.mod_in.includes(postId) ||
-              user.roles.includes("admin")) && <option value="delete">delete</option>}
-        </select>
+        {isAuthenticated &&
+        (user.username === comment.user_info.user_name ||
+          user.mod_in.includes(threadID) ||
+          user.roles.includes("admin")) ? (
+          <select
+            ref={listRef}
+            name="more-options"
+            id="more-options"
+            className="text-center bg-white md:px-2"
+            onChange={(e) => onEdit(e.target.value)}>
+            <option value="more" selected>
+              More
+            </option>
+            <option value="share">Share</option>
+            {user.username === comment.user_info.user_name && <option value="edit">Edit</option>}
+            <option value="delete">Delete</option>
+          </select>
+        ) : (
+          <div className="flex items-center space-x-1">
+            <Svg type="share" className="w-4 h-4" />
+            <p className="text-sm cursor-pointer md:text-base">Share</p>
+          </div>
+        )}
+
         <div
           className={`${!children.length && "invisible"} flex items-center space-x-1`}
           onClick={() => setExpandChildren(!expandChildren)}>

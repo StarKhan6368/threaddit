@@ -10,6 +10,7 @@ class Comments(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"))
     parent_id = db.Column(db.Integer, db.ForeignKey("comments.id"))
+    is_edited = db.Column(db.Boolean, default=False)
     has_parent = db.Column(db.Boolean)
     content = db.Column(db.Text)
     created_at = db.Column(
@@ -37,6 +38,7 @@ class CommentInfo(db.Model):
     has_parent = db.Column(db.Boolean)
     parent_id = db.Column(db.Integer)
     content = db.Column(db.Text)
+    is_edited = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime(timezone=True))
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"))
     post = db.relationship("Posts", back_populates="comment_info")
@@ -64,6 +66,7 @@ class CommentInfo(db.Model):
                 "created_at": self.created_at,
                 "comment_karma": self.comment_karma,
                 "has_parent": self.has_parent,
+                "is_edited": self.is_edited,
                 "parent_id": self.parent_id,
             },
         }

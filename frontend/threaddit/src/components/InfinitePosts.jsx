@@ -1,22 +1,47 @@
 import PropTypes from "prop-types";
 import Post from "./Post";
-import Spinner from "./Spinner";
+import { useEffect } from "react";
 
-PostLayout.propTypes = {
-  data: PropTypes.array,
+InfinitePostsLayout.propTypes = {
+  data: PropTypes.object,
+  fetchNextpage: PropTypes.func,
+  hasNextPage: PropTypes.bool,
   isFetching: PropTypes.bool,
   setSortBy: PropTypes.func,
   setDuration: PropTypes.func,
   sortBy: PropTypes.string,
   duration: PropTypes.string,
+  forSaved: PropTypes.bool,
 };
 
-export default function PostLayout({ duration, sortBy, setSortBy, setDuration, isFetching, data }) {
+export default function InfinitePostsLayout({
+  duration,
+  hasNextPage,
+  isFetching,
+  fetchNextpage,
+  sortBy,
+  setSortBy,
+  setDuration,
+  forSaved = false,
+  data,
+}) {
+  useEffect(() => {
+    const onScroll = (event) => {
+      const { scrollTop, scrollHeight, clientHeight } = event.target.scrollingElement;
+      if (scrollHeight - scrollTop <= clientHeight * 2 && hasNextPage && !isFetching) {
+        fetchNextpage();
+      }
+    };
+    window.addEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [fetchNextpage, hasNextPage, isFetching]);
   return (
-    <>
-      <div
-        id="main-content"
-        className="flex flex-col flex-1 p-2 m-2 space-y-3 w-full h-full rounded-lg bg-theme-cultured md:bg-white md:m-3">
+    <div
+      id="main-content"
+      className="flex flex-col flex-1 p-2 m-2 space-y-3 w-full h-full rounded-lg bg-theme-cultured md:bg-white md:m-3">
+      {!forSaved && (
         <header className="flex justify-between items-center w-full">
           <div className="flex items-center space-x-2 md:hidden">
             <span>Sort by</span>
@@ -100,16 +125,16 @@ export default function PostLayout({ duration, sortBy, setSortBy, setDuration, i
             </li>
           </ul>
         </header>
-        {isFetching ? (
-          <Spinner />
-        ) : (
-          <ul className="flex flex-col flex-1 space-y-5 w-full h-full">
-            {data?.map((post) => (
+      )}
+      <div className="flex flex-col flex-1 space-y-1 w-full h-full md:space-y-3">
+        {data?.pages.map((pageData, index) => (
+          <ul className="flex flex-col flex-1 space-y-1 w-full h-full md:space-y-3" key={index}>
+            {pageData?.map((post) => (
               <Post post={post} key={post.post_info.id} />
             ))}
           </ul>
-        )}
+        ))}
       </div>
-    </>
+    </div>
   );
 }

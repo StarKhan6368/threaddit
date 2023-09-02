@@ -40,6 +40,7 @@ def update_comment(cid):
     if not comment.user_id == current_user.id or not current_user:
         return jsonify({"message": "Unauthorized"}), 401
     comment.content = request.json.get("content")
+    comment.is_edited = True
     db.session.commit()
     return jsonify({"message": "Comment updated"}), 200
 

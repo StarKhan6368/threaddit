@@ -118,17 +118,15 @@ def update_post(pid):
         media = filename
     elif form_data.get("content_type") == "url":
         media = form_data.get("content_url")
-    update_post = Posts.query.filter_by(id=pid)
+    update_post = Posts.query.filter_by(id=pid).first()
     if not update_post:
         return jsonify({"message": "Invalid Post"}), 400
     else:
-        update_post = update_post.first()
         if update_post.user_id != current_user.id:
             return jsonify({"message": "Unauthorized"}), 401
-        update_post = update_post.first()
         update_post.title = form_data.get("title")
         update_post.content = form_data.get("content")
-        update_post.is_edit = True
+        update_post.is_edited = True
         if media:
             update_post.media = media
     db.session.commit()
@@ -209,7 +207,14 @@ def get_posts_of_user(user_name):
 @posts.route("/posts/saved", methods=["GET"])
 @login_required
 def get_saved():
-    saved_posts = SavedPosts.query.filter_by(user_id=current_user.id).all()
+    limit = request.args.get("limit", default=20, type=int)
+    offset = request.args.get("offset", default=0, type=int)
+    saved_posts = (
+        SavedPosts.query.filter(SavedPosts.user_id == current_user.id)
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
     post_infos = [PostInfo.query.filter_by(post_id=pid.post_id) for pid in saved_posts]
     return jsonify([p.first().as_dict() for p in post_infos]), 200
 
