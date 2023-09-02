@@ -97,3 +97,10 @@ def user_get_by_username(user_name):
 @auth_role(["admin", "sup-admin", "owner"])
 def users_get():
     return jsonify(User.get_all()), 200
+
+
+@user.route("/user/search/<search>")
+@login_required
+def get_user(search):
+    users = User.query.filter(User.username.ilike(f"%{search}%"))
+    return jsonify([user.as_dict() for user in users]), 200

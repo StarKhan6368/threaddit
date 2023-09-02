@@ -98,9 +98,10 @@ export default function Comment({ children, comment, postId }) {
           </option>
           <option value="share">Share</option>
           {isAuthenticated && user.username === comment.user_info.user_name && <option value="edit">edit</option>}
-          {isAuthenticated && (user.username === comment.user_info.user_name || user.mod_in.includes(postId)) && (
-            <option value="delete">delete</option>
-          )}
+          {isAuthenticated &&
+            (user.username === comment.user_info.user_name ||
+              user.mod_in.includes(postId) ||
+              user.roles.includes("admin")) && <option value="delete">delete</option>}
         </select>
         <div
           className={`${!children.length && "invisible"} flex items-center space-x-1`}

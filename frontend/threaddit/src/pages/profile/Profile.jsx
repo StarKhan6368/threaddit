@@ -11,7 +11,7 @@ import UpdateUser from "../../components/UpdateUser";
 import { Chat } from "../inbox/Inbox";
 
 export function Profile() {
-  const { logout } = AuthConsumer();
+  const { logout, user } = AuthConsumer();
   const { username } = useParams();
   const [action, setAction] = useState(false);
   const [sortBy, setSortBy] = useState("top");
@@ -44,6 +44,9 @@ export function Profile() {
     },
     enabled: data?.username !== undefined,
   });
+  if (userIsFetching || isFetching) {
+    return <Spinner />;
+  }
   return (
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
       <div className="flex flex-col items-center w-full bg-theme-cultured">
@@ -80,8 +83,12 @@ export function Profile() {
             value={action}
             onChange={(e) => setAction(e.target.value)}>
             <option value={false}>Choose an action</option>
-            <option value="edit">Update Profile</option>
-            <option value="delete">Delete Account</option>
+            {user.username === data.username && (
+              <>
+                <option value="edit">Update Profile</option>
+                <option value="delete">Delete Account</option>
+              </>
+            )}
             <option value="message">Message</option>
           </select>
         </div>

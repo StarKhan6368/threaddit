@@ -1,5 +1,6 @@
 from threaddit.subthreads.models import Subthread, SubthreadInfo, Subscription
 from flask_login import current_user, login_required
+from threaddit.users.models import User
 from flask import Blueprint, jsonify, request
 from threaddit.models import UserRole
 from threaddit import db, app
@@ -141,7 +142,11 @@ def update_thread(tid):
     if not thread:
         return jsonify({"message": "Invalid Thread"}), 400
     user_role = UserRole.query.filter_by(user_id=current_user.id, subthread_id=tid)
-    if not current_user.id != thread.first().created_by or not user_role:
+    if (
+        not current_user.id != thread.first().created_by
+        or not user_role
+        or not current_user.has_role("admin")
+    ):
         return jsonify({"message": "Unauthorized"}), 401
     image = request.files.get("media")
     form_data = request.form.to_dict()
@@ -159,3 +164,53 @@ def update_thread(tid):
         thread.logo = media
     db.session.commit()
     return jsonify({"message": "Thread updated"}), 200
+
+
+@threads.route("/thread/mod/<tid>/<username>", methods=["PUT"])
+@login_required
+def new_mod(tid, username):
+    thread = Subthread.query.filter_by(id=tid).first()
+    user = User.query.filter_by(username=username).first()
+    if (
+        thread.created_by == user.id
+        or current_user.has_role("admin")
+        or current_user.has_role("mod")
+    ):
+        current_user_roles = UserRole.query.filter_by(user_id=user.id, subthread_id=tid)
+        if not current_user_roles:
+            return jsonify({"message": "Unauthorized"}), 401
+        new_role = UserRole(user_id=user.id, subthread_id=tid, role_id=1)
+        db.session.add(new_role)
+        db.session.commit()
+        return jsonify({"message": "Moderator added"}), 200
+    return jsonify({"message": "Unauthorized"}), 401
+
+
+@threads.route("/thread/mod/<tid>/<username>", methods=["DELETE"])
+@login_required
+def delete_mod(tid, username):
+    thread = Subthread.query.filter_by(id=tid).first()
+    user = User.query.filter_by(username=username).first()
+    if (
+        thread.created_by == user.id
+        or current_user.has_role("admin")
+        or current_user.has_role("mod")
+    ):
+        current_user_roles = UserRole.query.filter_by(user_id=user.id, subthread_id=tid)
+        if not current_user_roles:
+            return jsonify({"message": "Unauthorized"}), 401
+        existing_role = UserRole.query.filter_by(
+            user_id=user.id, subthread_id=tid
+        ).first()
+        if (
+            existing_role.user.has_role("admin")
+            or thread.created_by == existing_role.user_id
+        ):
+            return jsonify({"message": "Unauthorized"}), 401
+        else:
+            existing_role = UserRole.query.filter_by(
+                user_id=user.id, subthread_id=tid
+            ).delete()
+            db.session.commit()
+            return jsonify({"message": "Moderator deleted"}), 200
+    return jsonify({"message": "Unauthorized"}), 401

@@ -118,17 +118,21 @@ def update_post(pid):
         media = filename
     elif form_data.get("content_type") == "url":
         media = form_data.get("content_url")
-    new_post = Posts.query.filter_by(id=pid)
-    if not new_post:
+    update_post = Posts.query.filter_by(id=pid)
+    if not update_post:
         return jsonify({"message": "Invalid Post"}), 400
     else:
-        new_post = new_post.first()
-        new_post.title = form_data.get("title")
-        new_post.content = form_data.get("content")
+        update_post = update_post.first()
+        if update_post.user_id != current_user.id:
+            return jsonify({"message": "Unauthorized"}), 401
+        update_post = update_post.first()
+        update_post.title = form_data.get("title")
+        update_post.content = form_data.get("content")
+        update_post.is_edit = True
         if media:
-            new_post.media = media
+            update_post.media = media
     db.session.commit()
-    return jsonify({"message": "Post created"}), 200
+    return jsonify({"message": "Post udpated"}), 200
 
 
 @posts.route("/post/<pid>", methods=["DELETE"])
@@ -150,7 +154,7 @@ def delete_post(pid):
     current_user_mod_in = [
         r.subthread_id for r in current_user.user_role if r.role.slug == "mod"
     ]
-    if post.subthread_id in current_user_mod_in:
+    if post.subthread_id in current_user_mod_in or current_user.has_role("mod"):
         Posts.query.filter_by(id=pid).delete()
         db.session.commit()
     else:

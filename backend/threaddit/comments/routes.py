@@ -54,7 +54,11 @@ def delete_comment(cid):
     current_user_role = UserRole.query.filter_by(
         user_id=current_user.id, subthread_id=comment.post_id
     )
-    if not comment.user_id == current_user.id or not current_user:
+    if not (
+        comment.user_id == current_user.id
+        or current_user_role
+        or current_user.has_role("admin")
+    ):
         return jsonify({"message": "Unauthorized"}), 401
     Comments.query.filter_by(id=cid).delete()
     db.session.commit()

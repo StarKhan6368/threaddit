@@ -3,6 +3,7 @@ import axios from "axios";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AuthConsumer from "../../components/AuthContext";
+import ManageMods from "../../components/ManageMods";
 import Modal from "../../components/Modal";
 import { NewThread } from "../../components/NewThread";
 import PostLayout from "../../components/PostLayout";
@@ -49,6 +50,9 @@ export function SubThread() {
       case "edit":
         setModalData(<NewThread ogInfo={threadData} edit={true} setShowModal={setModalData} />);
         break;
+      case "manage-mods":
+        setModalData(<ManageMods mods={threadData.modList || []} threadId={threadData.id} />);
+        break;
       default:
         navigate(`/u/${value}`);
     }
@@ -91,9 +95,10 @@ export function SubThread() {
               id="mods"
               className="px-10 py-2 rounded-md md:block bg-theme-cultured">
               <option value={"more"}>More</option>
-              {isAuthenticated && user.mod_in.includes(threadData.id) && (
+              {isAuthenticated && (user.mod_in.includes(threadData.id) || user.roles.includes("admin")) && (
                 <optgroup label="Subthread Options">
                   <option value="edit">Edit Subthread</option>
+                  <option value="manage-mods">Manage Mods</option>
                 </optgroup>
               )}
               <optgroup label="ModList">
