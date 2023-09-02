@@ -91,7 +91,7 @@ export default function Comment({ children, comment, postId }) {
           ref={listRef}
           name="more-options"
           id="more-options"
-          className="px-4 bg-white"
+          className="bg-white"
           onChange={(e) => onEdit(e.target.value)}>
           <option value="more" selected>
             More

@@ -77,7 +77,7 @@ export function Navbar() {
           <select
             name="page"
             id="page"
-            className="p-1 py-3 ml-1 rounded-md md:hidden bg-theme-cultured"
+            className="py-3 ml-1 rounded-md  md:hidden bg-theme-cultured"
             onChange={(e) => {
               if (e.target.value !== "logout") {
                 navigate(e.target.value);
