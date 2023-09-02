@@ -1,5 +1,5 @@
 from threaddit import db, ma, app
-import base64
+import base64, os
 from flask import send_file, jsonify
 from datetime import datetime, timedelta
 from threaddit.subthreads.models import Subthread
@@ -17,6 +17,7 @@ class Posts(db.Model):
     subthread_id = db.Column(db.Integer, db.ForeignKey("subthreads.id"))
     title = db.Column(db.Text, nullable=False)
     media = db.Column(db.Text)
+    is_edited = db.Column(db.Boolean, default=False)
     content = db.Column(db.Text)
     created_at = db.Column(
         db.DateTime(timezone=True), nullable=False, default=db.func.now()
@@ -37,12 +38,18 @@ class Posts(db.Model):
         self.content = content
 
     def as_dict(self):
+        if self.media and not str(self.media).startswith("http"):
+            data = open(f"{app.config['UPLOAD_FOLDER']}/{self.media}", "rb").read()
+            media = f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
+        else:
+            media = self.media
         return {
             "post_id": self.id,
+            "is_edited": self.is_edited,
             "user_id": self.user_id,
             "subthread_id": self.subthread_id,
             "title": self.title,
-            "media": self.media,
+            "media": media,
             "content": self.content,
             "created_at": self.created_at,
         }
@@ -71,6 +78,7 @@ class PostInfo(db.Model):
     thread_logo = db.Column(db.Text)
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), primary_key=True)
     title = db.Column(db.Text)
+    is_edited = db.Column(db.Boolean, default=False)
     media = db.Column(db.Text)
     content = db.Column(db.Text)
     created_at = db.Column(db.DateTime(timezone=True))
@@ -89,21 +97,40 @@ class PostInfo(db.Model):
             media = f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
         else:
             media = self.media
+        if self.thread_logo and not str(self.thread_logo).startswith("http"):
+            data = open(
+                f"{app.config['UPLOAD_FOLDER']}/{self.thread_logo}", "rb"
+            ).read()
+            thread_logo = (
+                f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
+            )
+        else:
+            thread_logo = self.thread_logo
+        if self.user_avatar and not str(self.user_avatar).startswith("http"):
+            data = open(
+                f"{app.config['UPLOAD_FOLDER']}/{self.user_avatar}", "rb"
+            ).read()
+            user_avatar = (
+                f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
+            )
+        else:
+            user_avatar = self.user_avatar
         cur_user = current_user.id if current_user.is_authenticated else None
         p_info = {
             "user_info": {
                 "user_name": self.user_name,
-                "user_avatar": self.user_avatar,
+                "user_avatar": user_avatar,
             },
             "thread_info": {
                 "thread_id": self.thread_id,
                 "thread_name": self.thread_name,
-                "thread_logo": self.thread_logo,
+                "thread_logo": thread_logo,
             },
             "post_info": {
                 "id": self.post_id,
                 "title": self.title,
                 "media": media,
+                "is_edited": self.is_edited,
                 "content": self.content,
                 "created_at": self.created_at,
                 "post_karma": self.post_karma,

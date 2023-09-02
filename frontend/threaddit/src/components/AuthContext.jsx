@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import PropTypes from "prop-types";
-import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import PropTypes from "prop-types";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
 

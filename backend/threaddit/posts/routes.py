@@ -99,6 +99,38 @@ def new_post():
     return jsonify({"message": "Post created"}), 200
 
 
+@posts.route("/post/<pid>", methods=["PATCH"])
+@login_required
+def update_post(pid):
+    image = request.files.get("media")
+    form_data = request.form.to_dict()
+    PostValidator().load(
+        {
+            "subthread_id": form_data.get("subthread_id"),
+            "title": form_data.get("title"),
+            "content": form_data.get("content"),
+        }
+    )
+    media = None
+    if form_data.get("content_type") == "image" and image:
+        filename = secure_filename(image.filename)
+        image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        media = filename
+    elif form_data.get("content_type") == "url":
+        media = form_data.get("content_url")
+    new_post = Posts.query.filter_by(id=pid)
+    if not new_post:
+        return jsonify({"message": "Invalid Post"}), 400
+    else:
+        new_post = new_post.first()
+        new_post.title = form_data.get("title")
+        new_post.content = form_data.get("content")
+        if media:
+            new_post.media = media
+    db.session.commit()
+    return jsonify({"message": "Post created"}), 200
+
+
 @posts.route("/post/<pid>", methods=["DELETE"])
 @login_required
 def delete_post(pid):

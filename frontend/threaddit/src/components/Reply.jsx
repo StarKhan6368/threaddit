@@ -9,13 +9,20 @@ Reply.propTypes = {
   parentComment: PropTypes.object,
   isComment: PropTypes.bool,
   setShowModal: PropTypes.func,
+  edit: PropTypes.bool,
 };
-export default function Reply({ parentComment, isComment = false, setShowModal }) {
+export default function Reply({ parentComment, isComment = false, setShowModal, edit = false }) {
   const queryClient = useQueryClient();
   const { postId } = useParams();
   const [reply, setReply] = useState("");
   async function handleSubmit(e) {
     e?.preventDefault();
+    if (edit) {
+      return axios.patch(`/api/comments/${parentComment.comment_info.id}`, { content: reply }).then(() => {
+        setShowModal(false);
+        queryClient.invalidateQueries({ queryKey: ["post/comment", postId] });
+      });
+    }
     const formData = new FormData();
     formData.append("content", reply);
     if (isComment) {
@@ -44,7 +51,7 @@ export default function Reply({ parentComment, isComment = false, setShowModal }
       </div>
       <form className="flex-1 px-5 space-y-5" onSubmit={handleSubmit}>
         <label htmlFor="content" className="flex flex-col space-y-1">
-          <span className="ml-2 text-sm font-semibold">Reply</span>
+          <span className="ml-2 text-sm font-semibold">{edit ? "Edit to" : "Reply"}</span>
           <input
             autoFocus
             type="text"

@@ -1,17 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import avatar from "../../assets/avatar.png";
+import AuthConsumer from "../../components/AuthContext";
 import Modal from "../../components/Modal";
 import PostLayout from "../../components/PostLayout";
 import Spinner from "../../components/Spinner";
-import Svg from "../../components/Svg";
+import UpdateUser from "../../components/UpdateUser";
 import { Chat } from "../inbox/Inbox";
 
 export function Profile() {
+  const { logout } = AuthConsumer();
   const { username } = useParams();
-  const [showModal, setShowModal] = useState(false);
+  const [action, setAction] = useState(false);
   const [sortBy, setSortBy] = useState("top");
   const [duration, setDuration] = useState("alltime");
   const { data, isFetching: userIsFetching } = useQuery({
@@ -20,6 +22,19 @@ export function Profile() {
       return await axios.get(`/api/user/${username}`).then((res) => res.data);
     },
   });
+  useEffect(() => {
+    switch (action) {
+      case "message":
+        setAction(<Chat sender={{ name: data.username }} setCurChat={setAction} newChat={true} />);
+        break;
+      case "edit":
+        setAction(<UpdateUser setModal={setAction} />);
+        break;
+      case "delete":
+        axios.delete(`/api/user`).then(() => logout());
+        break;
+    }
+  }, [action, data, username, logout]);
   const { data: userPosts, isFetching } = useQuery({
     queryKey: ["user", data?.username, "posts", sortBy, duration],
     queryFn: async () => {
@@ -40,13 +55,6 @@ export function Profile() {
                 <h1 className="flex items-center space-x-2 text-lg font-semibold">
                   u/{data.username}{" "}
                   <span className="hidden text-sm font-light md:inline">- Created on: {data.registrationDate}</span>
-                  <Svg
-                    type="mail"
-                    className="w-5 h-5"
-                    active={true}
-                    defaultStyle={false}
-                    onClick={() => setShowModal(true)}
-                  />
                 </h1>
                 <p className="hidden md:block">{data.bio}</p>
                 <div className="flex flex-col justify-between w-11/12 md:flex-row">
@@ -65,6 +73,17 @@ export function Profile() {
               </div>
             </div>
           )}
+          <select
+            name="options"
+            id="options"
+            className="p-2 mt-2 bg-white rounded-md border-2"
+            value={action}
+            onChange={(e) => setAction(e.target.value)}>
+            <option value={false}>Choose an action</option>
+            <option value="edit">Update Profile</option>
+            <option value="delete">Delete Account</option>
+            <option value="message">Message</option>
+          </select>
         </div>
       </div>
       {!isFetching ? (
@@ -79,9 +98,9 @@ export function Profile() {
       ) : (
         <Spinner />
       )}
-      {showModal && (
-        <Modal showModal={showModal} setShowModal={setShowModal}>
-          <Chat sender={{ name: data.username }} setCurChat={setShowModal} newChat={true} />
+      {action !== false && (
+        <Modal showModal={action} setShowModal={setAction}>
+          {action}
         </Modal>
       )}
     </div>

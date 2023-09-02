@@ -8,10 +8,14 @@ import { useState } from "react";
 import Reply from "./Reply";
 import Modal from "./Modal";
 import AuthConsumer from "./AuthContext";
+import { useRef } from "react";
+import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
 
 Comment.propTypes = {
   children: PropTypes.array,
   comment: PropTypes.object,
+  postId: PropTypes.string,
 };
 
 const borderColors = [
@@ -25,8 +29,10 @@ const borderColors = [
 
 let curColor = 0;
 
-export default function Comment({ children, comment }) {
-  const { isAuthenticated } = AuthConsumer();
+export default function Comment({ children, comment, postId }) {
+  const { isAuthenticated, user } = AuthConsumer();
+  const listRef = useRef();
+  const queryClient = useQueryClient();
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModaData] = useState(<></>);
   const [expandChildren, setExpandChildren] = useState(false);
@@ -39,6 +45,31 @@ export default function Comment({ children, comment }) {
     } else {
       alert("You must be logged in to reply.");
     }
+  }
+  function onEdit(value) {
+    if (isAuthenticated) {
+      if (value === "edit") {
+        setShowModal(true);
+        setModaData(
+          <Reply
+            className="w-5/6 h-5/6"
+            parentComment={comment}
+            isComment={true}
+            edit={true}
+            setShowModal={setShowModal}
+          />
+        );
+      } else if (value === "delete") {
+        if (window.confirm("Are you sure you want to delete this comment?")) {
+          axios.delete(`/api/comments/${comment.comment_info.id}`).then(() => {
+            queryClient.invalidateQueries({ queryKey: ["post/comment", postId] });
+          });
+        }
+      }
+    } else {
+      alert("You must be logged in to reply.");
+    }
+    listRef.current.value = "more";
   }
   function colorSquence() {
     if (curColor == borderColors.length) {
@@ -56,10 +87,21 @@ export default function Comment({ children, comment }) {
       </div>
       <p className="mr-2 ml-1">{comment.comment_info.content}</p>
       <div className="flex justify-around items-center md:justify-between md:mx-10">
-        <div className="flex items-center space-x-1">
-          <Svg type="share" className="w-4 h-4" />
-          <p className="text-sm cursor-pointer md:text-base">Share</p>
-        </div>
+        <select
+          ref={listRef}
+          name="more-options"
+          id="more-options"
+          className="px-4 bg-white"
+          onChange={(e) => onEdit(e.target.value)}>
+          <option value="more" selected>
+            More
+          </option>
+          <option value="share">Share</option>
+          {isAuthenticated && user.username === comment.user_info.user_name && <option value="edit">edit</option>}
+          {isAuthenticated && (user.username === comment.user_info.user_name || user.mod_in.includes(postId)) && (
+            <option value="delete">delete</option>
+          )}
+        </select>
         <div
           className={`${!children.length && "invisible"} flex items-center space-x-1`}
           onClick={() => setExpandChildren(!expandChildren)}>

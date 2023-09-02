@@ -1,6 +1,7 @@
 from threaddit.subthreads.models import Subthread, SubthreadInfo, Subscription
 from flask_login import current_user, login_required
 from flask import Blueprint, jsonify, request
+from threaddit.models import UserRole
 from threaddit import db, app
 from werkzeug.utils import secure_filename
 import os
@@ -131,3 +132,30 @@ def new_thread():
     db.session.add(new_sub)
     db.session.commit()
     return jsonify({"message": "Thread created"}), 200
+
+
+@threads.route("/thread/<tid>", methods=["PATCH"])
+@login_required
+def update_thread(tid):
+    thread = Subthread.query.filter_by(id=tid)
+    if not thread:
+        return jsonify({"message": "Invalid Thread"}), 400
+    user_role = UserRole.query.filter_by(user_id=current_user.id, subthread_id=tid)
+    if not current_user.id != thread.first().created_by or not user_role:
+        return jsonify({"message": "Unauthorized"}), 401
+    image = request.files.get("media")
+    form_data = request.form.to_dict()
+    if form_data.get("content_type") == "image" and image:
+        filename = secure_filename(image.filename)
+        image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+        media = filename
+    elif form_data.get("content_type") == "url":
+        media = form_data.get("content_url")
+    else:
+        media = None
+    thread = thread.first()
+    thread.description = form_data.get("description")
+    if media:
+        thread.logo = media
+    db.session.commit()
+    return jsonify({"message": "Thread updated"}), 200

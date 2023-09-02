@@ -51,8 +51,8 @@ function SideBarComponent({ threadList }) {
     <ul className="flex flex-col space-y-4 w-48 list-none">
       {threadList?.slice(0, 10).map((thread) => (
         <Link to={`/${thread.name}`} className="flex justify-between w-48 cursor-pointer" key={thread.name}>
-          <div className="flex items-center space-x-3">
-            <img src={thread.logo} alt="" className="w-6 h-6 rounded-full" />
+          <div className={`flex items-center space-x-3 ${!thread.logo && "pl-9"}`}>
+            {thread.logo && <img src={thread.logo} alt="" className="w-6 h-6 rounded-full" />}
             <span className="">{thread.name}</span>
           </div>
           <span className="p-1 px-2 text-sm font-semibold rounded-md bg-theme-gray-blue">{thread.subscriberCount}</span>

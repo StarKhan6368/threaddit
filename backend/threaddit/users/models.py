@@ -1,8 +1,10 @@
 from sqlalchemy import func
-from threaddit import db, login_manager
+from threaddit import db, login_manager, app
 from flask_login import UserMixin
-from threaddit import ma
+import base64, os
+from threaddit import ma, app
 from threaddit.models import Role, UserRole
+from werkzeug.utils import secure_filename
 from flask_marshmallow.fields import fields
 from marshmallow.exceptions import ValidationError
 
@@ -55,13 +57,17 @@ class User(db.Model, UserMixin):
         db.session.add(self)
         db.session.commit()
 
-    def patch(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        db.session.commit()
-
-    def delete(self):
-        db.session.delete(self)
+    def patch(self, image, form_data):
+        avatar = None
+        if form_data.get("content_type") == "image" and image:
+            filename = secure_filename(image.filename)
+            image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
+            avatar = filename
+        elif form_data.get("content_type") == "url":
+            avatar = form_data.get("content_url")
+        if avatar:
+            self.avatar = avatar
+        self.bio = form_data.get("bio")
         db.session.commit()
 
     def has_role(self, role):
@@ -81,10 +87,15 @@ class User(db.Model, UserMixin):
         return all_users
 
     def as_dict(self, include_all=False) -> dict:
+        if self.avatar and not str(self.avatar).startswith("http"):
+            data = open(f"{app.config['UPLOAD_FOLDER']}/{self.avatar}", "rb").read()
+            avatar = f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
+        else:
+            avatar = self.avatar
         return (
             {
                 "username": self.username,
-                "avatar": self.avatar,
+                "avatar": avatar,
                 "bio": self.bio,
                 "registrationDate": self.registration_date,
                 "roles": [r.role.slug for r in self.user_role],
@@ -140,17 +151,6 @@ class UserRegisterValidator(ma.SQLAlchemySchema):
     )
     email = fields.Email(required=True, validate=[email_validator])
     password = fields.Str(required=True, validate=[fields.validate.Length(min=8)])
-
-
-class UsersPatchValidator(ma.SQLAlchemySchema):
-    class Meta:
-        model = User
-
-    username = fields.Str(
-        validate=[fields.validate.Length(min=4, max=15), username_validator]
-    )
-    avatar = fields.Str()
-    bio = fields.Str()
 
 
 class UsersKarma(db.Model):

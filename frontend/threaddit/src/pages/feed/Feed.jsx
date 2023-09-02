@@ -1,11 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import PostLayout from "../../components/PostLayout";
 import ThreadsSidebar from "../../components/ThreadsSidebar";
+import AuthConsumer from "../../components/AuthContext";
 
 export function Feed() {
+  const { isAuthenticated } = AuthConsumer();
+  const navigate = useNavigate();
   const params = useParams();
   const [sortBy, setSortBy] = useState("top");
   const [duration, setDuration] = useState("alltime");
@@ -17,6 +20,9 @@ export function Feed() {
         .then((data) => data.data);
     },
   });
+  if (params.feedName == "home" && !isAuthenticated) {
+    return navigate("/login");
+  }
   return (
     <>
       <main className="flex flex-1 max-w-full bg-theme-cultured">

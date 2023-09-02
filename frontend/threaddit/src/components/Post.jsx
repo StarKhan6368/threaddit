@@ -65,7 +65,7 @@ export function Post({ post, isExpanded = false }) {
                   <Link
                     className="text-xs font-medium md:text-sm"
                     to={`/${post.thread_info.thread_name}`}>{` ${post.thread_info.thread_name}`}</Link>
-                  <img src={post.thread_info.logo} alt="" className="w-5 h-5 rounded-full" />
+                  {post.thread_info.logo && <img src={post.thread_info.logo} alt="" className="w-5 h-5 rounded-full" />}
                 </div>
               </div>
               <p className="hidden text-sm font-light md:block">{post.post_info.created_at}</p>
@@ -92,7 +92,13 @@ export function Post({ post, isExpanded = false }) {
             <Svg type="share" className="w-4 h-4 md:w-6 md:h-6" />
             <p className="text-sm cursor-pointer md:text-base">Share</p>
           </div>
-          <PostMoreOptions creatorInfo={post.user_info} threadInfo={post.thread_info} postInfo={post.post_info} />
+          <PostMoreOptions
+            creatorInfo={post.user_info}
+            threadInfo={post.thread_info}
+            postInfo={post.post_info}
+            setShowModal={setShowModal}
+            setModalData={setModalData}
+          />
           <div className="flex items-center space-x-3 md:hidden">
             <Vote
               {...{

@@ -1,10 +1,10 @@
 from flask import Blueprint, request, jsonify
 from marshmallow.exceptions import ValidationError
+from threaddit import db
 from threaddit.users.models import (
     UserLoginValidator,
     UserRegisterValidator,
     User,
-    UsersPatchValidator,
 )
 
 # from threaddit.config import SECRET_KEY
@@ -59,16 +59,18 @@ def user_register():
 @user.route("/user", methods=["PATCH"])
 @login_required
 def user_patch():
-    UsersPatchValidator().load(request.json)
-    current_user.patch(**request.json)
+    image = request.files.get("avatar")
+    form_data = request.form.to_dict()
+    current_user.patch(image=image, form_data=form_data)
     return jsonify(current_user.as_dict()), 200
 
 
 @user.route("/user", methods=["DELETE"])
 @login_required
 def user_delete():
-    current_user.delete()
+    User.query.filter_by(id=current_user.id).delete()
     logout_user()
+    db.session.commit()
     return jsonify({"message": "Successfully deleted"}), 200
 
 
@@ -80,12 +82,14 @@ def user_get():
 
 @user.route("/user/<user_name>", methods=["GET"])
 def user_get_by_username(user_name):
-    return (
-        jsonify(
-            User.query.filter_by(username=user_name).first().as_dict(include_all=False)
-        ),
-        200,
-    )
+    user = User.query.filter_by(username=user_name)
+    if user:
+        return (
+            jsonify(user.first().as_dict(include_all=False)),
+            200,
+        )
+    else:
+        return jsonify({"message": "User not found"}), 404
 
 
 @user.route("/users", methods=["GET"])

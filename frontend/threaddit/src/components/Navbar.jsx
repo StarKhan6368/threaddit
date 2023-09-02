@@ -61,7 +61,7 @@ export function Navbar() {
             to={`/u/${user.username}`}
             className="hidden md:flex items-center space-x-2 bg-theme-cultured rounded-3xl pr-3 py-0.5">
             <img
-              src={user.profile ? user.profile : avatar}
+              src={user.avatar ? user.avatar : avatar}
               alt="profile-picture"
               className="w-10 h-10 rounded-full duration-500 cursor-pointer hover:scale-125 md:block"
             />
@@ -78,19 +78,25 @@ export function Navbar() {
             name="page"
             id="page"
             className="p-1 py-3 ml-1 rounded-md md:hidden bg-theme-cultured"
-            onChange={(e) => navigate(e.target.value)}
+            onChange={(e) => {
+              if (e.target.value !== "logout") {
+                navigate(e.target.value);
+              } else {
+                logout();
+                return navigate("/all");
+              }
+            }}
             value={location.pathname}>
             <optgroup label="Feeds">
               <option value="/home">Home</option>
               <option value="/popular">Popular</option>
-              <option value="/all" selected>
-                All
-              </option>
+              <option value="/all">All</option>
             </optgroup>
             <optgroup label="Other">
               <option value="/inbox">Inbox</option>
               <option value="/saved">Saved</option>
               <option value={`/u/${user.username}`}>Profile</option>
+              <option value="logout">Logout</option>
             </optgroup>
           </select>
         </div>
@@ -181,10 +187,10 @@ function ThreadSearch() {
           {queryData?.data?.slice(0, 5).map((subthread) => (
             <Link
               to={`/${subthread.name}`}
-              className="flex space-x-5 cursor-pointer"
+              className={`flex space-x-5 cursor-pointer ${!subthread.logo && "pl-[3.75rem]"}`}
               key={subthread.name}
               onClick={() => setSearch("")}>
-              <img src={subthread.logo} className="w-10 h-10 rounded-full" />
+              {subthread.logo && <img src={subthread.logo} className="w-10 h-10 rounded-full" />}
               <div className="flex flex-col">
                 <p className="font-semibold tracking-wide">{subthread.name}</p>
                 <span className="text-sm font-light">{subthread.subscriberCount} Members</span>

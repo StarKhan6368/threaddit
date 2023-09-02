@@ -1,17 +1,21 @@
 import AuthConsumer from "./AuthContext";
 import avatar from "../assets/avatar.png";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import axios from "axios";
+import { focusManager, useQueryClient } from "@tanstack/react-query";
 
 NewThread.propTypes = {
   subThreadName: PropTypes.string,
   setShowModal: PropTypes.func,
+  edit: PropTypes.bool,
+  ogInfo: PropTypes.object,
 };
 
-export function NewThread({ subThreadName, setShowModal }) {
-  const [subName, setSubName] = useState(subThreadName);
-  const [description, setDescription] = useState("");
+export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = {} }) {
+  const queryClient = useQueryClient();
+  const [subName, setSubName] = useState(edit ? ogInfo.name : subThreadName);
+  const [description, setDescription] = useState(ogInfo?.description || "");
   const [media, setMedia] = useState("");
   const [mediaType, setMediaType] = useState("image");
   const [imageUrl, setImageUrl] = useState("");
@@ -19,43 +23,64 @@ export function NewThread({ subThreadName, setShowModal }) {
   async function handleSubmit(e) {
     e?.preventDefault();
     const formData = new FormData();
-    formData.append("name", `t/${subName}`);
+    if (!edit) {
+      formData.append("name", `t/${subName}`);
+    }
     formData.append("content_type", mediaType);
     formData.append("content_url", imageUrl);
     formData.append("description", description);
     if (media) {
       formData.append("media", media, media.name);
     }
-    await axios
-      .post("/api/thread", formData, { headers: { "Content-Type": "multipart/form-data" } })
-      .then(() => setShowModal(false))
-      .catch((err) => alert(`${err.message} check your fields, Title is mandatory`));
+    if (!edit) {
+      await axios
+        .post("/api/thread", formData, { headers: { "Content-Type": "multipart/form-data" } })
+        .then(() => setShowModal(false))
+        .catch((err) => alert(`${err.message} check your fields`));
+    } else {
+      await axios
+        .patch(`/api/thread/${ogInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
+        .then(() => {
+          setShowModal(false);
+          queryClient.invalidateQueries({ queryKey: ["thread", ogInfo.name] });
+        })
+        .catch((err) => alert(`${err.message} check your fields`));
+    }
   }
+  useEffect(() => {
+    focusManager.setFocused(false);
+    return () => focusManager.setFocused(true);
+  }, []);
   return (
-    <div className="flex flex-col p-5 space-y-5 w-5/6 rounded-md min-h-4/6 md:w-3/4 md:h-5/6 md:p-10 bg-theme-cultured">
-      <div className="flex flex-col  justify-around items-center p-4 space-y-3 bg-white rounded-xl md:flex-row md:space-y-0">
-        <p>Creating Subthread as</p>
-        <div className="flex space-x-3 items-center">
+    <div
+      className={`flex flex-col p-5 space-y-5 w-5/6 rounded-md min-h-4/6 ${
+        edit ? "md:w-2/4 md:h-4/6" : "md:w-3/4 md:h-5/6"
+      }  md:p-10 bg-theme-cultured`}>
+      <div className="flex flex-col justify-around items-center p-4 space-y-3 bg-white rounded-xl md:flex-row md:space-y-0">
+        <p>{edit ? "Editing" : "Creating"} Subthread as</p>
+        <div className="flex items-center space-x-3">
           <img src={user.avatar || avatar} className="w-9 h-9 rounded-full" alt="" />
           <p>{user.username}</p>
         </div>
       </div>
       <form className="flex flex-col flex-1 justify-around p-3 space-y-5 w-full h-1/2 bg-white rounded-md">
-        <label htmlFor="name" className="flex space-y-1 md:space-y-0 md:space-x-2 flex-col md:flex-row">
-          <span className="text-sm font-light">Subthread Name</span>
-          <input
-            type="text"
-            name="name"
-            id="name"
-            value={subName}
-            placeholder={subName}
-            onChange={(e) => setSubName(e.target.value)}
-            className=" border-b w-full border-gray-800 focus:outline-none"
-            required={true}
-            maxLength={50}
-          />
-        </label>
-        <label htmlFor="description" className="flex space-y-1 md:space-y-0 md:space-x-2 flex-col md:flex-row">
+        {!edit && (
+          <label htmlFor="name" className="flex flex-col space-y-1 md:space-y-0 md:space-x-2 md:flex-row">
+            <span className="text-sm font-light">Subthread Name</span>
+            <input
+              type="text"
+              name="name"
+              id="name"
+              value={subName}
+              placeholder={subName}
+              onChange={(e) => setSubName(e.target.value)}
+              className="w-full border-b border-gray-800 focus:outline-none"
+              required={true}
+              maxLength={50}
+            />
+          </label>
+        )}
+        <label htmlFor="description" className="flex flex-col space-y-1 md:space-y-0 md:space-x-2 md:flex-row">
           <span className="text-sm font-light">Description</span>
           <input
             type="text"
@@ -63,7 +88,7 @@ export function NewThread({ subThreadName, setShowModal }) {
             onChange={(e) => setDescription(e.target.value)}
             name="description"
             id="description"
-            className="border-b w-full border-gray-800 focus:outline-none"
+            className="w-full border-b border-gray-800 focus:outline-none"
           />
         </label>
         <label htmlFor="media" className="flex flex-col items-center space-y-3 md:space-y-0 md:space-x-5 md:flex-row">

@@ -1,4 +1,5 @@
-from threaddit import db
+from threaddit import db, app
+import base64, os
 from threaddit.reactions.models import Reactions
 from flask_login import current_user
 
@@ -43,10 +44,19 @@ class CommentInfo(db.Model):
 
     def as_dict(self):
         cur_user = current_user.id if current_user.is_authenticated else None
+        if self.user_avatar and not str(self.user_avatar).startswith("http"):
+            data = open(
+                f"{app.config['UPLOAD_FOLDER']}/{self.user_avatar}", "rb"
+            ).read()
+            user_avatar = (
+                f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
+            )
+        else:
+            user_avatar = self.user_avatar
         comment_info = {
             "user_info": {
                 "user_name": self.user_name,
-                "user_avatar": self.user_avatar,
+                "user_avatar": user_avatar,
             },
             "comment_info": {
                 "id": self.comment_id,

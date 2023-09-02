@@ -81,6 +81,7 @@ const svgTypes = {
   save: (
     <path d="M5 21h14a2 2 0 0 0 2-2V8l-5-5H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2zM7 5h4v2h2V5h2v4H7V5zm0 8h10v6H7v-6z"></path>
   ),
+  // edit: <path d="m16 2.012 3 3L16.713 7.3l-3-3zM4 14v3h3l8.299-8.287-3-3zm0 6h16v2H4z"></path>,
 };
 
 export function Svg({ type, className, onClick, active, defaultStyle = true }) {

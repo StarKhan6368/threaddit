@@ -1,17 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import AuthConsumer from "../../components/AuthContext";
+import Modal from "../../components/Modal";
+import { NewThread } from "../../components/NewThread";
 import PostLayout from "../../components/PostLayout";
 import Spinner from "../../components/Spinner";
-import AuthConsumer from "../../components/AuthContext";
 
 export function SubThread() {
+  const navigate = useNavigate();
   const [sortBy, setSortBy] = useState("top");
+  const [modalData, setModalData] = useState(false);
   const queryClient = useQueryClient();
   const [duration, setDuration] = useState("alltime");
   const params = useParams();
-  const { isAuthenticated } = AuthConsumer();
+  const { isAuthenticated, user } = AuthConsumer();
   const { data, isFetching: isThreadInfoFetching } = useQuery({
     queryKey: ["thread", params.threadName],
     queryFn: async () => {
@@ -38,18 +42,29 @@ export function SubThread() {
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["thread", params.threadName] }),
   });
+  function handleChange(value) {
+    switch (value) {
+      case "more":
+        break;
+      case "edit":
+        setModalData(<NewThread ogInfo={threadData} edit={true} setShowModal={setModalData} />);
+        break;
+      default:
+        navigate(`/u/${value}`);
+    }
+  }
   if (isFetching || isThreadInfoFetching) {
     return <Spinner />;
   }
   return (
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
       <div className="flex flex-col p-5 space-y-5 w-full bg-white rounded-md">
-        <div className="flex pr-3 rounded-full bg-theme-cultured">
-          <img src={threadData.logo} className="w-24 h-24 rounded-full md:w-36 md:h-36" alt="" />
+        <div className={`flex pr-3 rounded-full bg-theme-cultured ${!threadData.logo && "py-5"}`}>
+          {threadData.logo && <img src={threadData.logo} className="w-24 h-24 rounded-full md:w-36 md:h-36" alt="" />}
           <div className="flex flex-col flex-1 justify-around items-center p-2">
-            <div className="flex space-x-5 items-center">
+            <div className="flex items-center space-x-5">
               <h1 className="text-lg font-semibold">{threadData.name}</h1>
-              <p className="text-xs hidden md:block">Since: {threadData.created_at}</p>
+              <p className="hidden text-xs md:block">Since: {threadData.created_at}</p>
             </div>
             <p className="text-xs md:hidden">Since: {new Date(threadData.created_at).toDateString()}</p>
             <p className="hidden text-sm md:block">{threadData.description}</p>
@@ -61,7 +76,7 @@ export function SubThread() {
           </div>
         </div>
         {isAuthenticated && (
-          <div className="flex justify-around md:space-x-10 flex-col md:flex-row space-y-3 md:space-y-0">
+          <div className="flex flex-col justify-around space-y-3 md:space-x-10 md:flex-row md:space-y-0">
             <button
               className={`px-32 py-2 text-white rounded-full active:scale-90 ${
                 threadData.has_subscribed ? "bg-blue-400" : "bg-theme-red-coral"
@@ -70,16 +85,24 @@ export function SubThread() {
               {threadData.has_subscribed ? "Leave" : "Join"}
             </button>
             <select
+              defaultValue={"more"}
+              onChange={(e) => handleChange(e.target.value)}
               name="mods"
               id="mods"
-              className="px-10 py-2 rounded-md md:block bg-theme-cultured"
-              defaultValue={"ModList"}>
-              <option value="ModList">ModList</option>
-              {threadData.modList.map((mod) => (
-                <option key={mod} value={mod}>
-                  {mod}
-                </option>
-              ))}
+              className="px-10 py-2 rounded-md md:block bg-theme-cultured">
+              <option value={"more"}>More</option>
+              {isAuthenticated && user.mod_in.includes(threadData.id) && (
+                <optgroup label="Subthread Options">
+                  <option value="edit">Edit Subthread</option>
+                </optgroup>
+              )}
+              <optgroup label="ModList">
+                {threadData.modList.map((mod) => (
+                  <option key={mod} value={mod}>
+                    {mod}
+                  </option>
+                ))}
+              </optgroup>
             </select>
           </div>
         )}
@@ -92,6 +115,7 @@ export function SubThread() {
         setSortBy={setSortBy}
         isFetching={isFetching}
       />
+      {modalData && <Modal setShowModal={setModalData}>{modalData}</Modal>}
     </div>
   );
 }

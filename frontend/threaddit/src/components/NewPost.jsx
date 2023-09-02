@@ -1,24 +1,26 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import PropTypes from "prop-types";
 import { useState } from "react";
 import avatar from "../assets/avatar.png";
 import AuthConsumer from "./AuthContext";
 import Spinner from "./Spinner";
-import PropTypes from "prop-types";
 
 NewPost.propTypes = {
   setShowModal: PropTypes.func,
+  isEdit: PropTypes.bool,
+  postInfo: PropTypes.object,
 };
 
-export default function NewPost({ setShowModal }) {
+export default function NewPost({ setShowModal, isEdit = false, postInfo = {} }) {
   const { data, isLoading } = useQuery({
     queryKey: ["threads"],
     queryFn: async () => {
       return axios.get("/api/threads/get/all").then((res) => res.data);
     },
   });
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [title, setTitle] = useState(postInfo?.title || "");
+  const [content, setContent] = useState(postInfo?.content || "");
   const [media, setMedia] = useState("");
   const [mediaType, setMediaType] = useState("image");
   const [imageUrl, setImageUrl] = useState("");
@@ -35,10 +37,19 @@ export default function NewPost({ setShowModal }) {
       formData.append("media", media, media.name);
     }
     formData.append("subthread_id", thread);
-    await axios
-      .post("/api/post", formData, { headers: { "Content-Type": "multipart/form-data" } })
-      .then(() => setShowModal(false))
-      .catch((err) => alert(`${err.message} check your fields, Title is mandatory`));
+    if (!isEdit) {
+      await axios
+        .post("/api/post", formData, { headers: { "Content-Type": "multipart/form-data" } })
+        .then(() => setShowModal(false))
+        .catch((err) => alert(`${err.message} check your fields, Title is mandatory`));
+    } else {
+      await axios
+        .patch(`/api/post/${postInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
+        .then(() => {
+          setShowModal(false);
+        })
+        .catch((err) => alert(`${err.message} check your fields, Title is mandatory`));
+    }
   }
   if (isLoading) return <Spinner />;
   return (

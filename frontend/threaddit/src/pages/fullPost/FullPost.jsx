@@ -21,7 +21,11 @@ export function FullPost() {
         {data.comment_info.length > 0 ? (
           <ul className="space-y-4 rounded-xl md:border-2 md:p-2 hover:shadow-sm border-theme-gray-blue">
             {data.comment_info.map((comment) => (
-              <Comment key={comment.comment.comment_info.id} {...comment} />
+              <Comment
+                key={comment.comment.comment_info.id}
+                {...comment}
+                postId={data.post_info.thread_info.thread_id}
+              />
             ))}
           </ul>
         ) : (
