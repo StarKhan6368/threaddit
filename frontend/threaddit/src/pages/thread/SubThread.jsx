@@ -70,17 +70,19 @@ export function SubThread() {
   }
   return (
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
-      <div className="flex flex-col p-5 space-y-5 w-full bg-white rounded-md">
-        <div className={`flex pr-3 rounded-full bg-theme-cultured ${!threadData?.logo && "py-5"}`}>
-          {threadData?.logo && <img src={threadData?.logo} className="w-24 h-24 rounded-full md:w-36 md:h-36" alt="" />}
-          <div className="flex flex-col flex-1 justify-around items-center p-2">
+      <div className="flex flex-col p-5 space-y-1 w-full bg-white rounded-md">
+        <div
+          className={`flex pr-3 flex-col md:flex-row items-center rounded-full md:bg-theme-cultured ${
+            !threadData?.logo && "py-5"
+          }`}>
+          {threadData?.logo && <img src={threadData?.logo} className="w-32 h-32 rounded-full md:w-36 md:h-36" alt="" />}
+          <div className="flex flex-col flex-1 justify-around items-center p-2 space-y-1">
             <div className="flex items-center space-x-5">
-              <h1 className="text-lg font-semibold">{threadData?.name}</h1>
-              <p className="hidden text-xs md:block">Since: {threadData?.created_at}</p>
+              <h1 className="text-xl font-semibold">{threadData?.name}</h1>
             </div>
-            <p className="text-xs md:hidden">Since: {new Date(threadData?.created_at).toDateString()}</p>
-            <p className="hidden text-sm md:block">{threadData?.description}</p>
-            <div className="flex flex-col justify-center md:space-x-3 md:flex-row">
+            <p className="text-xs">Since: {new Date(threadData?.created_at).toDateString()}</p>
+            <p className={`${threadData?.description.length > 90 && "text-xs"} md:block`}>{threadData?.description}</p>
+            <div className="flex justify-center space-x-3">
               <p className="text-sm">{threadData?.subscriberCount} subscribers</p>
               <div className="flex justify-between space-x-3">
                 <p className="text-sm">{threadData?.PostsCount} posts</p>

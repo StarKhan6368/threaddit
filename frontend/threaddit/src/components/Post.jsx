@@ -135,7 +135,7 @@ export function Post({ post, isExpanded = false }) {
             }}
           />
         </div>
-        {isExpanded && <ScrollRestoration />}
+        <ScrollRestoration />
       </div>
       {modalShow && (
         <Modal setShowModal={setShowModal} showModal={modalShow}>
