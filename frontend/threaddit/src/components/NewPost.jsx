@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import PropTypes from "prop-types";
 import { useState } from "react";
@@ -19,6 +19,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {} })
       return axios.get("/api/threads/get/all").then((res) => res.data);
     },
   });
+  const queryClient = useQueryClient();
   const [title, setTitle] = useState(postInfo?.title || "");
   const [content, setContent] = useState(postInfo?.content || "");
   const [media, setMedia] = useState("");
@@ -46,6 +47,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {} })
       await axios
         .patch(`/api/post/${postInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
         .then(() => {
+          queryClient.invalidateQueries({ queryKey: ["post/comment", `${postInfo.id}`] });
           setShowModal(false);
         })
         .catch((err) => alert(`${err.message} check your fields, Title is mandatory`));

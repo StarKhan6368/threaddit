@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
       return await axios.get("/api/user").then((res) => res.data);
     },
     retry: 1,
+    staleTime: 0,
     onSuccess: (data) => {
       login(data);
     },

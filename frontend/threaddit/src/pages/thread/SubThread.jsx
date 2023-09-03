@@ -7,6 +7,7 @@ import InfinitePostsLayout from "../../components/InfinitePosts";
 import ManageMods from "../../components/ManageMods";
 import Modal from "../../components/Modal";
 import { NewThread } from "../../components/NewThread";
+import { AnimatePresence } from "framer-motion";
 
 export function SubThread() {
   const navigate = useNavigate();
@@ -106,7 +107,7 @@ export function SubThread() {
         linkUrl={`posts/thread/${threadData?.id}`}
         enabled={threadData !== undefined}
       />
-      {modalData && <Modal setShowModal={setModalData}>{modalData}</Modal>}
+      <AnimatePresence>{modalData && <Modal setShowModal={setModalData}>{modalData}</Modal>}</AnimatePresence>
     </div>
   );
 }

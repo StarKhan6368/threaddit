@@ -1,5 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -141,9 +142,11 @@ export default function InfinitePostsLayout({ linkUrl, apiQueryKey, forSaved = f
       <div className="flex flex-col flex-1 space-y-2 w-full h-full md:space-y-3">
         {data?.pages.map((pageData, index) => (
           <ul className="flex flex-col flex-1 space-y-2 w-full h-full md:space-y-3" key={index}>
-            {pageData?.map((post) => (
-              <Post post={post} key={post.post_info.id} />
-            ))}
+            <AnimatePresence initial={index == 0}>
+              {pageData?.map((post, index) => (
+                <Post post={post} key={post.post_info.id} postIndex={index} />
+              ))}
+            </AnimatePresence>
           </ul>
         ))}
       </div>

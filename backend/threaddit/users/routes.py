@@ -6,11 +6,9 @@ from threaddit.users.models import (
     UserRegisterValidator,
     User,
 )
-
-# from threaddit.config import SECRET_KEY
+from threaddit.config import SECRET_KEY
 from threaddit.auth.decorators import auth_role
-
-# from bcrypt import hashpw, checkpw
+from bcrypt import hashpw, checkpw
 from flask_login import login_user, logout_user, current_user, login_required
 
 user = Blueprint("users", __name__, url_prefix="/api")
@@ -23,9 +21,9 @@ def user_login():
     login_form = request.json
     UserLoginValidator().load(login_form)
     user_info = User.query.filter_by(email=login_form.get("email")).first()
-    # if user_info and checkpw(login_form.get("password").encode(),
-    # user_info.password_hash.encode()): IN DEV MODE
-    if user_info and login_form.get("password") == user_info.password_hash:
+    if user_info and checkpw(
+        login_form.get("password").encode(), user_info.password_hash.encode()
+    ):
         login_user(user_info)
         return jsonify(user_info.as_dict()), 200
     return jsonify({"message": "Invalid credentials"}), 401
@@ -44,9 +42,11 @@ def user_register():
         return jsonify({"message": "Already logged in"}), 409
     register_form = request.json
     UserRegisterValidator().load(register_form)
-    # new_user=User(register_form.get("username"), register_form.get("email"),
-    # hashpw(register_form.get("password").encode(),
-    # SECRET_KEY).decode("utf-8")): IN DEV MODE
+    new_user = User(
+        register_form.get("username"),
+        register_form.get("email"),
+        hashpw(register_form.get("password").encode(), SECRET_KEY).decode("utf-8"),
+    )
     new_user = User(
         register_form.get("username"),
         register_form.get("email"),

@@ -3,13 +3,14 @@ import PropTypes from "prop-types";
 import avatar from "../assets/avatar.png";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { focusManager } from "@tanstack/react-query";
+import { focusManager, useQueryClient } from "@tanstack/react-query";
 
 UpdateUser.propTypes = {
   setModal: PropTypes.func,
 };
 
 export default function UpdateUser({ setModal }) {
+  const queryClient = useQueryClient();
   const { user } = AuthConsumer();
   const [bio, setBio] = useState(user.bio);
   const [media, setMedia] = useState("");
@@ -26,7 +27,10 @@ export default function UpdateUser({ setModal }) {
     }
     await axios
       .patch("/api/user", formData, { headers: { "Content-Type": "multipart/form-data" } })
-      .then(() => setModal(false))
+      .then(() => {
+        setModal(false);
+        queryClient.invalidateQueries({ queryKey: ["user", user.username] });
+      })
       .catch((err) => alert(`${err.message} check your fields`));
   }
   useEffect(() => {

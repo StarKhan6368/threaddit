@@ -1,24 +1,21 @@
 // Have mercy on this code
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { AnimatePresence, motion } from "framer-motion";
 import PropTypes from "prop-types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import avatar from "../../assets/avatar.png";
 import AuthConsumer from "../../components/AuthContext";
 import Svg from "../../components/Svg";
-import { useRef } from "react";
 
 export function Inbox() {
   const [curChat, setCurChat] = useState(false);
-  const { data, isFetching } = useQuery({
+  const { data } = useQuery({
     queryKey: ["inbox"],
     queryFn: async () => {
       return await axios.get("/api/messages/inbox").then((res) => res.data);
     },
   });
-  if (isFetching) {
-    return <></>;
-  }
   return (
     <div className="flex flex-1">
       {!curChat && (
@@ -55,8 +52,11 @@ export function Inbox() {
         <div className="flex justify-between items-center py-3 border-b-2">
           <h1 className="text-2xl font-semibold text-blue-600">Messages</h1>
         </div>
-        {data?.map((message) => (
-          <li
+        {data?.map((message, index) => (
+          <motion.li
+            initial={{ opacity: 0, x: -100 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25, delay: index * 0.25 }}
             className={`flex items-center w-full p-3 space-x-2 rounded-xl cursor-pointer ${
               curChat.name === message.sender.name ? "bg-blue-200" : "hover:bg-blue-200"
             }`}
@@ -76,14 +76,16 @@ export function Inbox() {
                 {message.content.length > 15 ? "..." : ""}
               </p>
             </div>
-          </li>
+          </motion.li>
         ))}
       </ul>
-      {curChat && (
-        <div className={`flex-1 m-2.5 bg-white rounded-md ${!curChat && "flex justify-center items-center"}`}>
-          <Chat sender={curChat} setCurChat={setCurChat} />
-        </div>
-      )}
+      <AnimatePresence>
+        {curChat && (
+          <div className={`flex-1 m-2.5 bg-white rounded-md ${!curChat && "flex justify-center items-center"}`}>
+            <Chat sender={curChat} setCurChat={setCurChat} />
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -123,11 +125,24 @@ export function Chat({ sender, setCurChat, newChat = false }) {
   useEffect(() => {
     myRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [isFetching]);
-  if (isFetching) {
-    return <></>;
-  }
+  const AnimateChat = {
+    hidden: {
+      opacity: 0,
+      x: 10,
+    },
+    visible: {
+      opacity: 1,
+      x: 0,
+    },
+  };
   return (
-    <div className={`flex flex-col justify-between w-full ${newChat && "bg-white w-10/12 md:w-1/2"}`}>
+    <motion.div
+      className={`flex flex-col justify-between w-full ${newChat && "bg-white w-10/12 md:w-1/2"}`}
+      variants={AnimateChat}
+      initial="hidden"
+      animate="visible"
+      transition={{ duration: 0.25 }}
+      exit={{ opacity: 0, x: 10, transition: { duration: 0.1 } }}>
       <div className="flex justify-between items-center p-3 mx-2 border-b-2">
         <div className="flex items-center space-x-4">
           <img src={sender.avatar || avatar} alt="" className="w-14 h-14 rounded-full" />
@@ -139,9 +154,14 @@ export function Chat({ sender, setCurChat, newChat = false }) {
           Close
         </button>
       </div>
-      <ul className={`p-3 space-y-3 rounded-md md:h-[63vh] h-[70vh] overflow-auto ${newChat && "h-[20vh]"}`}>
-        {data?.map((message) => (
-          <Message message={message} toUser={message.sender.name == user.username} key={message.message_id} />
+      <ul className={`p-3 space-y-3 rounded-md md:h-[61vh] h-[70vh] overflow-auto ${newChat && "h-[20vh]"}`}>
+        {data?.map((message, index) => (
+          <Message
+            message={message}
+            messageIndex={index}
+            toUser={message.sender.name == user.username}
+            key={message.message_id}
+          />
         ))}
         <li className="invisible" key={"scrollToElement"} ref={myRef}></li>
       </ul>
@@ -160,24 +180,28 @@ export function Chat({ sender, setCurChat, newChat = false }) {
         />
         <Svg onClick={() => mutate({ message, sender })} type="send" className="w-8 h-8 text-white bg-inherit" />
       </form>
-    </div>
+    </motion.div>
   );
 }
 
 Message.propTypes = {
   message: PropTypes.object,
   toUser: PropTypes.bool,
+  messageIndex: PropTypes.number,
 };
-function Message({ message, toUser }) {
+function Message({ message, toUser, messageIndex }) {
   const sentDate = new Date(message.created_at);
   return (
-    <li
+    <motion.li
+      initial={{ opacity: 0, x: toUser ? 100 : -100 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.25, delay: messageIndex * 0.1 }}
       className={` pl-2 py-1 w-fit rounded-md ${message.seen ? "bg-green-100" : "bg-blue-100"} ${
         toUser ? "ml-auto pr-2" : "pr-10"
       }`}>
       <p className={`break-all pt-1 font-medium ${toUser && "pl-1"}`}>{message.content}</p>
       <p className={`mt-0.5 text-xs font-light ${toUser && "text-right"}`}>{sentDate.toLocaleString()}</p>
-    </li>
+    </motion.li>
   );
 }
 

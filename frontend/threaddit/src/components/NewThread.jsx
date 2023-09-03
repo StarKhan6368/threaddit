@@ -42,7 +42,8 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
         .patch(`/api/thread/${ogInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
         .then(() => {
           setShowModal(false);
-          queryClient.invalidateQueries({ queryKey: ["thread", ogInfo.name] });
+          console.log(ogInfo);
+          queryClient.invalidateQueries({ queryKey: ["thread", `${ogInfo.name.slice(2)}`] });
         })
         .catch((err) => alert(`${err.message} check your fields`));
     }

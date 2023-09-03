@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import avatar from "../../assets/avatar.png";
@@ -28,7 +29,10 @@ export function Profile() {
         setAction(<UpdateUser setModal={setAction} />);
         break;
       case "delete":
-        axios.delete(`/api/user`).then(() => logout());
+        if (window.confirm("Are you sure you want to delete your account?")) {
+          axios.delete(`/api/user`).then(() => logout());
+        }
+        setAction(false);
         break;
     }
   }, [action, data, username, logout]);
@@ -83,11 +87,13 @@ export function Profile() {
         linkUrl={`posts/user/${data?.username}`}
         enabled={data?.username !== undefined}
       />
-      {action !== false && (
-        <Modal showModal={action} setShowModal={setAction}>
-          {action}
-        </Modal>
-      )}
+      <AnimatePresence>
+        {action !== false && action !== "delete" && (
+          <Modal showModal={action} setShowModal={setAction}>
+            {action}
+          </Modal>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

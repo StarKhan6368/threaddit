@@ -18,7 +18,7 @@ MoreOptions.propTypes = {
 
 export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShowModal, setModalData }) {
   const { isAuthenticated, user } = AuthConsumer();
-  const [postSaved, setPostSaved] = useState(postInfo.saved);
+  const [postSaved, setPostSaved] = useState(postInfo?.saved);
   const queryClient = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,12 +29,11 @@ export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShow
   });
   async function handleDelte() {
     if (isAuthenticated) {
-      await axios.delete(`/api/post/${postInfo.id}`);
+      await axios.delete(`/api/post/${postInfo?.id}`);
       if (location.pathname.includes("post")) {
         return navigate(-1);
-      } else {
-        return navigate(0);
       }
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
     } else {
       alert("You must be logged in to delete.");
     }
@@ -42,10 +41,10 @@ export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShow
   }
   async function handleSaved() {
     if (postSaved) {
-      await axios.delete(`/api/posts/saved/${postInfo.id}`);
+      await axios.delete(`/api/posts/saved/${postInfo?.id}`);
       setPostSaved(false);
     } else {
-      await axios.put(`/api/posts/saved/${postInfo.id}`);
+      await axios.put(`/api/posts/saved/${postInfo?.id}`);
       setPostSaved(true);
     }
     queryClient.invalidateQueries({ queryKey: ["saved"] });
