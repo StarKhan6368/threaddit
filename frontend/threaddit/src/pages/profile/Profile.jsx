@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -13,8 +13,6 @@ export function Profile() {
   const { logout, user } = AuthConsumer();
   const { username } = useParams();
   const [action, setAction] = useState(false);
-  const [sortBy, setSortBy] = useState("top");
-  const [duration, setDuration] = useState("alltime");
   const { data, isFetching: userIsFetching } = useQuery({
     queryKey: ["user", username],
     queryFn: async () => {
@@ -34,25 +32,6 @@ export function Profile() {
         break;
     }
   }, [action, data, username, logout]);
-  const {
-    data: userPosts,
-    isFetching,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["user", data?.username, "posts", sortBy, duration],
-    queryFn: async ({ pageParam = 0 }) => {
-      return await axios
-        .get(
-          `/api/posts/user/${data?.username}?limit=${20}&offset=${pageParam * 20}&sortby=${sortBy}&duration=${duration}`
-        )
-        .then((res) => res.data);
-    },
-    getNextPageParam: (lastPage, pages) => {
-      return lastPage.length === 20 ? pages.length : undefined;
-    },
-    enabled: data?.username !== undefined,
-  });
   return (
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
       <div className="flex flex-col items-center w-full bg-theme-cultured">
@@ -100,14 +79,9 @@ export function Profile() {
         </div>
       </div>
       <InfinitePostsLayout
-        data={userPosts}
-        hasNextPage={hasNextPage}
-        isFetching={isFetching}
-        fetchNextpage={fetchNextPage}
-        duration={duration}
-        setDuration={setDuration}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
+        apiQueryKey={data?.username}
+        linkUrl={`posts/user/${data?.username}`}
+        enabled={data?.username !== undefined}
       />
       {action !== false && (
         <Modal showModal={action} setShowModal={setAction}>

@@ -1,42 +1,54 @@
+import { useInfiniteQuery } from "@tanstack/react-query";
+import axios from "axios";
 import PropTypes from "prop-types";
-import Post from "./Post";
 import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import Post from "./Post";
 
 InfinitePostsLayout.propTypes = {
-  data: PropTypes.object,
-  fetchNextpage: PropTypes.func,
-  hasNextPage: PropTypes.bool,
-  isFetching: PropTypes.bool,
-  setSortBy: PropTypes.func,
-  setDuration: PropTypes.func,
-  sortBy: PropTypes.string,
-  duration: PropTypes.string,
+  linkUrl: PropTypes.string,
+  apiQueryKey: PropTypes.string,
   forSaved: PropTypes.bool,
+  enabled: PropTypes.bool,
 };
 
-export default function InfinitePostsLayout({
-  duration,
-  hasNextPage,
-  isFetching,
-  fetchNextpage,
-  sortBy,
-  setSortBy,
-  setDuration,
-  forSaved = false,
-  data,
-}) {
+export default function InfinitePostsLayout({ linkUrl, apiQueryKey, forSaved = false, enabled = true }) {
+  const [searchParams, setSearchParams] = useSearchParams({ sortBy: "top", duration: "alltime" });
+  const sortBy = searchParams.get("sortBy");
+  const duration = searchParams.get("duration");
+  const { data, isFetching, hasNextPage, fetchNextPage } = useInfiniteQuery({
+    queryKey: ["posts", apiQueryKey, sortBy, duration],
+    queryFn: async ({ pageParam = 0 }) => {
+      return await axios
+        .get(`/api/${linkUrl}?limit=${20}&offset=${pageParam * 20}&sortby=${sortBy}&duration=${duration}`)
+        .then((data) => data.data);
+    },
+    enabled: enabled,
+    getNextPageParam: (lastPage, pages) => {
+      if (lastPage.length < 20) return undefined;
+      return pages.length;
+    },
+  });
   useEffect(() => {
     const onScroll = (event) => {
       const { scrollTop, scrollHeight, clientHeight } = event.target.scrollingElement;
       if (scrollHeight - scrollTop <= clientHeight * 2 && hasNextPage && !isFetching) {
-        fetchNextpage();
+        fetchNextPage();
       }
     };
     window.addEventListener("scroll", onScroll);
     return () => {
       window.removeEventListener("scroll", onScroll);
     };
-  }, [fetchNextpage, hasNextPage, isFetching]);
+  }, [fetchNextPage, isFetching, hasNextPage]);
+  function handleDurationChange(newDuration) {
+    searchParams.set("duration", newDuration);
+    setSearchParams(searchParams);
+  }
+  function handleSortByChange(newSortBy) {
+    searchParams.set("sortBy", newSortBy);
+    setSearchParams(searchParams);
+  }
   return (
     <div
       id="main-content"
@@ -49,7 +61,7 @@ export default function InfinitePostsLayout({
               name="sort"
               id="sort"
               className="p-2 px-4 bg-white rounded-md md:bg-theme-cultured"
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={(e) => handleSortByChange(e.target.value)}
               value={sortBy}>
               <option value="top">Top</option>
               <option value="hot">Hot</option>
@@ -62,7 +74,7 @@ export default function InfinitePostsLayout({
               name="duration"
               id="duration"
               className="p-2 px-4 bg-white rounded-md md:bg-theme-cultured"
-              onChange={(e) => setDuration(e.target.value)}
+              onChange={(e) => handleDurationChange(e.target.value)}
               value={duration}>
               <option value="day">Day</option>
               <option value="week">Week</option>
@@ -76,28 +88,28 @@ export default function InfinitePostsLayout({
               className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
                 duration === "day" && "bg-theme-gray-blue"
               }`}
-              onClick={() => setDuration("day")}>
+              onClick={() => handleDurationChange("day")}>
               Today
             </li>
             <li
               className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
                 duration === "week" && "bg-theme-gray-blue"
               }`}
-              onClick={() => setDuration("week")}>
+              onClick={() => handleDurationChange("week")}>
               Week
             </li>
             <li
               className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
                 duration === "month" && "bg-theme-gray-blue"
               }`}
-              onClick={() => setDuration("month")}>
+              onClick={() => handleDurationChange("month")}>
               Month
             </li>
             <li
               className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
                 duration === "alltime" && "bg-theme-gray-blue"
               }`}
-              onClick={() => setDuration("alltime")}>
+              onClick={() => handleDurationChange("alltime")}>
               All
             </li>
           </ul>
@@ -106,21 +118,21 @@ export default function InfinitePostsLayout({
               className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
                 sortBy === "hot" && "bg-theme-gray-blue"
               }`}
-              onClick={() => setSortBy("hot")}>
+              onClick={() => handleSortByChange("hot")}>
               Hot
             </li>
             <li
               className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
                 sortBy === "new" && "bg-theme-gray-blue"
               }`}
-              onClick={() => setSortBy("new")}>
+              onClick={() => handleSortByChange("new")}>
               New
             </li>
             <li
               className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
                 sortBy === "top" && "bg-theme-gray-blue"
               }`}
-              onClick={() => setSortBy("top")}>
+              onClick={() => handleSortByChange("top")}>
               Top
             </li>
           </ul>

@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -10,10 +10,8 @@ import { NewThread } from "../../components/NewThread";
 
 export function SubThread() {
   const navigate = useNavigate();
-  const [sortBy, setSortBy] = useState("top");
   const [modalData, setModalData] = useState(false);
   const queryClient = useQueryClient();
-  const [duration, setDuration] = useState("alltime");
   const params = useParams();
   const { isAuthenticated, user } = AuthConsumer();
   const { data } = useQuery({
@@ -23,27 +21,6 @@ export function SubThread() {
     },
   });
   const threadData = data?.threadData;
-  const {
-    data: threadPosts,
-    isFetching,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["thread", threadData?.id, "posts", sortBy, duration],
-    queryFn: async ({ pageParam = 0 }) => {
-      return await axios
-        .get(
-          `/api/posts/thread/${threadData?.id}?limit=${20}&offset=${
-            pageParam * 20
-          }&sortby=${sortBy}&duration=${duration}`
-        )
-        .then((res) => res.data);
-    },
-    getNextPageParam: (lastPage, pages) => {
-      return lastPage.length === 20 ? pages.length : undefined;
-    },
-    enabled: threadData?.id !== undefined,
-  });
   const { mutate } = useMutation({
     mutationFn: async (has_subscribed) => {
       if (has_subscribed) {
@@ -70,7 +47,7 @@ export function SubThread() {
   }
   return (
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
-      <div className="flex flex-col p-5 space-y-1 w-full bg-white rounded-md">
+      <div className="flex flex-col p-5 space-y-1 w-full bg-white rounded-md md:pb-3 md:space-y-3">
         <div
           className={`flex pr-3 flex-col md:flex-row items-center rounded-full md:bg-theme-cultured ${
             !threadData?.logo && "py-5"
@@ -125,14 +102,9 @@ export function SubThread() {
         )}
       </div>
       <InfinitePostsLayout
-        data={threadPosts}
-        hasNextPage={hasNextPage}
-        duration={duration}
-        fetchNextpage={fetchNextPage}
-        setDuration={setDuration}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        isFetching={isFetching}
+        apiQueryKey={threadData?.name}
+        linkUrl={`posts/thread/${threadData?.id}`}
+        enabled={threadData !== undefined}
       />
       {modalData && <Modal setShowModal={setModalData}>{modalData}</Modal>}
     </div>
