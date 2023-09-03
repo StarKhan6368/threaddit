@@ -40,7 +40,7 @@ export default function InfinitePostsLayout({
   return (
     <div
       id="main-content"
-      className="flex flex-col flex-1 p-2 m-2 space-y-3 w-full h-full rounded-lg bg-theme-cultured md:bg-white md:m-3">
+      className="flex flex-col flex-1 p-2 space-y-3 w-full h-full rounded-lg m-0.5 bg-theme-cultured md:bg-white md:m-3">
       {!forSaved && (
         <header className="flex justify-between items-center w-full">
           <div className="flex items-center space-x-2 md:hidden">
@@ -126,9 +126,9 @@ export default function InfinitePostsLayout({
           </ul>
         </header>
       )}
-      <div className="flex flex-col flex-1 space-y-1 w-full h-full md:space-y-3">
+      <div className="flex flex-col flex-1 space-y-2 w-full h-full md:space-y-3">
         {data?.pages.map((pageData, index) => (
-          <ul className="flex flex-col flex-1 space-y-1 w-full h-full md:space-y-3" key={index}>
+          <ul className="flex flex-col flex-1 space-y-2 w-full h-full md:space-y-3" key={index}>
             {pageData?.map((post) => (
               <Post post={post} key={post.post_info.id} />
             ))}

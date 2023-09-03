@@ -96,7 +96,12 @@ export function Post({ post, isExpanded = false }) {
               </div>
             </Link>
           )}
-          <div className="hidden items-center space-x-2 cursor-pointer md:flex group">
+          <div
+            className="hidden items-center space-x-2 cursor-pointer md:flex group"
+            onClick={() => {
+              navigator.clipboard.writeText(`${location.origin}/post/${post.post_info.id}`);
+              alert("Link copied to clipboard");
+            }}>
             <Svg type="share" className="w-4 h-4 md:w-6 md:h-6" />
             <p className="text-sm cursor-pointer md:text-base">Share</p>
           </div>

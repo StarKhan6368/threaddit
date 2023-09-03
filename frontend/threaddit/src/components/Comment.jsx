@@ -47,6 +47,12 @@ export default function Comment({ children, comment, threadID }) {
     }
   }
   function onEdit(value) {
+    if (value === "share") {
+      navigator.clipboard.writeText(location.href);
+      alert("Copied Post Link to clipboard");
+      listRef.current.value = "more";
+      return;
+    }
     if (isAuthenticated) {
       if (value === "edit") {
         setShowModal(true);
@@ -67,7 +73,7 @@ export default function Comment({ children, comment, threadID }) {
         }
       }
     } else {
-      alert("You must be logged in to reply.");
+      alert("You must be logged in for this action.");
     }
     listRef.current.value = "more";
   }
@@ -86,27 +92,26 @@ export default function Comment({ children, comment, threadID }) {
         <p>{timePassed}</p>
         <p>{comment.comment_info.is_edited && "Edited"}</p>
       </div>
-      <p className="mr-2 ml-1">{comment.comment_info.content}</p>
+      <p className="mr-2 ml-1 text-sm md:text-base">{comment.comment_info.content}</p>
       <div className="flex justify-around items-center md:justify-between md:mx-10">
         {isAuthenticated &&
         (user.username === comment.user_info.user_name ||
           user.mod_in.includes(threadID) ||
           user.roles.includes("admin")) ? (
           <select
+            defaultValue={"more"}
             ref={listRef}
             name="more-options"
             id="more-options"
             className="text-center bg-white md:px-2"
             onChange={(e) => onEdit(e.target.value)}>
-            <option value="more" selected>
-              More
-            </option>
+            <option value="more">More</option>
             <option value="share">Share</option>
             {user.username === comment.user_info.user_name && <option value="edit">Edit</option>}
             <option value="delete">Delete</option>
           </select>
         ) : (
-          <div className="flex items-center space-x-1">
+          <div className="flex items-center space-x-1" onClick={() => onEdit("share")}>
             <Svg type="share" className="w-4 h-4" />
             <p className="text-sm cursor-pointer md:text-base">Share</p>
           </div>

@@ -103,7 +103,7 @@ export function SubThread() {
               onChange={(e) => handleChange(e.target.value)}
               name="mods"
               id="mods"
-              className="px-10 py-2 rounded-md md:block bg-theme-cultured">
+              className="px-10 py-2 text-center rounded-md md:block bg-theme-cultured">
               <option value={"more"}>More</option>
               {isAuthenticated && (user.mod_in.includes(threadData?.id) || user.roles.includes("admin")) && (
                 <optgroup label="Subthread Options">
