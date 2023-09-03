@@ -13,9 +13,9 @@ InfinitePostsLayout.propTypes = {
 };
 
 export default function InfinitePostsLayout({ linkUrl, apiQueryKey, forSaved = false, enabled = true }) {
-  const [searchParams, setSearchParams] = useSearchParams({ sortBy: "top", duration: "alltime" });
-  const sortBy = searchParams.get("sortBy");
-  const duration = searchParams.get("duration");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sortBy = searchParams.get("sortBy") || "top";
+  const duration = searchParams.get("duration") || "alltime";
   const { data, isFetching, hasNextPage, fetchNextPage } = useInfiniteQuery({
     queryKey: ["posts", apiQueryKey, sortBy, duration],
     queryFn: async ({ pageParam = 0 }) => {
