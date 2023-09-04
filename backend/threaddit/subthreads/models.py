@@ -78,8 +78,8 @@ class Subthread(db.Model):
             "created_at": self.created_at,
             "logo": self.get_logo(),
             "PostsCount": len(self.post),
-            "CommentsCount": self.comments_count or 0,
-            "created_by": self.user.username,
+            "CommentsCount": sum([len(p.comment) for p in self.post]),
+            "created_by": self.user.username if self.user else None,
             "subscriberCount": len(self.subscription),
             "modList": [
                 r.user.username for r in self.user_role if r.role.slug == "mod"

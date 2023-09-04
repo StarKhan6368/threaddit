@@ -36,35 +36,35 @@ export function Profile() {
         break;
     }
   }, [action, data, username, logout]);
+  console.log(data);
   return (
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
       <div className="flex flex-col items-center w-full bg-theme-cultured">
         <div className="flex flex-col p-2 w-full bg-white rounded-md md:p-5">
           {!userIsFetching && data && (
-            <div className="flex pr-3 py-0.5 pl-1 rounded-full bg-theme-cultured">
+            <div className="flex flex-col flex-1 justify-between items-center p-2 w-full rounded-md md:flex-row md:rounded-full bg-theme-cultured">
               <img src={data.avatar || avatar} className="w-24 h-24 bg-white rounded-full md:w-36 md:h-36" alt="" />
-              <div className="flex flex-col flex-1 justify-around items-center pl-4 md:p-2">
-                <h1 className="flex items-center space-x-2 text-lg font-semibold">
-                  u/{data.username}{" "}
-                  <span className="hidden text-sm font-light md:inline">- Created on: {data?.registrationDate}</span>
-                </h1>
-                <p className="hidden md:block">{data?.bio}</p>
-                <div className="flex flex-col justify-between w-11/12 md:flex-row">
-                  <div className="flex space-x-2 text-sm">
-                    <p className="text-xs md:text-base">Total Posts: {data?.karma.posts_count}</p>
-                    <p className="text-xs text-center md:text-base">Posts Karma: {data?.karma.posts_karma}</p>
-                  </div>
-                  <p className="text-xs md:text-base">Overall Karma: {data?.karma.user_karma}</p>
-                  <div className="flex space-x-2 text-sm">
-                    <p className="text-xs md:text-base">
-                      <span className="hidden md:inline">Total </span>Comments: {data?.karma.comments_count}
-                    </p>
-                    <p className="text-xs md:text-base">Comments Karma: {data?.karma.comments_karma}</p>
-                  </div>
+              <div className="flex flex-col flex-1 items-center w-full md:p-2">
+                <h1 className="mt-2 text-lg font-semibold md:m-0">u/{data.username}</h1>
+                <p className="my-4 w-11/12 text-sm text-center md:my-2 md:text-base">{data?.bio}</p>
+                <div className="flex justify-between items-center w-full md:w-11/12">
+                  <p className="text-xs md:text-sm">Karma: {data?.karma.user_karma}</p>
+                  <p className="text-xs md:text-sm">Cake Day On: {new Date(data?.registrationDate).toDateString()}</p>
                 </div>
               </div>
             </div>
           )}
+          <div className="flex flex-col my-2 text-sm md:text-sm">
+            <div className="flex justify-between space-x-2">
+              <p className="">Total Posts: {data?.karma.posts_count}</p>
+              <p className="">Posts Karma: {data?.karma.posts_karma}</p>
+            </div>
+
+            <div className="flex justify-between space-x-2">
+              <p className="">Total Comments: {data?.karma.comments_count}</p>
+              <p className="">Comments Karma: {data?.karma.comments_karma}</p>
+            </div>
+          </div>
           <select
             name="options"
             id="options"

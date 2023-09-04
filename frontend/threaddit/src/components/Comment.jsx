@@ -115,7 +115,7 @@ export default function Comment({ children, comment, threadID, commentIndex }) {
               ref={listRef}
               name="more-options"
               id="more-options"
-              className="text-center bg-white md:px-2"
+              className="text-sm text-center bg-white md:px-2 md:text-base"
               onChange={(e) => onEdit(e.target.value)}>
               <option value="more">More</option>
               <option value="share">Share</option>
@@ -128,16 +128,15 @@ export default function Comment({ children, comment, threadID, commentIndex }) {
               <p className="text-sm cursor-pointer md:text-base">Share</p>
             </div>
           )}
-
+          <div className="flex items-center space-x-1" onClick={() => onReplyClick()}>
+            <Svg type="comment" className="w-4 h-4" />
+            <p className="text-sm cursor-pointer md:text-base">Reply</p>
+          </div>
           <div
             className={`${!children.length && "invisible"} flex items-center space-x-1`}
             onClick={() => setExpandChildren(!expandChildren)}>
             <Svg type="down-arrow" className={`w-4 h-4 ${expandChildren && "rotate-180"}`} />
             <p className="text-sm cursor-pointer md:text-base">{expandChildren ? "Hide" : "Show"}</p>
-          </div>
-          <div className="flex items-center space-x-1" onClick={() => onReplyClick()}>
-            <Svg type="comment" className="w-4 h-4" />
-            <p className="text-sm cursor-pointer md:text-base">Reply</p>
           </div>
           <div className="flex items-center space-x-2 text-sm md:text-base">
             <Vote
@@ -153,7 +152,7 @@ export default function Comment({ children, comment, threadID, commentIndex }) {
         </div>
         <AnimatePresence>
           {expandChildren && (
-            <ul className={`space-y-2 ${children.length > 0 && expandChildren && "border-l-2 " + colorSquence()}`}>
+            <ul className={children.length > 0 && expandChildren && "border-l-2 " + colorSquence()}>
               {children.map((child) => (
                 <Comment key={child.comment.comment_info.id} {...child} />
               ))}

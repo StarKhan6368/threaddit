@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from "react";
 import avatar from "../../assets/avatar.png";
 import AuthConsumer from "../../components/AuthContext";
 import Svg from "../../components/Svg";
+import Loader from "../../components/Loader";
+import { Link } from "react-router-dom";
 
 export function Inbox() {
   const [curChat, setCurChat] = useState(false);
@@ -48,7 +50,7 @@ export function Inbox() {
           ))}
         </ul>
       )}
-      <ul className="hidden md:block p-4 m-2.5 space-y-2 list-none bg-white rounded-md">
+      <ul className="hidden md:block p-4 w-1/5 m-2.5 space-y-2 list-none bg-white rounded-md">
         <div className="flex justify-between items-center py-3 border-b-2">
           <h1 className="text-2xl font-semibold text-blue-600">Messages</h1>
         </div>
@@ -147,7 +149,9 @@ export function Chat({ sender, setCurChat, newChat = false }) {
       <div className="flex justify-between items-center p-3 mx-2 border-b-2">
         <div className="flex items-center space-x-4">
           <img src={sender.avatar || avatar} alt="" className="w-14 h-14 rounded-full" />
-          <p className="text-xl font-semibold">{sender.username}</p>
+          <Link to={`/u/${sender.username}`} className="text-xl font-semibold text-blue-500">
+            {sender.username}
+          </Link>
         </div>
         <button
           onClick={() => setCurChat(false)}
@@ -155,17 +159,23 @@ export function Chat({ sender, setCurChat, newChat = false }) {
           Close
         </button>
       </div>
-      <ul className={`p-3 space-y-3 rounded-md md:h-[61vh] h-[70vh] overflow-auto ${newChat && "h-[20vh]"}`}>
-        {data?.map((message, index) => (
-          <Message
-            message={message}
-            messageIndex={index}
-            toUser={message.sender.name == user.username}
-            key={message.message_id}
-          />
-        ))}
-        <li className="invisible" key={"scrollToElement"} ref={myRef}></li>
-      </ul>
+      {isFetching ? (
+        <div className={`${newChat ? "h-[20vh]" : "md:h-[61vh] h-[70vh]"} flex justify-center items-center`}>
+          <Loader forPosts={true} />
+        </div>
+      ) : (
+        <ul className={`p-3 space-y-3 rounded-md overflow-auto ${newChat ? "h-[20vh]" : "md:h-[61vh] h-[70vh]"}`}>
+          {data?.map((message, index) => (
+            <Message
+              message={message}
+              messageIndex={index}
+              toUser={message.sender.username == user.username}
+              key={message.message_id}
+            />
+          ))}
+          <li className="invisible" key={"scrollToElement"} ref={myRef}></li>
+        </ul>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();

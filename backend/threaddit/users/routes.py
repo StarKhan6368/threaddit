@@ -77,10 +77,10 @@ def user_get():
 
 @user.route("/user/<user_name>", methods=["GET"])
 def user_get_by_username(user_name):
-    user = User.query.filter_by(username=user_name)
+    user = User.query.filter_by(username=user_name).first()
     if user:
         return (
-            jsonify(user.first().as_dict(include_all=False)),
+            jsonify(user.as_dict(include_all=False)),
             200,
         )
     else:

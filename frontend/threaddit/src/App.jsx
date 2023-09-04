@@ -7,6 +7,7 @@ import Loader from "./components/Loader.jsx";
 import RequireAuth from "./components/PrivateRoute.jsx";
 import Login, { userLoginAction } from "./pages/login/Login.jsx";
 import Register, { userRegisterAction } from "./pages/register/Register.jsx";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 const Feed = lazy(() => import("./pages/feed/Feed.jsx"));
 const Profile = lazy(() => import("./pages/profile/Profile.jsx"));
@@ -75,6 +76,7 @@ const queryClient = new QueryClient({});
 export function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <ReactQueryDevtools initialIsOpen={false} />
       <AuthProvider>
         <Suspense fallback={<Loader />}>
           <RouterProvider router={router} />

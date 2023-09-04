@@ -24,12 +24,6 @@ def callback():
     return jsonify({"message": "Unauthorized"}), 401
 
 
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def catch_all(path):
-    return app.send_static_file("index.html")
-
-
 @app.route("/api/send_image/<filename>")
 def send_image(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
@@ -59,3 +53,9 @@ app.register_blueprint(posts)
 app.register_blueprint(comments)
 app.register_blueprint(reactions)
 app.register_blueprint(messages)
+
+
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def catch_all(path):
+    return app.send_static_file("index.html")

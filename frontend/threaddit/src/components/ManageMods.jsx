@@ -3,6 +3,7 @@ import axios from "axios";
 import PropTypes from "prop-types";
 import { useEffect, useState } from "react";
 import Svg from "./Svg";
+import Loader from "./Loader";
 
 ManageMods.propTypes = {
   mods: PropTypes.array,
@@ -17,7 +18,7 @@ export default function ManageMods({ mods, threadId }) {
     queryFn: async ({ signal }) => {
       return await axios.get(`/api/user/search/${search}`, { signal }).then((data) => data.data);
     },
-    enabled: search.length > 0,
+    enabled: search.length > 3,
   });
   useEffect(() => {
     focusManager.setFocused(false);
@@ -64,24 +65,30 @@ export default function ManageMods({ mods, threadId }) {
           id="username"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="p-2 mx-10 font-semibold border-2"
+          className="p-2 mx-3 font-semibold border-2 md:mx-10"
           placeholder="Enter username to add new mod"
         />
-        {!isFetching && data && (
-          <ul className="overflow-auto relative p-4 m-3 space-y-2 md:max-h-[38vh] max-h-[45vh] list-none rounded-md bg-theme-cultured">
-            {data?.map(
-              (user) =>
-                !modList.includes(user.username) && (
-                  <li
-                    key={user.username}
-                    className="flex justify-between items-center p-1 px-2 bg-white rounded-md cursor-pointer"
-                    onClick={() => mutate({ username: user.username })}>
-                    {user.username}
-                    <Svg type="add" className="w-8 h-8 font-bold text-theme-orange" />
-                  </li>
-                )
-            )}
-          </ul>
+        {isFetching ? (
+          <div className="m-28">
+            <Loader forPosts={true} />
+          </div>
+        ) : (
+          data && (
+            <ul className="overflow-auto relative p-4 m-3 space-y-2 md:max-h-[38vh] max-h-[45vh] list-none rounded-md bg-theme-cultured">
+              {data?.map(
+                (user) =>
+                  !modList.includes(user.username) && (
+                    <li
+                      key={user.username}
+                      className="flex justify-between items-center p-1 px-2 bg-white rounded-md cursor-pointer"
+                      onClick={() => mutate({ username: user.username })}>
+                      {user.username}
+                      <Svg type="add" className="w-8 h-8 font-bold text-theme-orange" />
+                    </li>
+                  )
+              )}
+            </ul>
+          )
         )}
       </div>
     </div>

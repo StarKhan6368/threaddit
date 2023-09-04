@@ -66,8 +66,7 @@ class User(db.Model, UserMixin):
             self.avatar = unqiue_filename
         elif form_data.get("content_type") == "url":
             self.avatar = form_data.get("content_url")
-        if self.bio:
-            self.bio = form_data.get("bio")
+        self.bio = form_data.get("bio")
         db.session.commit()
 
     def has_role(self, role):

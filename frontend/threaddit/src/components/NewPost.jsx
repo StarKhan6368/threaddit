@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { useState } from "react";
 import avatar from "../assets/avatar.png";
 import AuthConsumer from "./AuthContext";
-import Spinner from "./Spinner";
+import Loader from "./Loader";
 
 NewPost.propTypes = {
   setShowModal: PropTypes.func,
@@ -26,7 +26,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
   const [media, setMedia] = useState("");
   const [mediaType, setMediaType] = useState("image");
   const [imageUrl, setImageUrl] = useState("");
-  const [thread, setThread] = useState(threadInfo.thread_id || data[0]?.id);
+  const [thread, setThread] = useState(threadInfo.thread_id || 0);
   const { user } = AuthConsumer();
   async function handleSubmit(e) {
     e?.preventDefault();
@@ -54,7 +54,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
         .catch((err) => alert(`${err.message} check your fields, Title is mandatory`));
     }
   }
-  if (isLoading) return <Spinner />;
+  if (isLoading) return <Loader />;
   return (
     <div className="flex flex-col p-5 space-y-5 w-5/6 rounded-md min-h-4/6 md:w-3/4 md:h-5/6 md:p-10 bg-theme-cultured">
       <div className="flex flex-col justify-between items-center p-4 space-y-3 bg-white rounded-xl md:flex-row md:space-y-0">

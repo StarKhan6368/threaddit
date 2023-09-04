@@ -52,7 +52,7 @@ export function SubThread() {
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
       <div className="flex flex-col p-5 space-y-1 w-full bg-white rounded-md md:pb-3 md:space-y-3">
         <div
-          className={`flex pr-3 flex-col md:flex-row items-center rounded-full md:bg-theme-cultured ${
+          className={`flex p-2 flex-col md:flex-row items-center rounded-md md:rounded-full bg-theme-cultured ${
             !threadData?.logo && "py-5"
           }`}>
           {threadData?.logo && <img src={threadData?.logo} className="w-32 h-32 rounded-full md:w-36 md:h-36" alt="" />}
@@ -66,12 +66,10 @@ export function SubThread() {
                 {threadData?.description}
               </p>
             )}
-            <div className="flex justify-center space-x-3">
+            <div className="flex justify-between mt-2 space-x-7 w-full md:w-11/12">
               <p className="text-sm">{threadData?.subscriberCount} subscribers</p>
-              <div className="flex justify-between space-x-3">
-                <p className="text-sm">{threadData?.PostsCount} posts</p>
-                <p className="text-sm">{threadData?.CommentsCount} comments</p>
-              </div>
+              <p className="text-sm">{threadData?.PostsCount} posts</p>
+              <p className="text-sm">{threadData?.CommentsCount} comments</p>
             </div>
           </div>
         </div>
