@@ -52,7 +52,7 @@ export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShow
   }
   function handleEdit() {
     setShowModal(true);
-    setModalData(<NewPost isEdit={true} postInfo={postInfo} setShowModal={setShowModal} />);
+    setModalData(<NewPost isEdit={true} postInfo={postInfo} setShowModal={setShowModal} threadInfo={threadInfo} />);
   }
   const shouldBeAbleToDelete =
     isAuthenticated &&

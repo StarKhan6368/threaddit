@@ -65,3 +65,4 @@ backend/threaddit/uploaded_media/
 backend/threaddit/messages/__pycache__/__init__.cpython-311.pyc
 backend/threaddit/messages/__pycache__/models.cpython-311.pyc
 backend/threaddit/messages/__pycache__/routes.cpython-311.pyc
+backend/threaddit/static/uploads/

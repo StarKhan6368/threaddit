@@ -1,16 +1,19 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from marshmallow import ValidationError
+import os
 from flask_login import LoginManager
 from threaddit.config import POSTGRES_USER, POSTGRES_PASSWORD, SECRET_KEY
 
+
+upload_folder = os.path.join(os.path.dirname(__file__), "static/uploads")
 app = Flask(__name__)
 app.config[
     "SQLALCHEMY_DATABASE_URI"
-] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost/threaddit_test"
+] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost/threaddit"
 app.config["SECRET_KEY"] = SECRET_KEY
-app.config["UPLOAD_FOLDER"] = "./backend/threaddit/uploaded_media/"
+app.config["UPLOAD_FOLDER"] = upload_folder
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 ma = Marshmallow(app)
@@ -24,6 +27,11 @@ def callback():
 @app.route("/")
 def index():
     return "Hello World!"
+
+
+@app.route("/api/send_image/<filename>")
+def send_image(filename):
+    return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
 
 @app.errorhandler(ValidationError)

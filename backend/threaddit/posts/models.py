@@ -1,7 +1,8 @@
 from threaddit import db, ma, app
-import base64, os
-from flask import send_file, jsonify
+import os, uuid
+from flask import jsonify, url_for
 from datetime import datetime, timedelta
+from werkzeug.utils import secure_filename
 from threaddit.subthreads.models import Subthread
 from flask_marshmallow.fields import fields
 from marshmallow.exceptions import ValidationError
@@ -30,6 +31,46 @@ class Posts(db.Model):
     comment_info = db.relationship("CommentInfo", back_populates="post")
     saved_post = db.relationship("SavedPosts", back_populates="post")
 
+    def get_media(self):
+        if self.media and not self.media.startswith("http"):
+            return url_for("send_image", filename=self.media)
+        return self.media
+
+    def patch(self, form_data, image):
+        self.content = form_data.get("content", self.content)
+        self.title = form_data.get("title", self.title)
+        self.handle_media(
+            form_data.get("content_type"), image, form_data.get("content_url")
+        )
+        self.is_edited = True
+        db.session.commit()
+
+    @classmethod
+    def add(cls, form_data, image, user_id):
+        new_post = Posts(
+            user_id=user_id,
+            subthread_id=form_data.get("subthread_id"),
+            title=form_data.get("title"),
+        )
+        new_post.handle_media(
+            form_data.get("content_type"), image, form_data.get("content_url")
+        )
+        if form_data.get("content"):
+            new_post.content = form_data.get("content")
+        db.session.add(new_post)
+        db.session.commit()
+
+    def handle_media(self, content_type, image=None, url=None):
+        if content_type == "image" and image:
+            if self.media and not self.media.startswith("http"):
+                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], self.media))
+            filename = secure_filename(image.filename)
+            unique_filename = f"{uuid.uuid4().hex}_{filename}"
+            image.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_filename))
+            self.media = unique_filename
+        elif content_type == "url" and url:
+            self.media = url
+
     def __init__(self, user_id, subthread_id, title, media=None, content=None):
         self.user_id = user_id
         self.subthread_id = subthread_id
@@ -38,18 +79,13 @@ class Posts(db.Model):
         self.content = content
 
     def as_dict(self):
-        if self.media and not str(self.media).startswith("http"):
-            data = open(f"{app.config['UPLOAD_FOLDER']}/{self.media}", "rb").read()
-            media = f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
-        else:
-            media = self.media
         return {
             "post_id": self.id,
             "is_edited": self.is_edited,
             "user_id": self.user_id,
             "subthread_id": self.subthread_id,
             "title": self.title,
-            "media": media,
+            "media": self.get_media(),
             "content": self.content,
             "created_at": self.created_at,
         }
@@ -91,45 +127,21 @@ class PostInfo(db.Model):
     subthread = db.relationship("Subthread", back_populates="post_info")
     user = db.relationship("User", back_populates="post_info")
 
-    def as_dict(self):
-        if self.media and not str(self.media).startswith("http"):
-            data = open(f"{app.config['UPLOAD_FOLDER']}/{self.media}", "rb").read()
-            media = f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
-        else:
-            media = self.media
-        if self.thread_logo and not str(self.thread_logo).startswith("http"):
-            data = open(
-                f"{app.config['UPLOAD_FOLDER']}/{self.thread_logo}", "rb"
-            ).read()
-            thread_logo = (
-                f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
-            )
-        else:
-            thread_logo = self.thread_logo
-        if self.user_avatar and not str(self.user_avatar).startswith("http"):
-            data = open(
-                f"{app.config['UPLOAD_FOLDER']}/{self.user_avatar}", "rb"
-            ).read()
-            user_avatar = (
-                f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
-            )
-        else:
-            user_avatar = self.user_avatar
-        cur_user = current_user.id if current_user.is_authenticated else None
+    def as_dict(self, cur_user=None):
         p_info = {
             "user_info": {
                 "user_name": self.user_name,
-                "user_avatar": user_avatar,
+                "user_avatar": self.user.get_avatar(),
             },
             "thread_info": {
                 "thread_id": self.thread_id,
                 "thread_name": self.thread_name,
-                "thread_logo": thread_logo,
+                "thread_logo": self.subthread.get_logo(),
             },
             "post_info": {
                 "id": self.post_id,
                 "title": self.title,
-                "media": media,
+                "media": self.post.get_media(),
                 "is_edited": self.is_edited,
                 "content": self.content,
                 "created_at": self.created_at,
@@ -137,19 +149,12 @@ class PostInfo(db.Model):
                 "comments_count": self.comments_count,
             },
         }
-        if not cur_user:
-            return p_info
-        else:
+        if cur_user:
             has_reaction = Reactions.query.filter_by(
                 post_id=self.post_id, user_id=cur_user
             ).first()
             p_info["current_user"] = {
                 "has_upvoted": has_reaction.is_upvote if has_reaction else None,
-                "has_commented": bool(
-                    Comments.query.filter_by(
-                        post_id=self.post_id, user_id=cur_user
-                    ).first()
-                ),
             }
             p_info["post_info"] = p_info["post_info"] | {
                 "saved": bool(

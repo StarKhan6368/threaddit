@@ -1,15 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AuthConsumer from "../../components/AuthContext";
 import InfinitePostsLayout from "../../components/InfinitePosts";
 import ManageMods from "../../components/ManageMods";
 import Modal from "../../components/Modal";
 import { NewThread } from "../../components/NewThread";
-import { AnimatePresence } from "framer-motion";
 
 export function SubThread() {
+  const listRef = useRef();
   const navigate = useNavigate();
   const [modalData, setModalData] = useState(false);
   const queryClient = useQueryClient();
@@ -45,6 +46,7 @@ export function SubThread() {
       default:
         navigate(`/u/${value}`);
     }
+    listRef.current.value = "more";
   }
   return (
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
@@ -59,7 +61,11 @@ export function SubThread() {
               <h1 className="text-xl font-semibold">{threadData?.name}</h1>
             </div>
             <p className="text-xs">Since: {new Date(threadData?.created_at).toDateString()}</p>
-            <p className={`${threadData?.description.length > 90 && "text-xs"} md:block`}>{threadData?.description}</p>
+            {threadData?.description && (
+              <p className={`${threadData?.description.length > 90 && "text-xs"} md:block`}>
+                {threadData?.description}
+              </p>
+            )}
             <div className="flex justify-center space-x-3">
               <p className="text-sm">{threadData?.subscriberCount} subscribers</p>
               <div className="flex justify-between space-x-3">
@@ -79,6 +85,7 @@ export function SubThread() {
               {threadData?.has_subscribed ? "Leave" : "Join"}
             </button>
             <select
+              ref={listRef}
               defaultValue={"more"}
               onChange={(e) => handleChange(e.target.value)}
               name="mods"

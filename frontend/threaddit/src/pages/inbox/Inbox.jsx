@@ -26,20 +26,20 @@ export function Inbox() {
           {data?.map((message) => (
             <li
               className={`w-full flex items-center p-3 space-x-2 rounded-xl cursor-pointer ${
-                curChat.name === message.sender.name ? "bg-blue-200" : "hover:bg-blue-200"
+                curChat.username === message.sender.username ? "bg-blue-200" : "hover:bg-blue-200"
               }`}
               key={message.message_id}
               onClick={() => setCurChat(message.sender)}>
               <img src={message.sender.avatar || avatar} className="w-14 h-14 rounded-full" alt="" />
               <div className="flex flex-col space-y-1 w-full">
                 <div className="flex justify-between items-center w-full">
-                  <p className="font-medium">{message.sender.name}</p>
+                  <p className="font-medium">{message.sender.username}</p>
                   {!message.latest_from_user && !message.seen && (
                     <Svg type="mail" className="w-4 h-4 text-theme-orange" />
                   )}
                 </div>
                 <p className="text-sm">
-                  {message.latest_from_user ? "You: " : `${message.receiver.name}: `}
+                  {message.latest_from_user ? "You: " : `${message.receiver.username}: `}
                   {message.content.slice(0, 15)}
                   {message.content.length > 15 ? "..." : ""}
                 </p>
@@ -58,20 +58,20 @@ export function Inbox() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: index * 0.25 }}
             className={`flex items-center w-full p-3 space-x-2 rounded-xl cursor-pointer ${
-              curChat.name === message.sender.name ? "bg-blue-200" : "hover:bg-blue-200"
+              curChat.username === message.sender.username ? "bg-blue-200" : "hover:bg-blue-200"
             }`}
             key={message.message_id}
             onClick={() => setCurChat(message.sender)}>
             <img src={message.sender.avatar || avatar} className="w-14 h-14 rounded-full" alt="" />
             <div className="flex flex-col space-y-1 w-full">
               <div className="flex justify-between items-center w-full">
-                <p className="font-medium">{message.sender.name}</p>
+                <p className="font-medium">{message.sender.username}</p>
                 {!message.latest_from_user && !message.seen && (
                   <Svg type="mail" className="w-4 h-4 text-theme-orange" />
                 )}
               </div>
               <p className="text-sm">
-                {message.latest_from_user ? "You: " : `${message.receiver.name}: `}
+                {message.latest_from_user ? "You: " : `${message.receiver.username}: `}
                 {message.content.slice(0, 15)}
                 {message.content.length > 15 ? "..." : ""}
               </p>
@@ -94,6 +94,7 @@ Chat.propTypes = {
   sender: PropTypes.shape({
     avatar: PropTypes.string,
     name: PropTypes.string,
+    username: PropTypes.string,
   }),
   setCurChat: PropTypes.func,
   newChat: PropTypes.bool,
@@ -104,21 +105,21 @@ export function Chat({ sender, setCurChat, newChat = false }) {
   const { user } = AuthConsumer();
   const [message, setMessage] = useState("");
   const { data, isFetching } = useQuery({
-    queryKey: ["chat", sender.name],
+    queryKey: ["chat", sender.username],
     queryFn: async () => {
-      return await axios.get(`/api/messages/all/${sender.name}`).then((res) => res.data);
+      return await axios.get(`/api/messages/all/${sender.username}`).then((res) => res.data);
     },
-    enabled: sender.name !== undefined,
+    enabled: sender.username !== undefined,
   });
   const { mutate } = useMutation({
     mutationFn: async (params) => {
       return await axios
-        .post("/api/messages", { content: params.message, receiver: params.sender.name })
+        .post("/api/messages", { content: params.message, receiver: params.sender.username })
         .then((res) => res.data);
     },
     onSuccess: () => {
       setMessage("");
-      queryClient.invalidateQueries({ queryKey: ["chat", sender.name] });
+      queryClient.invalidateQueries({ queryKey: ["chat", sender.username] });
       queryClient.invalidateQueries({ queryKey: ["inbox"] });
     },
   });
@@ -146,7 +147,7 @@ export function Chat({ sender, setCurChat, newChat = false }) {
       <div className="flex justify-between items-center p-3 mx-2 border-b-2">
         <div className="flex items-center space-x-4">
           <img src={sender.avatar || avatar} alt="" className="w-14 h-14 rounded-full" />
-          <p className="text-xl font-semibold">{sender.name}</p>
+          <p className="text-xl font-semibold">{sender.username}</p>
         </div>
         <button
           onClick={() => setCurChat(false)}

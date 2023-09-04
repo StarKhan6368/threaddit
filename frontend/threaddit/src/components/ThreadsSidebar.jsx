@@ -55,7 +55,9 @@ function SideBarComponent({ threadList }) {
             {thread.logo && <img src={thread.logo} alt="" className="w-6 h-6 rounded-full" />}
             <span className="">{thread.name}</span>
           </div>
-          <span className="p-1 px-2 text-sm font-semibold rounded-md bg-theme-gray-blue">{thread.subscriberCount}</span>
+          <span className="p-1 px-2 text-sm font-semibold rounded-md bg-theme-gray-blue">
+            {thread.subscriberCount > 9 ? thread.subscriberCount : `0${thread.subscriberCount}`}
+          </span>
         </Link>
       ))}
     </ul>

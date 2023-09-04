@@ -4,12 +4,12 @@ import { AppLogo } from "../../components/Navbar.jsx";
 import Svg from "../../components/Svg.jsx";
 
 export function Register() {
+  const [showPass, setShowPass] = useState(false);
   const actionData = useActionData();
   const navigate = useNavigate();
-  if (!actionData?.errors) {
-    navigate("/login");
+  if (actionData === null) {
+    return navigate("/login");
   }
-  const [showPass, setShowPass] = useState(false);
   return (
     <div className="flex justify-center items-center w-screen h-screen md:space-x-10 bg-theme-cultured">
       <AppLogo forBanner={true} />
@@ -76,7 +76,9 @@ export function Register() {
               )}
             </div>
           </label>
-          <button type="submit" className="py-2 w-full font-semibold text-white rounded-md bg-theme-orange active:scale-95">
+          <button
+            type="submit"
+            className="py-2 w-full font-semibold text-white rounded-md bg-theme-orange active:scale-95">
             Sign up
           </button>
         </Form>

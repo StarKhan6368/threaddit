@@ -1,14 +1,14 @@
+import { AnimatePresence, motion } from "framer-motion";
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { Link, ScrollRestoration } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import avatar from "../assets/avatar.png";
+import AuthConsumer from "./AuthContext";
 import Modal from "./Modal";
+import PostMoreOptions from "./PostMoreOptions";
+import Reply from "./Reply";
 import Svg from "./Svg";
 import Vote from "./Vote";
-import Reply from "./Reply";
-import AuthConsumer from "./AuthContext";
-import PostMoreOptions from "./PostMoreOptions";
 
 Post.propTypes = {
   post: PropTypes.object,
@@ -160,7 +160,6 @@ export function Post({ post, isExpanded = false, postIndex }) {
             }}
           />
         </div>
-        {isExpanded && <ScrollRestoration />}
       </motion.div>
       <AnimatePresence>
         {modalShow && (

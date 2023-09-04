@@ -8,7 +8,7 @@ from threaddit.users.models import (
 )
 from threaddit.config import SECRET_KEY
 from threaddit.auth.decorators import auth_role
-from bcrypt import hashpw, checkpw
+from bcrypt import hashpw, checkpw, gensalt
 from flask_login import login_user, logout_user, current_user, login_required
 
 user = Blueprint("users", __name__, url_prefix="/api")
@@ -45,12 +45,7 @@ def user_register():
     new_user = User(
         register_form.get("username"),
         register_form.get("email"),
-        hashpw(register_form.get("password").encode(), SECRET_KEY).decode("utf-8"),
-    )
-    new_user = User(
-        register_form.get("username"),
-        register_form.get("email"),
-        register_form.get("password"),
+        hashpw(register_form.get("password").encode(), gensalt()).decode("utf-8"),
     )
     new_user.add()
     return jsonify(new_user.as_dict()), 201
@@ -94,7 +89,7 @@ def user_get_by_username(user_name):
 
 @user.route("/users", methods=["GET"])
 @login_required
-@auth_role(["admin", "sup-admin", "owner"])
+@auth_role(["admin"])
 def users_get():
     return jsonify(User.get_all()), 200
 

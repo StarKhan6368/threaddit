@@ -1,11 +1,11 @@
-def create_comment_tree(comments):
+def create_comment_tree(comments, cur_user=None):
     if not comments[0]:
         return []
     comment_dict = {}
     root_comments = []
 
     for comment in comments:
-        comment_data = {"comment": comment.as_dict(), "children": []}
+        comment_data = {"comment": comment.as_dict(cur_user), "children": []}
         comment_dict[comment.comment_id] = comment_data
 
         if not comment.has_parent:

@@ -1,7 +1,5 @@
-from threaddit import db, app
-import base64, os
+from threaddit import db
 from threaddit.reactions.models import Reactions
-from flask_login import current_user
 
 
 class Comments(db.Model):
@@ -20,6 +18,25 @@ class Comments(db.Model):
     user = db.relationship("User", back_populates="comment")
     post = db.relationship("Posts", back_populates="comment")
     comment_info = db.relationship("CommentInfo", back_populates="comment")
+
+    @classmethod
+    def add(cls, form_data, user_id):
+        new_comment = Comments(
+            user_id=user_id,
+            content=form_data["content"],
+            post_id=form_data["post_id"],
+        )
+        if form_data.get("has_parent", False):
+            new_comment.has_parent = True
+            new_comment.parent_id = form_data["parent_id"]
+        db.session.add(new_comment)
+        db.session.commit()
+
+    def patch(self, content):
+        if content:
+            self.content = content
+            self.is_edited = True
+            db.session.commit()
 
     def __init__(self, user_id, content, post_id=None, has_parent=None, parent_id=None):
         self.user_id = user_id
@@ -44,21 +61,11 @@ class CommentInfo(db.Model):
     post = db.relationship("Posts", back_populates="comment_info")
     comment = db.relationship("Comments", back_populates="comment_info")
 
-    def as_dict(self):
-        cur_user = current_user.id if current_user.is_authenticated else None
-        if self.user_avatar and not str(self.user_avatar).startswith("http"):
-            data = open(
-                f"{app.config['UPLOAD_FOLDER']}/{self.user_avatar}", "rb"
-            ).read()
-            user_avatar = (
-                f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
-            )
-        else:
-            user_avatar = self.user_avatar
+    def as_dict(self, cur_user):
         comment_info = {
             "user_info": {
                 "user_name": self.user_name,
-                "user_avatar": user_avatar,
+                "user_avatar": self.comment.user.get_avatar(),
             },
             "comment_info": {
                 "id": self.comment_id,
@@ -70,13 +77,11 @@ class CommentInfo(db.Model):
                 "parent_id": self.parent_id,
             },
         }
-        if not cur_user:
-            return comment_info
-        else:
+        if cur_user:
             has_reaction = Reactions.query.filter_by(
                 comment_id=self.comment_id, user_id=cur_user
             ).first()
             comment_info["current_user"] = {
                 "has_upvoted": has_reaction.is_upvote if has_reaction else None
             }
-            return comment_info
+        return comment_info

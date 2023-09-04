@@ -10,9 +10,10 @@ NewPost.propTypes = {
   setShowModal: PropTypes.func,
   isEdit: PropTypes.bool,
   postInfo: PropTypes.object,
+  threadInfo: PropTypes.object,
 };
 
-export default function NewPost({ setShowModal, isEdit = false, postInfo = {} }) {
+export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, threadInfo = {} }) {
   const { data, isLoading } = useQuery({
     queryKey: ["threads"],
     queryFn: async () => {
@@ -25,7 +26,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {} })
   const [media, setMedia] = useState("");
   const [mediaType, setMediaType] = useState("image");
   const [imageUrl, setImageUrl] = useState("");
-  const [thread, setThread] = useState(0);
+  const [thread, setThread] = useState(threadInfo.thread_id || 0);
   const { user } = AuthConsumer();
   async function handleSubmit(e) {
     e?.preventDefault();

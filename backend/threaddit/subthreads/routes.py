@@ -3,9 +3,8 @@ from flask_login import current_user, login_required
 from threaddit.users.models import User
 from flask import Blueprint, jsonify, request
 from threaddit.models import UserRole
-from threaddit import db, app
-from werkzeug.utils import secure_filename
-import os
+from threaddit import db
+from threaddit.auth.decorators import auth_role
 
 threads = Blueprint("threads", __name__, url_prefix="/api")
 
@@ -14,25 +13,32 @@ threads = Blueprint("threads", __name__, url_prefix="/api")
 def get_subthreads():
     limit = request.args.get("limit", default=10, type=int)
     offset = request.args.get("offset", default=0, type=int)
+    cur_user = current_user.id if current_user.is_authenticated else None
     subscribed_threads = []
     if current_user.is_authenticated:
         subscribed_threads = [
-            subscription.subthread.as_dict()
+            subscription.subthread.as_dict(cur_user)
             for subscription in Subscription.query.filter_by(user_id=current_user.id)
             .limit(limit)
             .offset(offset)
             .all()
         ]
     all_threads = [
-        thread.as_dict()
-        for thread in SubthreadInfo.query.order_by(SubthreadInfo.members_count.desc())
+        subinfo.as_dict()
+        for subinfo in SubthreadInfo.query.filter(
+            SubthreadInfo.members_count.is_not(None)
+        )
+        .order_by(SubthreadInfo.members_count.desc())
         .limit(limit)
         .offset(offset)
         .all()
     ]
     popular_threads = [
-        thread.as_dict()
-        for thread in SubthreadInfo.query.order_by(SubthreadInfo.posts_count.desc())
+        subinfo.as_dict()
+        for subinfo in SubthreadInfo.query.filter(
+            SubthreadInfo.posts_count.is_not(None)
+        )
+        .order_by(SubthreadInfo.posts_count.desc())
         .limit(limit)
         .offset(offset)
         .all()
@@ -89,9 +95,7 @@ def get_thread_by_name(thread_name):
 @threads.route("threads/subscription/<tid>", methods=["POST"])
 @login_required
 def new_subscription(tid):
-    new_sub = Subscription(current_user.id, tid)
-    db.session.add(new_sub)
-    db.session.commit()
+    Subscription.add(tid, current_user.id)
     return jsonify({"message": "Subscribed"}), 200
 
 
@@ -114,103 +118,43 @@ def del_subscription(tid):
 def new_thread():
     image = request.files.get("media")
     form_data = request.form.to_dict()
-    if form_data.get("content_type") == "image" and image:
-        filename = secure_filename(image.filename)
-        image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-        media = filename
-    elif form_data.get("content_type") == "url":
-        media = form_data.get("content_url")
-    else:
-        media = None
-    new_sub = Subthread(
-        name=form_data.get("name")
-        if form_data.get("name").startswith("t/")
-        else f"t/{form_data.get('name')}",
-        description=form_data.get("description"),
-        logo=media,
-        created_by=current_user.id,
-    )
-    db.session.add(new_sub)
-    db.session.commit()
-    return jsonify({"message": "Thread created"}), 200
+    subthread = Subthread.add(form_data, image, current_user.id)
+    if subthread:
+        UserRole.add_moderator(current_user.id, subthread.id)
+        return jsonify({"message": "Thread created"}), 200
+    return jsonify({"message": "Something went wrong"}), 500
 
 
 @threads.route("/thread/<tid>", methods=["PATCH"])
 @login_required
+@auth_role(["admin", "mod"])
 def update_thread(tid):
-    thread = Subthread.query.filter_by(id=tid)
+    thread = Subthread.query.filter_by(id=tid).first()
     if not thread:
         return jsonify({"message": "Invalid Thread"}), 400
-    user_role = UserRole.query.filter_by(user_id=current_user.id, subthread_id=tid)
-    if (
-        not current_user.id != thread.first().created_by
-        or not user_role
-        or not current_user.has_role("admin")
-    ):
-        return jsonify({"message": "Unauthorized"}), 401
     image = request.files.get("media")
     form_data = request.form.to_dict()
-    if form_data.get("content_type") == "image" and image:
-        filename = secure_filename(image.filename)
-        image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-        media = filename
-    elif form_data.get("content_type") == "url":
-        media = form_data.get("content_url")
-    else:
-        media = None
-    thread = thread.first()
-    thread.description = form_data.get("description")
-    if media:
-        thread.logo = media
-    db.session.commit()
+    thread.patch(form_data, image)
     return jsonify({"message": "Thread updated"}), 200
 
 
 @threads.route("/thread/mod/<tid>/<username>", methods=["PUT"])
 @login_required
+@auth_role(["admin", "mod"])
 def new_mod(tid, username):
-    thread = Subthread.query.filter_by(id=tid).first()
     user = User.query.filter_by(username=username).first()
-    if (
-        thread.created_by == user.id
-        or current_user.has_role("admin")
-        or current_user.has_role("mod")
-    ):
-        current_user_roles = UserRole.query.filter_by(user_id=user.id, subthread_id=tid)
-        if not current_user_roles:
-            return jsonify({"message": "Unauthorized"}), 401
-        new_role = UserRole(user_id=user.id, subthread_id=tid, role_id=1)
-        db.session.add(new_role)
-        db.session.commit()
-        return jsonify({"message": "Moderator added"}), 200
-    return jsonify({"message": "Unauthorized"}), 401
+    UserRole.add_moderator(user.id, tid)
+    return jsonify({"message": "Moderator added"}), 200
 
 
 @threads.route("/thread/mod/<tid>/<username>", methods=["DELETE"])
 @login_required
+@auth_role(["admin", "mod"])
 def delete_mod(tid, username):
-    thread = Subthread.query.filter_by(id=tid).first()
     user = User.query.filter_by(username=username).first()
-    if (
-        thread.created_by == user.id
-        or current_user.has_role("admin")
-        or current_user.has_role("mod")
-    ):
-        current_user_roles = UserRole.query.filter_by(user_id=user.id, subthread_id=tid)
-        if not current_user_roles:
-            return jsonify({"message": "Unauthorized"}), 401
-        existing_role = UserRole.query.filter_by(
-            user_id=user.id, subthread_id=tid
-        ).first()
-        if (
-            existing_role.user.has_role("admin")
-            or thread.created_by == existing_role.user_id
-        ):
-            return jsonify({"message": "Unauthorized"}), 401
-        else:
-            existing_role = UserRole.query.filter_by(
-                user_id=user.id, subthread_id=tid
-            ).delete()
-            db.session.commit()
-            return jsonify({"message": "Moderator deleted"}), 200
-    return jsonify({"message": "Unauthorized"}), 401
+    thread = Subthread.query.filter_by(id=tid).first()
+    if thread.created_by == user.id and not current_user.has_role("admin"):
+        return jsonify({"message": "Cannot Remove Thread Creator"}), 400
+    existing_role = UserRole.query.filter_by(user_id=user.id, subthread_id=tid).delete()
+    db.session.commit()
+    return jsonify({"message": "Moderator deleted"}), 200

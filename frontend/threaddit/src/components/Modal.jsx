@@ -5,7 +5,6 @@ import useEventListener from "../hooks/useEventListener";
 
 Modal.propTypes = {
   children: PropTypes.node,
-  showModal: PropTypes.bool,
   setShowModal: PropTypes.func,
 };
 export default function Modal({ children, setShowModal }) {

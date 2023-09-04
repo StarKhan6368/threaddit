@@ -23,7 +23,7 @@ export function Profile() {
   useEffect(() => {
     switch (action) {
       case "message":
-        setAction(<Chat sender={{ name: data.username }} setCurChat={setAction} newChat={true} />);
+        setAction(<Chat sender={data} setCurChat={setAction} newChat={true} />);
         break;
       case "edit":
         setAction(<UpdateUser setModal={setAction} />);
@@ -42,7 +42,7 @@ export function Profile() {
         <div className="flex flex-col p-2 w-full bg-white rounded-md md:p-5">
           {!userIsFetching && data && (
             <div className="flex pr-3 py-0.5 pl-1 rounded-full bg-theme-cultured">
-              <img src={data?.avatar || avatar} className="w-24 h-24 bg-white rounded-full md:w-36 md:h-36" alt="" />
+              <img src={data.avatar || avatar} className="w-24 h-24 bg-white rounded-full md:w-36 md:h-36" alt="" />
               <div className="flex flex-col flex-1 justify-around items-center pl-4 md:p-2">
                 <h1 className="flex items-center space-x-2 text-lg font-semibold">
                   u/{data.username}{" "}

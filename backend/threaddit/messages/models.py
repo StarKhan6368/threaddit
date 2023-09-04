@@ -29,37 +29,15 @@ class Messages(db.Model):
         self.content = content
 
     def as_dict(self):
-        if self.user_sender.avatar and not str(self.user_sender.avatar).startswith(
-            "http"
-        ):
-            data = open(
-                f"{app.config['UPLOAD_FOLDER']}/{self.user_sender.avatar}", "rb"
-            ).read()
-            user_sender_avatar = (
-                f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
-            )
-        else:
-            user_sender_avatar = self.user_sender.avatar
-        if self.user_receiver.avatar and not str(self.user_receiver.avatar).startswith(
-            "http"
-        ):
-            data = open(
-                f"{app.config['UPLOAD_FOLDER']}/{self.user_receiver.avatar}", "rb"
-            ).read()
-            user_receiver_avatar = (
-                f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
-            )
-        else:
-            user_receiver_avatar = self.user_receiver.avatar
         return {
             "message_id": self.id,
             "sender": {
-                "name": self.user_sender.username,
-                "avatar": user_sender_avatar,
+                "username": self.user_sender.username,
+                "avatar": self.user_sender.get_avatar(),
             },
             "receiver": {
-                "name": self.user_receiver.username,
-                "avatar": user_receiver_avatar,
+                "username": self.user_receiver.username,
+                "avatar": self.user_receiver.get_avatar(),
             },
             "content": self.content,
             "created_at": self.created_at,
@@ -91,22 +69,13 @@ class Messages(db.Model):
                 if message.sender_id == user_id
                 else message.user_sender
             )
-            if sender.avatar and not str(sender.avatar).startswith("http"):
-                data = open(
-                    f"{app.config['UPLOAD_FOLDER']}/{sender.avatar}", "rb"
-                ).read()
-                sender_avatar = (
-                    f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
-                )
-            else:
-                sender_avatar = sender.avatar
             messages_list.append(
                 message.as_dict()
                 | {
                     "latest_from_user": message.sender_id == user_id,
                     "sender": {
-                        "name": sender.username,
-                        "avatar": sender_avatar,
+                        "username": sender.username,
+                        "avatar": sender.get_avatar(),
                     },
                 }
             )

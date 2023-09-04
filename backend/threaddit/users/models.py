@@ -1,5 +1,8 @@
 from sqlalchemy import func
+from flask import url_for
+import uuid
 from threaddit import db, login_manager, app
+from werkzeug.utils import secure_filename
 from flask_login import UserMixin
 import base64, os
 from threaddit import ma, app
@@ -49,25 +52,22 @@ class User(db.Model, UserMixin):
     def get_id(self):
         return self.id
 
-    def __str__(self) -> str:
-        return f"id: {self.id}, username: {self.username}, email: {self.email}\
-               registration_date: {self.registration_date}"
-
     def add(self):
         db.session.add(self)
         db.session.commit()
 
     def patch(self, image, form_data):
-        avatar = None
         if form_data.get("content_type") == "image" and image:
+            if self.avatar:
+                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], self.avatar))
             filename = secure_filename(image.filename)
-            image.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-            avatar = filename
+            unqiue_filename = f"{uuid.uuid4().hex}_{filename}"
+            image.save(os.path.join(app.config["UPLOAD_FOLDER"], unqiue_filename))
+            self.avatar = unqiue_filename
         elif form_data.get("content_type") == "url":
-            avatar = form_data.get("content_url")
-        if avatar:
-            self.avatar = avatar
-        self.bio = form_data.get("bio")
+            self.avatar = form_data.get("content_url")
+        if self.bio:
+            self.bio = form_data.get("bio")
         db.session.commit()
 
     def has_role(self, role):
@@ -86,16 +86,16 @@ class User(db.Model, UserMixin):
             all_users.append(user.as_dict(include_all=True))
         return all_users
 
+    def get_avatar(self):
+        if self.avatar and not self.avatar.startswith("http"):
+            return url_for("send_image", filename=self.avatar)
+        return self.avatar
+
     def as_dict(self, include_all=False) -> dict:
-        if self.avatar and not str(self.avatar).startswith("http"):
-            data = open(f"{app.config['UPLOAD_FOLDER']}/{self.avatar}", "rb").read()
-            avatar = f"data:image/jpeg;base64,{base64.b64encode(data).decode('utf-8')}"
-        else:
-            avatar = self.avatar
         return (
             {
                 "username": self.username,
-                "avatar": avatar,
+                "avatar": self.get_avatar(),
                 "bio": self.bio,
                 "registrationDate": self.registration_date,
                 "roles": [r.role.slug for r in self.user_role],

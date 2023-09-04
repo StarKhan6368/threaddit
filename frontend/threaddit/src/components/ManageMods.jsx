@@ -1,8 +1,8 @@
-import PropTypes from "prop-types";
-import Svg from "./Svg";
-import { useEffect, useState } from "react";
 import { focusManager, useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import PropTypes from "prop-types";
+import { useEffect, useState } from "react";
+import Svg from "./Svg";
 
 ManageMods.propTypes = {
   mods: PropTypes.array,
@@ -12,7 +12,6 @@ ManageMods.propTypes = {
 export default function ManageMods({ mods, threadId }) {
   const [modList, setModList] = useState(mods);
   const [search, setSearch] = useState("");
-  console.log(modList);
   const { data, isFetching } = useQuery({
     queryKey: ["search/user", search],
     queryFn: async ({ signal }) => {
@@ -33,7 +32,9 @@ export default function ManageMods({ mods, threadId }) {
             setModList(modList.filter((user) => user !== username));
             return res.data;
           })
-          .catch((err) => alert(`${err.message}, you can't delete creator or admins`));
+          .catch((err) => {
+            alert(`${err.message} - ${err.response.data.message}, Only admins can remove thread creator`);
+          });
       } else {
         return await axios.put(`/api/thread/mod/${threadId}/${username}`).then((res) => {
           setModList([...modList, username]);
