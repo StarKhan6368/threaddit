@@ -26,7 +26,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
   const [media, setMedia] = useState("");
   const [mediaType, setMediaType] = useState("image");
   const [imageUrl, setImageUrl] = useState("");
-  const [thread, setThread] = useState(threadInfo.thread_id || 0);
+  const [thread, setThread] = useState(threadInfo.thread_id || 1);
   const { user } = AuthConsumer();
   async function handleSubmit(e) {
     e?.preventDefault();
