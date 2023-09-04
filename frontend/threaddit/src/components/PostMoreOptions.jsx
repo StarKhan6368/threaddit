@@ -14,9 +14,10 @@ MoreOptions.propTypes = {
   postInfo: PropTypes.object,
   setShowModal: PropTypes.func,
   setModalData: PropTypes.func,
+  handleShare: PropTypes.func,
 };
 
-export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShowModal, setModalData }) {
+export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShowModal, setModalData, handleShare }) {
   const { isAuthenticated, user } = AuthConsumer();
   const [postSaved, setPostSaved] = useState(postInfo?.saved);
   const queryClient = useQueryClient();
@@ -81,7 +82,13 @@ export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShow
                 Edit
               </li>
             )}
-            <li className="p-1 text-sm cursor-pointer md:hidden md:text-base hover:bg-theme-cultured">Share</li>
+            <li
+              className="p-1 text-sm cursor-pointer md:hidden md:text-base hover:bg-theme-cultured"
+              onClick={() => {
+                handleShare().then(() => setExpand(false));
+              }}>
+              Share
+            </li>
           </ul>
         )}
       </div>

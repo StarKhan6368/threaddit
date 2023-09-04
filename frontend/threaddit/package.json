@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^4.33.0",
-    "@tanstack/react-query-devtools": "^4.33.0",
     "axios": "^1.4.0",
     "framer-motion": "^10.16.1",
     "prop-types": "^15.8.1",
@@ -21,8 +20,10 @@
     "react-router-dom": "^6.15.0"
   },
   "devDependencies": {
+    "@tanstack/react-query-devtools": "^4.33.0",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
+    "@vitejs/plugin-basic-ssl": "^1.0.1",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "autoprefixer": "^10.4.15",
     "eslint": "^8.45.0",

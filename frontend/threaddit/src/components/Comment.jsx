@@ -50,8 +50,12 @@ export default function Comment({ children, comment, threadID, commentIndex }) {
   }
   function onEdit(value) {
     if (value === "share") {
-      navigator.clipboard.writeText(location.href);
-      alert("Copied Post Link to clipboard");
+      navigator.clipboard
+        .writeText(location.href)
+        .then(() => {
+          alert("Copied Post Link to clipboard");
+        })
+        .catch((err) => alert(err));
       listRef.current.value = "more";
       return;
     }

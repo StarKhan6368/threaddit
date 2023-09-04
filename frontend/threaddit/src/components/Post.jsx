@@ -51,6 +51,14 @@ export function Post({ post, isExpanded = false, postIndex }) {
     },
     empty: {},
   };
+  async function handleShare() {
+    return navigator.clipboard
+      .writeText(location.href)
+      .then(() => {
+        alert("Copied Post Link to clipboard");
+      })
+      .catch((err) => alert(err));
+  }
   return (
     <>
       <motion.div
@@ -121,12 +129,7 @@ export function Post({ post, isExpanded = false, postIndex }) {
               </div>
             </Link>
           )}
-          <div
-            className="hidden items-center space-x-2 cursor-pointer md:flex group"
-            onClick={() => {
-              navigator.clipboard.writeText(`${location.origin}/post/${post?.post_info.id}`);
-              alert("Link copied to clipboard");
-            }}>
+          <div className="hidden items-center space-x-2 cursor-pointer md:flex group" onClick={handleShare}>
             <Svg type="share" className="w-4 h-4 md:w-6 md:h-6" />
             <p className="text-sm cursor-pointer md:text-base">Share</p>
           </div>
@@ -136,6 +139,7 @@ export function Post({ post, isExpanded = false, postIndex }) {
             postInfo={post?.post_info}
             setShowModal={setShowModal}
             setModalData={setModalData}
+            handleShare={handleShare}
           />
           <div className="flex items-center space-x-3 md:hidden">
             <Vote
