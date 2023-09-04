@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, ScrollRestoration } from "react-router-dom";
 import avatar from "../assets/avatar.png";
 import AuthConsumer from "./AuthContext";
 import Modal from "./Modal";
@@ -165,6 +165,7 @@ export function Post({ post, isExpanded = false, postIndex }) {
           />
         </div>
       </motion.div>
+      {isExpanded && <ScrollRestoration />}
       <AnimatePresence>
         {modalShow && (
           <Modal setShowModal={setShowModal} showModal={modalShow}>
