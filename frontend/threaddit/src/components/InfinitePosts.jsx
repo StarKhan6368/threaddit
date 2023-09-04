@@ -140,7 +140,7 @@ export default function InfinitePostsLayout({ linkUrl, apiQueryKey, forSaved = f
           </ul>
         </header>
       )}
-      {isFetching && <Loader />}
+      {isFetching && <Loader forPosts={true} />}
       <div className="flex flex-col flex-1 space-y-2 w-full h-full md:space-y-3">
         {data?.pages.map((pageData, index) => (
           <ul className="flex flex-col flex-1 space-y-2 w-full h-full md:space-y-3" key={index}>

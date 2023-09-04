@@ -71,13 +71,7 @@ class User(db.Model, UserMixin):
         db.session.commit()
 
     def has_role(self, role):
-        return bool(
-            UserRole.query.join(Role)
-            .filter(Role.slug == role)
-            .filter(UserRole.user_id == self.id)
-            .count()
-            == 1
-        )
+        return role in {r.role.slug for r in self.user_role}
 
     @classmethod
     def get_all(cls):
@@ -98,7 +92,7 @@ class User(db.Model, UserMixin):
                 "avatar": self.get_avatar(),
                 "bio": self.bio,
                 "registrationDate": self.registration_date,
-                "roles": [r.role.slug for r in self.user_role],
+                "roles": list({r.role.slug for r in self.user_role}),
                 "karma": self.user_karma[0].as_dict(),
                 "mod_in": [
                     r.subthread_id for r in self.user_role if r.role.slug == "mod"

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, send_from_directory, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from marshmallow import ValidationError
@@ -8,7 +8,7 @@ from threaddit.config import POSTGRES_USER, POSTGRES_PASSWORD, SECRET_KEY
 
 
 upload_folder = os.path.join(os.path.dirname(__file__), "static/uploads")
-app = Flask(__name__)
+app = Flask(__name__, static_folder="templates", static_url_path="/")
 app.config[
     "SQLALCHEMY_DATABASE_URI"
 ] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost/threaddit"
@@ -24,9 +24,10 @@ def callback():
     return jsonify({"message": "Unauthorized"}), 401
 
 
-@app.route("/")
-def index():
-    return "Hello World!"
+@app.route("/", defaults={"path": ""})
+@app.route("/<path:path>")
+def catch_all(path):
+    return app.send_static_file("index.html")
 
 
 @app.route("/api/send_image/<filename>")
@@ -37,6 +38,11 @@ def send_image(filename):
 @app.errorhandler(ValidationError)
 def handle_marshmallow_validation(err):
     return jsonify({"errors": err.messages}), 400
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return app.send_static_file("index.html")
 
 
 # flake8: noqa

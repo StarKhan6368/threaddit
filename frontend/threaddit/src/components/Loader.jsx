@@ -1,8 +1,13 @@
 import "./loader.css";
+import PropTypes from "prop-types";
 
-export function Loader() {
+Loader.propTypes = {
+  forPosts: PropTypes.bool,
+};
+
+export function Loader({ forPosts = false }) {
   return (
-    <div className="flex justify-center items-center w-screen h-screen">
+    <div className={`flex justify-center items-center ${forPosts ? "max-w-full max-h-full" : "w-screen h-screen"}`}>
       <div style={{ color: "#FF4500" }} className="la-pacman la-dark la-3x">
         <div></div>
         <div></div>

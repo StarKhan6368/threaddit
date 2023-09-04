@@ -77,6 +77,8 @@ class Subthread(db.Model):
             "description": self.description,
             "created_at": self.created_at,
             "logo": self.get_logo(),
+            "PostsCount": len(self.post),
+            "CommentsCount": self.comments_count or 0,
             "created_by": self.user.username,
             "subscriberCount": len(self.subscription),
             "modList": [
