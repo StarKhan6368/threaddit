@@ -4,14 +4,12 @@ from flask_marshmallow import Marshmallow
 from marshmallow import ValidationError
 import os
 from flask_login import LoginManager
-from threaddit.config import POSTGRES_USER, POSTGRES_PASSWORD, SECRET_KEY
+from threaddit.config import PDATABASE_URI, SECRET_KEY
 
 
 upload_folder = os.path.join(os.path.dirname(__file__), "static/uploads")
 app = Flask(__name__, static_folder="templates", static_url_path="/")
-app.config[
-    "SQLALCHEMY_DATABASE_URI"
-] = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@localhost/threaddit"
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 app.config["SECRET_KEY"] = SECRET_KEY
 app.config["UPLOAD_FOLDER"] = upload_folder
 db = SQLAlchemy(app)
