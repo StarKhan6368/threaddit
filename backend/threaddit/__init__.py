@@ -4,7 +4,7 @@ from flask_marshmallow import Marshmallow
 from marshmallow import ValidationError
 import os
 from flask_login import LoginManager
-from threaddit.config import PDATABASE_URI, SECRET_KEY
+from threaddit.config import DATABASE_URI, SECRET_KEY
 
 
 upload_folder = os.path.join(os.path.dirname(__file__), "static/uploads")
