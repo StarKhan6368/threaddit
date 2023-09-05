@@ -62,8 +62,9 @@ export function SubThread() {
             </div>
             <p className="text-xs">Since: {new Date(threadData?.created_at).toDateString()}</p>
             {threadData?.description && (
-              <p className={`${threadData?.description.length > 90 && "text-xs"} md:block`}>
+              <p className={`text-center py-4 md:py-2 text-sm ${threadData?.description.length > 90 && "text-xs"}`}>
                 {threadData?.description}
+                {threadData?.description.length > 90 && "..."}
               </p>
             )}
             <div className="flex justify-between mt-2 space-x-7 w-full md:w-11/12">

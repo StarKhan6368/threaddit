@@ -81,15 +81,17 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
             />
           </label>
         )}
-        <label htmlFor="description" className="flex flex-col space-y-1 md:space-y-0 md:space-x-2 md:flex-row">
+        <label
+          htmlFor="description"
+          className="flex flex-col items-center space-y-1 md:space-y-0 md:space-x-2 md:flex-row">
           <span className="text-sm font-light">Description</span>
-          <input
+          <textarea
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             name="description"
             id="description"
-            className="w-full border-b border-gray-800 focus:outline-none"
+            className="w-full h-20 max-h-28 border-b border-gray-800 focus:outline-none"
           />
         </label>
         <label htmlFor="media" className="flex flex-col items-center space-y-3 md:space-y-0 md:space-x-5 md:flex-row">

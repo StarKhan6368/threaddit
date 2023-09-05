@@ -60,7 +60,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
       <div className="flex flex-col justify-between items-center p-4 space-y-3 bg-white rounded-xl md:flex-row md:space-y-0">
         <div className="flex space-x-3">
           <p>Posting as</p>
-          <img src={user.avatar || avatar} className="w-6 h-6 rounded-full" alt="" />
+          <img src={user.avatar || avatar} className="w-8 h-8 rounded-full" alt="" />
           <p>{user.username}</p>
         </div>
         <div className="flex items-center space-x-2 md:space-x-3">
@@ -69,7 +69,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
           <select
             name="thread"
             id="thread"
-            className="px-10 py-2 bg-white rounded-md border md:px-12"
+            className="px-3 py-2 bg-white rounded-md border md:px-12"
             value={thread}
             onChange={(e) => setThread(Number(e.target.value))}>
             {data?.map((thread) => (
