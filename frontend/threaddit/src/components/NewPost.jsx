@@ -92,8 +92,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
             name="title"
             id="title"
             className="w-full border-b border-gray-800 focus:outline-none"
-            required={true}
-            maxLength={50}
+            required
           />
         </label>
         <label htmlFor="content">

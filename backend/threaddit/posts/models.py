@@ -177,7 +177,7 @@ class PostValidator(ma.SQLAlchemySchema):
         model = Posts
 
     subthread_id = fields.Int(required=True, validate=[doesSubthreadExist])
-    title = fields.Str(required=True, validate=[fields.validate.Length(min=1, max=50)])
+    title = fields.Str(required=True)
     content = fields.Str(required=False)
 
 
