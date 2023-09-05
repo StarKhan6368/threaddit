@@ -16,6 +16,8 @@ def get_comments(pid):
         .order_by(CommentInfo.has_parent.desc(), CommentInfo.comment_id)
         .all()
     )
+    if not comments:
+        return jsonify({"message": "Invalid Post ID"}), 400
     cur_user = current_user.id if current_user.is_authenticated else None
     return (
         jsonify(

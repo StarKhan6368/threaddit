@@ -8,6 +8,7 @@ import InfinitePostsLayout from "../../components/InfinitePosts";
 import ManageMods from "../../components/ManageMods";
 import Modal from "../../components/Modal";
 import { NewThread } from "../../components/NewThread";
+import Loader from "../../components/Loader";
 
 export function SubThread() {
   const listRef = useRef();
@@ -16,7 +17,7 @@ export function SubThread() {
   const queryClient = useQueryClient();
   const params = useParams();
   const { isAuthenticated, user } = AuthConsumer();
-  const { data } = useQuery({
+  const { data, isFetching } = useQuery({
     queryKey: ["thread", params.threadName],
     queryFn: async () => {
       return await axios.get(`/api/threads/${params.threadName}`).then((res) => res.data);
@@ -51,29 +52,35 @@ export function SubThread() {
   return (
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
       <div className="flex flex-col p-5 space-y-1 w-full bg-white rounded-md md:pb-3 md:space-y-3">
-        <div
-          className={`flex p-2 flex-col md:flex-row items-center rounded-md md:rounded-full bg-theme-cultured ${
-            !threadData?.logo && "py-5"
-          }`}>
-          {threadData?.logo && <img src={threadData?.logo} className="w-32 h-32 rounded-full md:w-36 md:h-36" alt="" />}
-          <div className="flex flex-col flex-1 justify-around items-center p-2 space-y-1">
-            <div className="flex items-center space-x-5">
-              <h1 className="text-xl font-semibold">{threadData?.name}</h1>
-            </div>
-            <p className="text-xs">Since: {new Date(threadData?.created_at).toDateString()}</p>
-            {threadData?.description && (
-              <p className={`text-center py-4 md:py-2 text-sm ${threadData?.description.length > 90 && "text-xs"}`}>
-                {threadData?.description}
-                {threadData?.description.length > 90 && "..."}
-              </p>
+        {isFetching ? (
+          <Loader forPosts={true} />
+        ) : (
+          <div
+            className={`flex p-2 flex-col md:flex-row items-center rounded-md md:rounded-full bg-theme-cultured ${
+              !threadData?.logo && "py-5"
+            }`}>
+            {threadData?.logo && (
+              <img src={threadData?.logo} className="w-32 h-32 rounded-full md:w-36 md:h-36" alt="" />
             )}
-            <div className="flex justify-between mt-2 space-x-7 w-full md:w-11/12">
-              <p className="text-sm">{threadData?.subscriberCount} subscribers</p>
-              <p className="text-sm">{threadData?.PostsCount} posts</p>
-              <p className="text-sm">{threadData?.CommentsCount} comments</p>
+            <div className="flex flex-col flex-1 justify-around items-center p-2 space-y-1">
+              <div className="flex items-center space-x-5">
+                <h1 className="text-xl font-semibold">{threadData?.name}</h1>
+              </div>
+              <p className="text-xs">Since: {new Date(threadData?.created_at).toDateString()}</p>
+              {threadData?.description && (
+                <p className={`text-center py-4 md:py-2 text-sm ${threadData?.description.length > 90 && "text-xs"}`}>
+                  {threadData?.description}
+                  {threadData?.description.length > 90 && "..."}
+                </p>
+              )}
+              <div className="flex justify-between mt-2 space-x-7 w-full md:w-11/12">
+                <p className="text-sm">{threadData?.subscriberCount} subscribers</p>
+                <p className="text-sm">{threadData?.PostsCount} posts</p>
+                <p className="text-sm">{threadData?.CommentsCount} comments</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
         {isAuthenticated && (
           <div className="flex flex-col justify-around space-y-3 md:space-x-10 md:flex-row md:space-y-0">
             <button

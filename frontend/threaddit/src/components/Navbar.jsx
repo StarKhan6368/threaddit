@@ -147,6 +147,7 @@ export function AppLogo({ forBanner = false, children }) {
 }
 
 function ThreadSearch() {
+  const { isAuthenticated } = AuthConsumer();
   const [showModal, setShowModal] = useState(false);
   const searchRef = useRef();
   const [search, setSearch] = useState("");
@@ -179,7 +180,7 @@ function ThreadSearch() {
         type="search"
         name="search"
         id="search"
-        className="py-0.5 w-44 md:w-full bg-neutral-100 focus:outline-none md:pr-20"
+        className={`py-0.5 ${isAuthenticated && "w-48"} md:w-full bg-neutral-100 focus:outline-none md:pr-20`}
         placeholder="Find community"
       />
       {queryData?.data && (

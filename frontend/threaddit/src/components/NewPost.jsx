@@ -58,9 +58,9 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
   return (
     <div className="flex flex-col p-5 space-y-5 w-5/6 rounded-md min-h-4/6 md:w-3/4 md:h-5/6 md:p-10 bg-theme-cultured">
       <div className="flex flex-col justify-between items-center p-4 space-y-3 bg-white rounded-xl md:flex-row md:space-y-0">
-        <div className="flex space-x-3">
+        <div className="flex items-center space-x-3">
           <p>Posting as</p>
-          <img src={user.avatar || avatar} className="w-8 h-8 rounded-full" alt="" />
+          <img src={user.avatar || avatar} className="w-8 h-8 rounded-full md:w-12 md:h-12" alt="" />
           <p>{user.username}</p>
         </div>
         <div className="flex items-center space-x-2 md:space-x-3">

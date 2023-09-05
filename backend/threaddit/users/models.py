@@ -58,7 +58,7 @@ class User(db.Model, UserMixin):
 
     def patch(self, image, form_data):
         if form_data.get("content_type") == "image" and image:
-            if self.avatar:
+            if self.avatar and not self.avatar.startswith("http"):
                 os.remove(os.path.join(app.config["UPLOAD_FOLDER"], self.avatar))
             filename = secure_filename(image.filename)
             unqiue_filename = f"{uuid.uuid4().hex}_{filename}"

@@ -9,6 +9,7 @@ import InfinitePostsLayout from "../../components/InfinitePosts";
 import Modal from "../../components/Modal";
 import UpdateUser from "../../components/UpdateUser";
 import { Chat } from "../inbox/Inbox";
+import Loader from "../../components/Loader";
 
 export function Profile() {
   const { logout, user } = AuthConsumer();
@@ -39,9 +40,11 @@ export function Profile() {
   console.log(data);
   return (
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
-      <div className="flex flex-col items-center w-full bg-theme-cultured">
-        <div className="flex flex-col p-2 w-full bg-white rounded-md md:p-5">
-          {!userIsFetching && data && (
+      {userIsFetching ? (
+        <Loader forPosts={true} />
+      ) : (
+        <div className="flex flex-col items-center w-full bg-theme-cultured">
+          <div className="flex flex-col p-2 w-full bg-white rounded-md md:p-5">
             <div className="flex flex-col flex-1 justify-between items-center p-2 w-full rounded-md md:flex-row md:rounded-full bg-theme-cultured">
               <img src={data.avatar || avatar} className="w-24 h-24 bg-white rounded-full md:w-36 md:h-36" alt="" />
               <div className="flex flex-col flex-1 items-center w-full md:p-2">
@@ -53,35 +56,35 @@ export function Profile() {
                 </div>
               </div>
             </div>
-          )}
-          <div className="flex flex-col my-2 text-sm md:text-sm">
-            <div className="flex justify-between space-x-2">
-              <p className="">Total Posts: {data?.karma.posts_count}</p>
-              <p className="">Posts Karma: {data?.karma.posts_karma}</p>
-            </div>
+            <div className="flex flex-col my-2 text-sm md:text-sm">
+              <div className="flex justify-between space-x-2">
+                <p className="">Total Posts: {data?.karma.posts_count}</p>
+                <p className="">Posts Karma: {data?.karma.posts_karma}</p>
+              </div>
 
-            <div className="flex justify-between space-x-2">
-              <p className="">Total Comments: {data?.karma.comments_count}</p>
-              <p className="">Comments Karma: {data?.karma.comments_karma}</p>
+              <div className="flex justify-between space-x-2">
+                <p className="">Total Comments: {data?.karma.comments_count}</p>
+                <p className="">Comments Karma: {data?.karma.comments_karma}</p>
+              </div>
             </div>
+            <select
+              name="options"
+              id="options"
+              className="p-2 mt-2 bg-white rounded-md border-2"
+              value={action}
+              onChange={(e) => setAction(e.target.value)}>
+              <option value={false}>Choose an action</option>
+              {user.username === data?.username && (
+                <>
+                  <option value="edit">Update Profile</option>
+                  <option value="delete">Delete Account</option>
+                </>
+              )}
+              <option value="message">Message</option>
+            </select>
           </div>
-          <select
-            name="options"
-            id="options"
-            className="p-2 mt-2 bg-white rounded-md border-2"
-            value={action}
-            onChange={(e) => setAction(e.target.value)}>
-            <option value={false}>Choose an action</option>
-            {user.username === data?.username && (
-              <>
-                <option value="edit">Update Profile</option>
-                <option value="delete">Delete Account</option>
-              </>
-            )}
-            <option value="message">Message</option>
-          </select>
         </div>
-      </div>
+      )}
       <InfinitePostsLayout
         apiQueryKey={data?.username}
         linkUrl={`posts/user/${data?.username}`}

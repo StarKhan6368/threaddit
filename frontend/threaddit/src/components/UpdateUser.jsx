@@ -44,16 +44,16 @@ export default function UpdateUser({ setModal }) {
         <img src={user.avatar || avatar} className="w-10 h-10 rounded-full md:w-14 md:h-14" alt="" />
         <p>{user.username}</p>
       </div>
-      <form className="flex flex-col p-5 space-y-10 bg-white rounded-md" onSubmit={handleSubmit}>
+      <form className="flex flex-col p-5 space-y-5 bg-white rounded-md" onSubmit={handleSubmit}>
         <label htmlFor="bio" className="flex flex-col p-2 md:space-x-3 md:flex-row">
           <span className="text-sm font-light">Bio</span>
-          <input
+          <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}
             type="text"
             name="bio"
             id="bio"
-            className="w-full border-b border-gray-800 focus:outline-none"
+            className="w-full h-20 max-h-28 border-b border-gray-800 focus:outline-none"
           />
         </label>
         <label htmlFor="media" className="flex flex-col items-center space-y-3 md:space-y-0 md:space-x-5 md:flex-row">

@@ -18,7 +18,6 @@ export function Login() {
   }
   if (actionData?.user) {
     authData.login(actionData.user);
-    setTimeout(navigate("/home", { replace: true }), 1000);
   }
   return (
     <div className="flex justify-center items-center min-h-screen md:space-x-10 bg-theme-cultured">

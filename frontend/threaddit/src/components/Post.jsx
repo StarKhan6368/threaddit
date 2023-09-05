@@ -53,7 +53,7 @@ export function Post({ post, isExpanded = false, postIndex }) {
   };
   async function handleShare() {
     return navigator.clipboard
-      .writeText(location.href)
+      .writeText(`${location.host}/post/${post?.post_info.id}`)
       .then(() => {
         alert("Copied Post Link to clipboard");
       })

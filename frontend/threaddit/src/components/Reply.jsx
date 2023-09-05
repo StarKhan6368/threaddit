@@ -37,7 +37,7 @@ export default function Reply({ parentComment, isComment = false, setShowModal, 
   }
   return (
     <div className="flex flex-col justify-between p-5 w-5/6 bg-white rounded-md min-h-4/6 md:w-2/6">
-      <div className="p-4 mx-auto space-y-3 w-full rouned-md">
+      <div className="p-4 pb-0 mx-auto space-y-3 w-full rouned-md">
         <div className="flex justify-center items-center p-2 space-x-5 w-full rounded-md border-2">
           <img src={parentComment.user_info.user_avatar || avatar} className="w-10 h-10 rounded-full" alt="" />
           <p>{parentComment.user_info.user_name}</p>
@@ -52,7 +52,7 @@ export default function Reply({ parentComment, isComment = false, setShowModal, 
       <form className="flex-1 px-5 space-y-5" onSubmit={handleSubmit}>
         <label htmlFor="content" className="flex flex-col space-y-1">
           <span className="ml-2 text-sm font-semibold">{edit ? "Edit to" : "Reply"}</span>
-          <input
+          <textarea
             autoFocus
             type="text"
             className="p-2 mx-2 rounded-md border-2 focus:outline-none"

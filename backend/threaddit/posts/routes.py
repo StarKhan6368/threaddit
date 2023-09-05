@@ -64,10 +64,12 @@ def get_posts(feed_name):
 @posts.route("/post/<pid>", methods=["GET"])
 def get_post(pid):
     post_info = PostInfo.query.filter_by(post_id=pid).first()
-    return (
-        jsonify({"post": post_info.as_dict()}),
-        200,
-    )
+    if post_info:
+        return (
+            jsonify({"post": post_info.as_dict()}),
+            200,
+        )
+    return jsonify({"message": "Invalid Post"}), 400
 
 
 @posts.route("/post", methods=["POST"])
