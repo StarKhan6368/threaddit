@@ -116,6 +116,7 @@ def delete_post(pid):
     if not post:
         return jsonify({"message": "Invalid Post"}), 400
     elif post.user_id == current_user.id or current_user.has_role("admin"):
+        post.delete_media()
         Posts.query.filter_by(id=pid).delete()
         db.session.commit()
         return jsonify({"message": "Post deleted"}), 200
@@ -123,6 +124,7 @@ def delete_post(pid):
         r.subthread_id for r in current_user.user_role if r.role.slug == "mod"
     ]
     if post.subthread_id in current_user_mod_in:
+        post.delete_media()
         Posts.query.filter_by(id=pid).delete()
         db.session.commit()
         return jsonify({"message": "Post deleted"}), 200

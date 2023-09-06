@@ -65,7 +65,7 @@ class CommentInfo(db.Model):
         comment_info = {
             "user_info": {
                 "user_name": self.user_name,
-                "user_avatar": self.comment.user.get_avatar(),
+                "user_avatar": self.user_avatar,
             },
             "comment_info": {
                 "id": self.comment_id,

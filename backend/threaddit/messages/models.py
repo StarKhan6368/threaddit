@@ -33,11 +33,11 @@ class Messages(db.Model):
             "message_id": self.id,
             "sender": {
                 "username": self.user_sender.username,
-                "avatar": self.user_sender.get_avatar(),
+                "avatar": self.user_sender.avatar,
             },
             "receiver": {
                 "username": self.user_receiver.username,
-                "avatar": self.user_receiver.get_avatar(),
+                "avatar": self.user_receiver.avatar,
             },
             "content": self.content,
             "created_at": self.created_at,
@@ -75,7 +75,7 @@ class Messages(db.Model):
                     "latest_from_user": message.sender_id == user_id,
                     "sender": {
                         "username": sender.username,
-                        "avatar": sender.get_avatar(),
+                        "avatar": sender.avatar,
                     },
                 }
             )

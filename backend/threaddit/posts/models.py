@@ -2,6 +2,7 @@ from threaddit import db, ma, app
 import os, uuid
 from flask import jsonify, url_for
 from datetime import datetime, timedelta
+import cloudinary.uploader as uploader
 from werkzeug.utils import secure_filename
 from threaddit.subthreads.models import Subthread
 from flask_marshmallow.fields import fields
@@ -62,12 +63,12 @@ class Posts(db.Model):
 
     def handle_media(self, content_type, image=None, url=None):
         if content_type == "image" and image:
-            if self.media and not self.media.startswith("http"):
-                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], self.media))
-            filename = secure_filename(image.filename)
-            unique_filename = f"{uuid.uuid4().hex}_{filename}"
-            image.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_filename))
-            self.media = unique_filename
+            self.delete_media()
+            image_data = uploader.upload(
+                image, public_id=f"{uuid.uuid4().hex}_{image.filename.rsplit('.')[0]}"
+            )
+            url = f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}/image/upload/f_auto,q_auto/{image_data.get('public_id')}"
+            self.media = url
         elif content_type == "url" and url:
             self.media = url
 
@@ -77,6 +78,13 @@ class Posts(db.Model):
         self.title = title
         self.media = media
         self.content = content
+
+    def delete_media(self):
+        if self.media and self.media.startswith(
+            f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}"
+        ):
+            res = uploader.destroy(self.media.split("/")[-1])
+            print(f"Cloudinary Image Destory Response for {self.title}: ", res)
 
     def as_dict(self):
         return {
@@ -131,17 +139,17 @@ class PostInfo(db.Model):
         p_info = {
             "user_info": {
                 "user_name": self.user_name,
-                "user_avatar": self.user.get_avatar(),
+                "user_avatar": self.user_avatar,
             },
             "thread_info": {
                 "thread_id": self.thread_id,
                 "thread_name": self.thread_name,
-                "thread_logo": self.subthread.get_logo(),
+                "thread_logo": self.thread_logo,
             },
             "post_info": {
                 "id": self.post_id,
                 "title": self.title,
-                "media": self.post.get_media(),
+                "media": self.media,
                 "is_edited": self.is_edited,
                 "content": self.content,
                 "created_at": self.created_at,

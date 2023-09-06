@@ -104,9 +104,10 @@ def new_subscription(tid):
 def del_subscription(tid):
     subscription = Subscription.query.filter_by(
         user_id=current_user.id, subthread_id=tid
-    )
+    ).first()
     if subscription:
-        subscription.delete()
+        subscription.delete_logo()
+        Subscription.query.filter_by(user_id=current_user.id, subthread_id=tid).delete()
         db.session.commit()
     else:
         return jsonify({"message": "Invalid Subscription"}), 400

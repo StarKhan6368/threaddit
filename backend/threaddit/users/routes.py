@@ -63,6 +63,7 @@ def user_patch():
 @user.route("/user", methods=["DELETE"])
 @login_required
 def user_delete():
+    current_user.delete_avatar()
     User.query.filter_by(id=current_user.id).delete()
     logout_user()
     db.session.commit()

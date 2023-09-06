@@ -1,5 +1,6 @@
 from threaddit import db, app
 from flask import url_for
+import cloudinary.uploader as uploader
 from werkzeug.utils import secure_filename
 import os
 from threaddit.models import UserRole
@@ -35,13 +36,9 @@ class Subthread(db.Model):
             description=form_data.get("description"),
             created_by=created_by,
         )
-        if form_data.get("content_type") == "image" and image:
-            filename = secure_filename(image.filename)
-            unique_filename = f"{uuid.uuid4().hex}_{filename}"
-            image.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_filename))
-            new_sub.logo = unique_filename
-        elif form_data.get("content_type") == "url":
-            new_sub.logo = form_data.get("content_url")
+        new_sub.handle_logo(
+            form_data.get("content_type"), image, form_data.get("content_url")
+        )
         db.session.add(new_sub)
         db.session.commit()
         return new_sub
@@ -56,19 +53,21 @@ class Subthread(db.Model):
 
     def handle_logo(self, content_type, image=None, url=None):
         if content_type == "image" and image:
-            if self.logo and not self.logo.startswith("http"):
-                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], self.logo))
-            filename = secure_filename(image.filename)
-            unique_filename = f"{uuid.uuid4().hex}_{filename}"
-            image.save(os.path.join(app.config["UPLOAD_FOLDER"], unique_filename))
-            self.logo = unique_filename
+            self.delete_logo()
+            image_data = uploader.upload(
+                image, public_id=f"{uuid.uuid4().hex}_{image.filename.rsplit('.')[0]}"
+            )
+            url = f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}/image/upload/f_auto,q_auto/{image_data.get('public_id')}"
+            self.logo = url
         elif content_type == "url" and url:
             self.logo = url
 
-    def get_logo(self):
-        if self.logo and not str(self.logo).startswith("http"):
-            return url_for("send_image", filename=self.logo)
-        return self.logo
+    def delete_logo(self):
+        if self.logo and self.logo.startswith(
+            f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}"
+        ):
+            res = uploader.destroy(self.logo.split("/")[-1])
+            print(f"Cloudinary Image Destory Response for {self.name}: ", res)
 
     def as_dict(self, cur_user_id=None):
         data = {
@@ -76,7 +75,7 @@ class Subthread(db.Model):
             "name": self.name,
             "description": self.description,
             "created_at": self.created_at,
-            "logo": self.get_logo(),
+            "logo": self.logo,
             "PostsCount": len(self.post),
             "CommentsCount": sum([len(p.comment) for p in self.post]),
             "created_by": self.user.username if self.user else None,
@@ -133,7 +132,7 @@ class SubthreadInfo(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "logo": self.subthread.get_logo(),
+            "logo": self.logo,
             "subscriberCount": self.members_count or 0,
             "PostsCount": self.posts_count or 0,
             "CommentsCount": self.comments_count or 0,

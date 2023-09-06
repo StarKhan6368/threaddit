@@ -1,10 +1,9 @@
 from sqlalchemy import func
 from flask import url_for
-import uuid
+import cloudinary.uploader as uploader
+import uuid, cloudinary
 from threaddit import db, login_manager, app
-from werkzeug.utils import secure_filename
 from flask_login import UserMixin
-import base64, os
 from threaddit import ma, app
 from threaddit.models import Role, UserRole
 from werkzeug.utils import secure_filename
@@ -58,16 +57,23 @@ class User(db.Model, UserMixin):
 
     def patch(self, image, form_data):
         if form_data.get("content_type") == "image" and image:
-            if self.avatar and not self.avatar.startswith("http"):
-                os.remove(os.path.join(app.config["UPLOAD_FOLDER"], self.avatar))
-            filename = secure_filename(image.filename)
-            unqiue_filename = f"{uuid.uuid4().hex}_{filename}"
-            image.save(os.path.join(app.config["UPLOAD_FOLDER"], unqiue_filename))
-            self.avatar = unqiue_filename
+            self.delete_avatar()
+            image_data = uploader.upload(
+                image, public_id=f"{uuid.uuid4().hex}_{image.filename.rsplit('.')[0]}"
+            )
+            url = f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}/image/upload/f_auto,q_auto/{image_data.get('public_id')}"
+            self.avatar = url
         elif form_data.get("content_type") == "url":
             self.avatar = form_data.get("content_url")
         self.bio = form_data.get("bio")
         db.session.commit()
+
+    def delete_avatar(self):
+        if self.avatar and self.avatar.startswith(
+            f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}"
+        ):
+            res = uploader.destroy(self.avatar.split("/")[-1])
+            print(f"Cloudinary Image Destory Response for {self.username}: ", res)
 
     def has_role(self, role):
         return role in {r.role.slug for r in self.user_role}
@@ -79,16 +85,11 @@ class User(db.Model, UserMixin):
             all_users.append(user.as_dict(include_all=True))
         return all_users
 
-    def get_avatar(self):
-        if self.avatar and not self.avatar.startswith("http"):
-            return url_for("send_image", filename=self.avatar)
-        return self.avatar
-
     def as_dict(self, include_all=False) -> dict:
         return (
             {
                 "username": self.username,
-                "avatar": self.get_avatar(),
+                "avatar": self.avatar,
                 "bio": self.bio,
                 "registrationDate": self.registration_date,
                 "roles": list({r.role.slug for r in self.user_role}),
