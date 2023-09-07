@@ -119,15 +119,24 @@ export function Chat({ sender, setCurChat, newChat = false }) {
         .post("/api/messages", { content: params.message, receiver: params.sender.username })
         .then((res) => res.data);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setMessage("");
-      queryClient.invalidateQueries({ queryKey: ["chat", sender.username] });
-      queryClient.invalidateQueries({ queryKey: ["inbox"] });
+      queryClient.setQueryData({ queryKey: ["chat", sender.username] }, (oldData) => {
+        return [...oldData, data];
+      });
+      queryClient.setQueryData({ queryKey: ["inbox"] }, (oldData) => {
+        return oldData.map((m) =>
+          m.sender == sender
+            ? { ...m, content: data.content, created_at: data.created_a, message_id: data.message_id }
+            : m
+        );
+      });
     },
   });
   useEffect(() => {
     myRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [isFetching]);
+  const animateWhen = data?.length - 10;
   const AnimateChat = {
     hidden: {
       opacity: 0,
@@ -164,11 +173,11 @@ export function Chat({ sender, setCurChat, newChat = false }) {
           <Loader forPosts={true} />
         </div>
       ) : (
-        <ul className={`p-3 space-y-3 rounded-md overflow-auto ${newChat ? "h-[20vh]" : "md:h-[61vh] h-[70vh]"}`}>
+        <ul className="p-3 space-y-3 rounded-md overflow-auto md:h-[61vh] h-[70vh]">
           {data?.map((message, index) => (
             <Message
               message={message}
-              messageIndex={index}
+              messageIndex={index < animateWhen ? 0 : index - animateWhen}
               toUser={message.sender.username == user.username}
               key={message.message_id}
             />

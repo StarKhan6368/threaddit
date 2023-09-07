@@ -15,6 +15,7 @@ from threaddit.config import (
 
 app = Flask(
     __name__,
+    static_folder="../../frontend/threaddit/dist",
     static_url_path="/",
 )
 cloudinary.config(

@@ -6,7 +6,6 @@ import avatar from "../assets/avatar.png";
 import AuthConsumer from "./AuthContext";
 import Modal from "./Modal";
 import PostMoreOptions from "./PostMoreOptions";
-import Reply from "./Reply";
 import Svg from "./Svg";
 import Vote from "./Vote";
 
@@ -14,28 +13,22 @@ Post.propTypes = {
   post: PropTypes.object,
   isExpanded: PropTypes.bool,
   postIndex: PropTypes.number,
+  setCommentMode: PropTypes.func,
 };
 
-export function Post({ post, isExpanded = false, postIndex }) {
+export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
   const { isAuthenticated } = AuthConsumer();
   const [modalShow, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(<></>);
   function onImageClick() {
     if (post?.post_info.media) {
       setShowModal(true);
-      setModalData(
-        <img
-          className="w-11/12 max-h-5/6 md:w-max md:max-h-screen md:max-w-screen"
-          src={post?.post_info.media}
-          alt=""
-        />
-      );
+      setModalData(<img className="w-11/12 max-h-5/6 md:w-max md:max-h-screen" src={post?.post_info.media} alt="" />);
     }
   }
   function onReplyClick() {
     if (isAuthenticated) {
-      setShowModal(true);
-      setModalData(<Reply className="w-5/6 h-5/6" parentComment={post} setShowModal={setShowModal} />);
+      setCommentMode((data) => !data);
     } else {
       alert("You must be logged in to reply.");
     }

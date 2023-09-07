@@ -38,7 +38,7 @@ export default function UpdateUser({ setModal }) {
     return () => focusManager.setFocused(true);
   }, []);
   return (
-    <div className="flex flex-col p-5 space-y-5 w-5/6 rounded-md min-h-3/6 md:w-3/4 md:h-4/6 md:p-10 bg-theme-cultured">
+    <div className="flex flex-col p-5 space-y-5 w-5/6 rounded-md min-h-3/6 md:w-3/4 md:p-10 bg-theme-cultured">
       <div className="flex flex-col justify-between items-center p-4 space-y-3 bg-white rounded-xl md:flex-row md:space-y-0">
         <p>Updating Profile for</p>
         <img src={user.avatar || avatar} className="w-10 h-10 rounded-full md:w-14 md:h-14" alt="" />
@@ -84,6 +84,9 @@ export default function UpdateUser({ setModal }) {
             />
           )}
         </label>
+        <span className="text-sm font-semibold text-red-500">
+          Only Add Image if you want to modify the original image if empty the original will be used.
+        </span>
         <button
           onClick={handleSubmit}
           className="py-2 font-semibold text-white rounded-md bg-theme-orange active:scale-95">

@@ -31,6 +31,7 @@ class Comments(db.Model):
             new_comment.parent_id = form_data["parent_id"]
         db.session.add(new_comment)
         db.session.commit()
+        return new_comment.comment_info[0].as_dict(user_id)
 
     def patch(self, content):
         if content:

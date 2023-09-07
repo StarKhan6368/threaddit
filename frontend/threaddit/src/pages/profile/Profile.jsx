@@ -37,7 +37,6 @@ export function Profile() {
         break;
     }
   }, [action, data, username, logout]);
-  console.log(data);
   return (
     <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
       {userIsFetching ? (
@@ -46,7 +45,16 @@ export function Profile() {
         <div className="flex flex-col items-center w-full bg-theme-cultured">
           <div className="flex flex-col p-2 w-full bg-white rounded-md md:p-5">
             <div className="flex flex-col flex-1 justify-between items-center p-2 w-full rounded-md md:flex-row md:rounded-full bg-theme-cultured">
-              <img src={data.avatar || avatar} className="w-24 h-24 bg-white rounded-full md:w-36 md:h-36" alt="" />
+              <img
+                src={data.avatar || avatar}
+                className="w-24 h-24 bg-white rounded-full cursor-pointer md:w-36 md:h-36"
+                alt=""
+                onClick={() =>
+                  setAction(
+                    <img src={data.avatar || avatar} className="w-11/12 max-h-5/6 md:w-max md:max-h-screen" alt="" />
+                  )
+                }
+              />
               <div className="flex flex-col flex-1 items-center w-full md:p-2">
                 <h1 className="mt-2 text-lg font-semibold md:m-0">u/{data.username}</h1>
                 <p className="my-4 w-11/12 text-sm text-center md:my-2 md:text-base">{data?.bio}</p>

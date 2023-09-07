@@ -70,5 +70,13 @@ def delete_comment(cid):
 @login_required
 def new_comment():
     form_data = request.json
-    Comments.add(form_data, current_user.id)
-    return jsonify({"message": "Comment created"}), 200
+    new_comment = Comments.add(form_data, current_user.id)
+    return (
+        jsonify(
+            {
+                "message": "Comment created",
+                "new_comment": {"comment": new_comment, "children": []},
+            }
+        ),
+        200,
+    )

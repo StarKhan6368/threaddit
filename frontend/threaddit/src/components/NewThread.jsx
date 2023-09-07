@@ -42,7 +42,6 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
         .patch(`/api/thread/${ogInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
         .then(() => {
           setShowModal(false);
-          console.log(ogInfo);
           queryClient.invalidateQueries({ queryKey: ["thread", `${ogInfo.name.slice(2)}`] });
         })
         .catch((err) => alert(`${err.message} check your fields`));
@@ -122,6 +121,11 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
             />
           )}
         </label>
+        {edit && (
+          <span className="text-sm font-semibold text-red-500">
+            Only Add Image if you want to modify the original image if empty the original will be used.
+          </span>
+        )}
         <button
           onClick={handleSubmit}
           className="py-2 font-semibold text-white rounded-md bg-theme-orange active:scale-95">

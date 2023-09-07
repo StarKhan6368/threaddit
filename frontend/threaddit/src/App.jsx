@@ -3,11 +3,11 @@ import { Suspense, lazy } from "react";
 import { Navigate, RouterProvider, createBrowserRouter } from "react-router-dom";
 import AppLayout from "./components/AppLayout.jsx";
 import { AuthProvider } from "./components/AuthContext.jsx";
+import Error from "./components/Error.jsx";
 import Loader from "./components/Loader.jsx";
 import RequireAuth from "./components/PrivateRoute.jsx";
 import Login, { userLoginAction } from "./pages/login/Login.jsx";
 import Register, { userRegisterAction } from "./pages/register/Register.jsx";
-import Error from "./components/Error.jsx";
 
 const Feed = lazy(() => import("./pages/feed/Feed.jsx"));
 const Profile = lazy(() => import("./pages/profile/Profile.jsx"));
@@ -72,7 +72,13 @@ const router = createBrowserRouter([
   },
 ]);
 
-const queryClient = new QueryClient({});
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 120000,
+    },
+  },
+});
 
 export function App() {
   return (

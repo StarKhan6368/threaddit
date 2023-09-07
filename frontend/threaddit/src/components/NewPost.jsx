@@ -133,6 +133,11 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
             />
           )}
         </label>
+        {isEdit && (
+          <span className="text-sm font-semibold text-red-500">
+            Only Add Image if you want to modify the original image if empty the original will be used.
+          </span>
+        )}
         <button
           onClick={handleSubmit}
           className="py-2 font-semibold text-white rounded-md bg-theme-orange active:scale-95">
