@@ -16,11 +16,11 @@ Threaddit is a full-stack Reddit clone; it's a comprehensive web application ins
   - [Post](#post)
   - [Comments](#comments)
   - [Messages](#messages)
-  - [Project Setup Instructions](#project-setup-instructions)
-    - [Database Setup](#database-setup)
-    - [Backend Setup](#backend-setup)
-    - [Running the Application](#running-the-application)
-    - [Access the Application](#access-the-application)
+- [Project Setup Instructions](#project-setup-instructions)
+  - [Database Setup](#database-setup)
+  - [Backend Setup](#backend-setup)
+  - [Running the Application](#running-the-application)
+  - [Access the Application](#access-the-application)
 - [Hosting](#hosting)
 
 # Introduction
