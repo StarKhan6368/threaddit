@@ -6,8 +6,8 @@ import { AuthProvider } from "./components/AuthContext.jsx";
 import Error from "./components/Error.jsx";
 import Loader from "./components/Loader.jsx";
 import RequireAuth from "./components/PrivateRoute.jsx";
-import Login, { userLoginAction } from "./pages/login/Login.jsx";
-import Register, { userRegisterAction } from "./pages/register/Register.jsx";
+import Login from "./pages/login/Login.jsx";
+import Register from "./pages/register/Register.jsx";
 
 const Feed = lazy(() => import("./pages/feed/Feed.jsx"));
 const Profile = lazy(() => import("./pages/profile/Profile.jsx"));
@@ -63,12 +63,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
-    action: userLoginAction,
   },
   {
     path: "/register",
     element: <Register />,
-    action: userRegisterAction,
   },
 ]);
 

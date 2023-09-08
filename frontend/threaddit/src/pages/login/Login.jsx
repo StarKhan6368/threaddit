@@ -1,23 +1,26 @@
-import Svg from "../../components/Svg.jsx";
-import { useEffect, useState } from "react";
-import { Form, Link, useActionData, useNavigate } from "react-router-dom";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import AuthConsumer from "../../components/AuthContext.jsx";
+import Loader from "../../components/Loader.jsx";
 import { AppLogo } from "../../components/Navbar.jsx";
+import Svg from "../../components/Svg.jsx";
 
 export function Login() {
   const [showPass, setShowPass] = useState(false);
-  const [clear, setClear] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const { isAuthenticated, login } = AuthConsumer();
   const navigate = useNavigate();
-  const actionData = useActionData();
-  const authData = AuthConsumer();
-  useEffect(() => {
-    setClear(actionData?.errors === undefined);
-  }, [actionData]);
-  if (authData.isAuthenticated) {
-    navigate("/home");
-  }
-  if (actionData?.user) {
-    authData.login(actionData.user);
+  const { mutate, status, error, reset } = useMutation({
+    mutationFn: async () => {
+      return await axios.post("/api/user/login", { email, password }).then((res) => login(res.data));
+    },
+    onSuccess: () => navigate("/home"),
+  });
+  if (isAuthenticated) {
+    return navigate("/home");
   }
   return (
     <div className="flex justify-center items-center min-h-screen md:space-x-10 bg-theme-cultured">
@@ -29,12 +32,17 @@ export function Login() {
           </AppLogo>
         </div>
         <h1
-          className={`font-semibold text-2xl tracking-wide ${
-            actionData?.errors && !clear && "font-bold uppercase text-theme-orange"
+          className={`font-semibold ${status !== "loading" && "text-2xl "} tracking-wide ${
+            error && "font-bold uppercase text-theme-orange"
           }`}>
-          {actionData?.errors && !clear ? actionData.errors.message : "Welcome Back!"}
+          {error ? error.response.data.message : status === "loading" ? <Loader forPosts={true} /> : "Welcome Back!"}
         </h1>
-        <Form className="flex flex-col items-center space-y-5 bg-white" method="post" action="/login">
+        <form
+          className="flex flex-col items-center space-y-5 bg-white"
+          onSubmit={(e) => {
+            e?.preventDefault();
+            mutate();
+          }}>
           <label htmlFor="email" className="flex flex-col space-y-1">
             <span className="pl-2 text-sm font-light">Email</span>
             <input
@@ -42,7 +50,11 @@ export function Login() {
               name="email"
               id="email"
               required
-              onChange={() => setClear(true)}
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                reset();
+              }}
               className="px-2 py-2 pr-24 border-b focus:outline-none focus:border-black"
             />
           </label>
@@ -56,6 +68,11 @@ export function Login() {
                 className="px-2 py-2 pr-20 focus:outline-none"
                 required
                 minLength={8}
+                value={password}
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  reset();
+                }}
               />
               {showPass ? (
                 <Svg type="eye-open" className="w-6 h-6" onClick={() => setShowPass(!showPass)} />
@@ -66,10 +83,11 @@ export function Login() {
           </label>
           <button
             type="submit"
+            disabled={status === "loading"}
             className="py-2 w-full font-semibold text-white rounded-md bg-theme-orange active:scale-95">
-            Log in
+            {status === "loading" ? "Logging in..." : "Log in"}
           </button>
-        </Form>
+        </form>
         <div className="flex justify-between">
           <Link to="/forgot_password" className="flex font-semibold cursor-pointer group hover:text-theme-orange">
             Forgot Password
@@ -87,21 +105,6 @@ export function Login() {
       </div>
     </div>
   );
-}
-
-export async function userLoginAction({ request }) {
-  const data = Object.fromEntries(await request.formData());
-  const response = await fetch("api/user/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email: data.email, password: data.password }),
-  });
-  if (response.ok) {
-    return { user: await response.json() };
-  }
-  return { errors: await response.json() };
 }
 
 export default Login;
