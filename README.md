@@ -45,7 +45,8 @@ On the front end, the project leverages a stack of essential technologies and li
 
 The project's backend relies on PostgreSQL, a robust and open-source relational database system, to effectively handle data storage and management. Details about the schema, views, and relationships can be found in the backend folder as an SQL file; the schema is shown below.
 
-![Schema](https://github.com/StarKhan6368/threaddit/assets/77010375/3a82bfa4-755f-4080-89d0-f185145a0722)
+![Schema](https://github.com/StarKhan6368/threaddit/assets/77010375/8e60b685-e3a1-4a72-b219-61399fec79a5)
+
 
 # Features
 
