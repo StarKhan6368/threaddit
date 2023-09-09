@@ -108,21 +108,24 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
         <label htmlFor="media" className="flex flex-col items-center space-y-3 md:space-y-0 md:space-x-5 md:flex-row">
           <select
             className="px-10 py-2 bg-white rounded-md border md:px-12"
-            name="type"
-            id="media_type"
+            name="media"
+            id="media"
             onChange={(e) => setMediaType(e.target.value)}>
             <option value="image">Image</option>
             <option value="url">URL</option>
           </select>
           {mediaType === "image" ? (
-            <input
-              onChange={(e) => setMedia(e.target.files[0])}
-              type="file"
-              name="file"
-              accept="image/*"
-              id="image"
-              className="w-full focus:outline-none"
-            />
+            <label htmlFor="image">
+              <input
+                onChange={(e) => setMedia(e.target.files[0])}
+                type="file"
+                name="image"
+                alt="image"
+                accept="image/*"
+                id="image"
+                className="w-full focus:outline-none"
+              />
+            </label>
           ) : (
             <input
               type="text"

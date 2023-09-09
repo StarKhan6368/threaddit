@@ -48,7 +48,7 @@ SideBarComponent.propTypes = {
 };
 function SideBarComponent({ threadList }) {
   return (
-    <ul className="flex flex-col space-y-4 w-48 list-none">
+    <div className="flex flex-col space-y-4 w-48 list-none">
       {threadList?.slice(0, 10).map((thread) => (
         <Link to={`/${thread.name}`} className="flex justify-between w-48 cursor-pointer" key={thread.name}>
           <div className={`flex items-center space-x-3 ${!thread.logo && "pl-9"}`}>
@@ -60,7 +60,7 @@ function SideBarComponent({ threadList }) {
           </span>
         </Link>
       ))}
-    </ul>
+    </div>
   );
 }
 export default ThreadsSidebar;

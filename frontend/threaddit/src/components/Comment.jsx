@@ -58,12 +58,12 @@ export default function Comment({ children, comment, threadID, commentIndex, par
     }
   }
   return (
-    <motion.div
+    <motion.li
       className="py-3 pl-2 space-y-2 w-full bg-white rounded-xl md:text-base"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: commentIndex * 0.15 }}
-      exit={{ opacity: 0, y: -10, transition: { duration: 0.15 } }}>
+      exit={{ opacity: 0, y: -10, transition: { duration: 0.1 } }}>
       {editMode ? (
         <CommentMode
           callBackSubmit={(data) => {
@@ -95,6 +95,7 @@ export default function Comment({ children, comment, threadID, commentIndex, par
             defaultValue={"more"}
             ref={listRef}
             name="more-options"
+            title="More Options"
             id="more-options"
             className="text-sm text-center bg-white md:px-2 md:text-base"
             onChange={(e) => handleSelect(e.target.value)}>
@@ -143,9 +144,9 @@ export default function Comment({ children, comment, threadID, commentIndex, par
           user={user}
         />
       )}
-      {expandChildren && (
-        <ul className={commentChildren.length > 0 && expandChildren && "border-l-2 " + colorSquence()}>
-          <AnimatePresence>
+      <AnimatePresence mode="wait">
+        {expandChildren && (
+          <ul className={commentChildren.length > 0 && expandChildren && "border-l-2 " + colorSquence()}>
             {commentChildren.map((child, index) => (
               <Comment
                 key={child.comment.comment_info.id}
@@ -154,10 +155,10 @@ export default function Comment({ children, comment, threadID, commentIndex, par
                 parentDelete={deleteComment}
               />
             ))}
-          </AnimatePresence>
-        </ul>
-      )}
-    </motion.div>
+          </ul>
+        )}
+      </AnimatePresence>
+    </motion.li>
   );
 }
 
@@ -171,7 +172,11 @@ CommentMode.propTypes = {
 
 export function CommentMode({ user, colorSquence, callBackSubmit, callBackCancel, defaultValue = null }) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10, transition: { duration: 0.15 } }}
+      transition={{ duration: 0.25 }}
       className={`mr-4 space-y-2 bg-white md:text-base ${
         defaultValue !== null ? "" : `border-l-2 ${colorSquence()} py-3 pl-2 `
       }`}>
@@ -202,6 +207,6 @@ export function CommentMode({ user, colorSquence, callBackSubmit, callBackCancel
           </button>
         </div>
       </form>
-    </div>
+    </motion.div>
   );
 }

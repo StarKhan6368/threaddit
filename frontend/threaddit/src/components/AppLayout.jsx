@@ -5,6 +5,7 @@ import Modal from "./Modal.jsx";
 import Navbar from "./Navbar.jsx";
 import NewComment from "./NewPost.jsx";
 import Svg from "./Svg.jsx";
+import { AnimatePresence } from "framer-motion";
 
 export function AppLayout() {
   const [showModal, setShowModal] = useState(false);
@@ -27,11 +28,13 @@ export function AppLayout() {
           />
         </div>
       )}
-      {showModal && isAuthenticated && (
-        <Modal showModal={showModal} setShowModal={setShowModal}>
-          <NewComment setShowModal={setShowModal} />
-        </Modal>
-      )}
+      <AnimatePresence>
+        {showModal && isAuthenticated && (
+          <Modal showModal={showModal} setShowModal={setShowModal}>
+            <NewComment setShowModal={setShowModal} />
+          </Modal>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

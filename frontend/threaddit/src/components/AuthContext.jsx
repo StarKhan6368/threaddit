@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import PropTypes from "prop-types";
 import { createContext, useContext, useEffect, useState } from "react";
@@ -10,22 +10,26 @@ AuthProvider.propTypes = {
 };
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
   const localData = JSON.parse(localStorage.getItem("user"));
   const [isAuthenticated, setIsAuthenticated] = useState(!!localData);
   const [user, setUser] = useState(localData || {});
   const { refetch } = useQuery({
     queryKey: ["user"],
     queryFn: async () => {
-      return await axios.get("/api/user").then((res) => res.data);
+      return await axios
+        .get("/api/user")
+        .then((res) => {
+          login(res.data);
+          return res.data;
+        })
+        .catch(() => {
+          setIsAuthenticated(false);
+          setUser({});
+          return {};
+        });
     },
     retry: 1,
-    onSuccess: (data) => {
-      login(data);
-    },
-    onError: () => {
-      setUser({});
-      setIsAuthenticated(false);
-    },
     enabled: isAuthenticated,
   });
   useEffect(() => {
@@ -40,6 +44,7 @@ export function AuthProvider({ children }) {
   function logout() {
     axios.get("api/user/logout").then(() => {
       localStorage.removeItem("user");
+      queryClient.invalidateQueries();
       setUser({});
       setIsAuthenticated(false);
     });

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import PropTypes from "prop-types";
 import { useState } from "react";
-import { Link, ScrollRestoration } from "react-router-dom";
+import { Link, ScrollRestoration, useNavigate } from "react-router-dom";
 import avatar from "../assets/avatar.png";
 import AuthConsumer from "./AuthContext";
 import Modal from "./Modal";
@@ -17,6 +17,7 @@ Post.propTypes = {
 };
 
 export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
+  const navigate = useNavigate();
   const { isAuthenticated } = AuthConsumer();
   const [modalShow, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(<></>);
@@ -52,9 +53,10 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
       })
       .catch((err) => alert(err));
   }
+  const createdAt = new Date(post?.post_info.created_at);
   return (
     <>
-      <motion.div
+      <motion.li
         className="flex flex-col p-1 pb-3 bg-white rounded-xl border-2 md:pb-0 hover:drop-shadow-md md:flex-row border-theme-gray-blue"
         variants={PostVariant}
         initial={postIndex < 5 || isExpanded ? "hidden" : "empty"}
@@ -73,36 +75,44 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
               className="rounded-md duration-500 cursor-pointer md:h-32 md:w-32 hover:scale-110"
             />
           )}
-          <div className="flex flex-col justify-between space-y-2 w-full cursor-pointer">
-            <Link className={`flex flex-col space-y-2 w-full h-full`} to={`/post/${post?.post_info.id}`}>
+          <div className="flex flex-col md:justify-between space-y-1 w-full md:cursor-pointer">
+            <Link to={`/post/${post?.post_info.id}`} className="flex flex-col space-y-2 w-full h-full">
               <div className="w-full text-sm font-semibold md:text-lg text-ellipsis">{post?.post_info.title}</div>
               {isExpanded && <p className="text-sm">{post?.post_info.content}</p>}
             </Link>
-            <div className="flex justify-between w-full md:space-x-2">
-              <div className="flex space-x-2">
+            <div className="flex justify-between md:space-x-2">
+              <div className="flex space-x-2 w-full md:w-fit">
                 <div className="flex items-center space-x-2 text-xs md:text-sm">
                   <Link to={`/u/${post?.user_info.user_name}`}>
-                    By <span className="font-medium">u/{post?.user_info.user_name}</span>
+                    By{" "}
+                    <span className="hover:underline hover:text-blue-600 font-medium text-xs  md:text-sm">
+                      u/{post?.user_info.user_name}
+                    </span>
                   </Link>
-                  <img src={post?.user_info.user_avatar || avatar} alt="" className="w-5 h-5 rounded-full" />
+                  <img src={post?.user_info.user_avatar || avatar} alt="" className="w-6 h-6 rounded-full" />
                 </div>
                 <div className="flex items-center space-x-2">
                   <p className="text-xs md:text-sm">in</p>
                   <Link
-                    className="text-xs font-medium md:text-sm"
-                    to={`/${post?.thread_info.thread_name}`}>{` ${post?.thread_info.thread_name}`}</Link>
+                    to={`/${post?.thread_info.thread_name}`}
+                    className="hover:underline hover:text-theme-orange font-medium text-xs  md:text-sm">{` ${post?.thread_info.thread_name}`}</Link>
                   {post?.thread_info.thread_logo && (
-                    <img src={post?.thread_info.thread_logo} alt="" className="w-5 h-5 rounded-full" />
+                    <img src={post?.thread_info.thread_logo} alt="" className="w-6 h-6 rounded-full" />
                   )}
                 </div>
+                <span onClick={() => navigate(`/post/${post?.post_info.id}`)} className="flex-1 md:hidden"></span>
               </div>
               <div className="hidden space-x-1 md:flex">
-                <p className="text-xs font-light">{post?.post_info.created_at}</p>
+                <p className="text-xs font-light">
+                  {createdAt.toDateString()} {createdAt.toLocaleTimeString({ hour12: true })}
+                </p>
                 <p className="text-xs">{post?.post_info.is_edited && "Edited"}</p>
               </div>
             </div>
             <div className="flex space-x-1 md:hidden">
-              <p className="text-xs font-light">{post?.post_info.created_at}</p>
+              <p className="text-xs font-light">
+                {createdAt.toDateString()} {createdAt.toLocaleTimeString({ hour12: true })}
+              </p>
               <p className="text-xs">{post?.post_info.is_edited && "Edited"}</p>
             </div>
           </div>
@@ -157,7 +167,7 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
             }}
           />
         </div>
-      </motion.div>
+      </motion.li>
       {isExpanded && <ScrollRestoration />}
       <AnimatePresence>
         {modalShow && (

@@ -34,7 +34,9 @@ export function FullPost() {
     <div className="flex pb-20 md:pb-0">
       <ThreadsSidebar />
       <div className="flex flex-col p-2 space-y-2 w-full">
-        <Post post={data?.post_info} isExpanded={true} setCommentMode={setCommentMode} />
+        <ul>
+          <Post post={data?.post_info} isExpanded={true} setCommentMode={setCommentMode} />
+        </ul>
         {commentMode && (
           <div className="py-3 pl-2 space-y-2 w-full bg-white rounded-xl md:text-base">
             <CommentMode
@@ -50,12 +52,7 @@ export function FullPost() {
             <ul className="space-y-2 rounded-xl md:border-2 md:p-2 hover:shadow-sm border-theme-gray-blue">
               <AnimatePresence>
                 {data?.comment_info.map((comment, index) => (
-                  <Comment
-                    key={comment.comment.comment_info.id}
-                    {...comment}
-                    postId={data?.post_info.thread_info.thread_id}
-                    commentIndex={index}
-                  />
+                  <Comment key={comment.comment.comment_info.id} {...comment} commentIndex={index} />
                 ))}
               </AnimatePresence>
             </ul>

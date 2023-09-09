@@ -66,7 +66,7 @@ export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShow
         <Svg className="w-4 h-4 md:w-6 md:h-6" type="more" />
         <p className="ml-2 text-sm cursor-pointer md:text-base">More</p>
         {expand && (
-          <ul className="absolute top-full z-10 p-1 mt-1 space-y-1 w-24 list-none bg-white rounded-md border-2 border-theme-cultured">
+          <ul className="absolute top-full z-20 p-1 mt-1 space-y-1 w-24 list-none bg-white rounded-md border-2 border-theme-cultured">
             <li className="p-1 text-sm cursor-pointer md:text-base hover:bg-theme-cultured" onClick={handleSaved}>
               {postSaved ? "Unsave" : "Save"}
             </li>

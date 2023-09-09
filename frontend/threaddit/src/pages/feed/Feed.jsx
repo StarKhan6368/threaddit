@@ -11,10 +11,10 @@ export function Feed() {
     return navigate("/login");
   }
   return (
-    <main className="flex flex-1 max-w-full bg-theme-cultured">
+    <div className="flex flex-1 max-w-full bg-theme-cultured">
       <ThreadsSidebar />
       <InfinitePostsLayout linkUrl={`posts/${params.feedName}`} apiQueryKey={params.feedName} />
-    </main>
+    </div>
   );
 }
 

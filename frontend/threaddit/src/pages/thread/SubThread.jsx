@@ -44,6 +44,9 @@ export function SubThread() {
       case "manage-mods":
         setModalData(<ManageMods mods={threadData.modList || []} threadId={threadData.id} />);
         break;
+      case "logo":
+        setModalData(<img src={threadData?.logo} className="w-11/12 max-h-5/6 md:w-max md:max-h-screen" alt="" />);
+        break;
       default:
         navigate(`/u/${value}`);
     }
@@ -60,7 +63,12 @@ export function SubThread() {
               !threadData?.logo && "py-5"
             }`}>
             {threadData?.logo && (
-              <img src={threadData?.logo} className="w-32 h-32 rounded-full md:w-36 md:h-36" alt="" />
+              <img
+                src={threadData?.logo}
+                className="w-32 cursor-pointer h-32 rounded-full md:w-36 md:h-36"
+                alt=""
+                onClick={() => handleChange("logo")}
+              />
             )}
             <div className="flex flex-col flex-1 justify-around items-center p-2 space-y-1">
               <div className="flex items-center space-x-5">
@@ -81,8 +89,8 @@ export function SubThread() {
             </div>
           </div>
         )}
-        {isAuthenticated && (
-          <div className="flex flex-col justify-around space-y-3 md:space-x-10 md:flex-row md:space-y-0">
+        <div className="flex flex-col justify-around space-y-3 md:space-x-10 md:flex-row md:space-y-0">
+          {isAuthenticated && (
             <button
               className={`px-32 py-2 text-white rounded-full active:scale-90 ${
                 threadData?.has_subscribed ? "bg-blue-400" : "bg-theme-red-coral"
@@ -90,30 +98,30 @@ export function SubThread() {
               onClick={() => mutate(threadData?.has_subscribed)}>
               {threadData?.has_subscribed ? "Leave" : "Join"}
             </button>
-            <select
-              ref={listRef}
-              defaultValue={"more"}
-              onChange={(e) => handleChange(e.target.value)}
-              name="mods"
-              id="mods"
-              className="px-10 py-2 text-center rounded-md md:block bg-theme-cultured">
-              <option value={"more"}>More</option>
-              {isAuthenticated && (user.mod_in.includes(threadData?.id) || user.roles.includes("admin")) && (
-                <optgroup label="Subthread Options">
-                  <option value="edit">Edit Subthread</option>
-                  <option value="manage-mods">Manage Mods</option>
-                </optgroup>
-              )}
-              <optgroup label="ModList">
-                {threadData?.modList.map((mod) => (
-                  <option key={mod} value={mod}>
-                    {mod}
-                  </option>
-                ))}
+          )}
+          <select
+            ref={listRef}
+            defaultValue={"more"}
+            onChange={(e) => handleChange(e.target.value)}
+            name="mods"
+            id="mods"
+            className="px-10 py-2 text-center rounded-md md:block bg-theme-cultured">
+            <option value={"more"}>More</option>
+            {isAuthenticated && (user.mod_in.includes(threadData?.id) || user.roles.includes("admin")) && (
+              <optgroup label="Subthread Options">
+                <option value="edit">Edit Subthread</option>
+                <option value="manage-mods">Manage Mods</option>
               </optgroup>
-            </select>
-          </div>
-        )}
+            )}
+            <optgroup label="ModList">
+              {threadData?.modList.map((mod) => (
+                <option key={mod} value={mod}>
+                  {mod}
+                </option>
+              ))}
+            </optgroup>
+          </select>
+        </div>
       </div>
       <InfinitePostsLayout
         apiQueryKey={threadData?.name}
