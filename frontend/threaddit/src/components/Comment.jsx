@@ -80,7 +80,7 @@ export default function Comment({ children, comment, threadID, commentIndex, par
       ) : (
         <>
           <div className="flex items-center space-x-2 text-sm font-medium">
-            <img src={userInfo.user_avatar || avatar} alt="" className="w-5 h-5 rounded-full" />
+            <img src={userInfo.user_avatar || avatar} alt="" className="object-cover w-5 h-5 rounded-full" />
             <Link to={`/u/${userInfo.user_name}`}>{userInfo.user_name}</Link>
             <p>{timePassed}</p>
             <p>{commentInfo.is_edited && "Edited"}</p>
@@ -181,7 +181,7 @@ export function CommentMode({ user, colorSquence, callBackSubmit, callBackCancel
         defaultValue !== null ? "" : `border-l-2 ${colorSquence()} py-3 pl-2 `
       }`}>
       <div className="flex items-center space-x-2 text-sm font-medium">
-        <img src={user.avatar || avatar} alt="" className="w-5 h-5 rounded-full" />
+        <img src={user.avatar || avatar} alt="" className="object-cover w-5 h-5 rounded-full" />
         <Link to={`/u/${user.username}`}>{user.username}</Link>
       </div>
       <form

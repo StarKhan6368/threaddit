@@ -11,15 +11,24 @@ import Svg from "./Svg";
 MoreOptions.propTypes = {
   creatorInfo: PropTypes.object,
   threadInfo: PropTypes.object,
+  currentUser: PropTypes.object,
   postInfo: PropTypes.object,
   setShowModal: PropTypes.func,
   setModalData: PropTypes.func,
   handleShare: PropTypes.func,
 };
 
-export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShowModal, setModalData, handleShare }) {
+export default function MoreOptions({
+  creatorInfo,
+  threadInfo,
+  currentUser,
+  postInfo,
+  setShowModal,
+  setModalData,
+  handleShare,
+}) {
   const { isAuthenticated, user } = AuthConsumer();
-  const [postSaved, setPostSaved] = useState(postInfo?.saved);
+  const [postSaved, setPostSaved] = useState(currentUser?.saved);
   const queryClient = useQueryClient();
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,6 +50,9 @@ export default function MoreOptions({ creatorInfo, threadInfo, postInfo, setShow
     setExpand(false);
   }
   async function handleSaved() {
+    if (!isAuthenticated) {
+      return alert("You must be logged in to save.");
+    }
     if (postSaved) {
       await axios.delete(`/api/posts/saved/${postInfo?.id}`);
       setPostSaved(false);

@@ -163,13 +163,11 @@ class PostInfo(db.Model):
             ).first()
             p_info["current_user"] = {
                 "has_upvoted": has_reaction.is_upvote if has_reaction else None,
-            }
-            p_info["post_info"] = p_info["post_info"] | {
                 "saved": bool(
                     SavedPosts.query.filter_by(
                         user_id=cur_user, post_id=self.post_id
                     ).first()
-                )
+                ),
             }
         return p_info
 

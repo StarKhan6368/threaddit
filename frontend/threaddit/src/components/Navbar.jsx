@@ -16,7 +16,7 @@ export function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   return (
-    <nav className={`flex justify-between items-center ${isAuthenticated ? "mx-3" : "ml-3"} h-16 md:p-5`}>
+    <nav className="flex justify-between items-center mx-1 h-16 md:p-5">
       <AppLogo />
       <div className="flex items-center md:space-x-10">
         <div
@@ -62,9 +62,8 @@ export function Navbar() {
               to={`/u/${user.username}`}
               className="hidden md:flex items-center space-x-2 bg-theme-cultured rounded-3xl pr-3 py-0.5">
               <img
-                src={user.avatar ? user.avatar : avatar}
-                alt="profile-picture"
-                className="w-10 h-10 rounded-full duration-500 cursor-pointer hover:scale-125 md:block"
+                src={user.avatar || avatar}
+                className="object-cover w-10 h-10 rounded-full duration-500 cursor-pointer hover:scale-125 md:block"
               />
               <div className="text-sm font-semibold md:block">
                 <p className="text-gray-700">{user.username}</p>
@@ -80,7 +79,7 @@ export function Navbar() {
         <select
           name="page"
           id="page"
-          className="py-3 ml-1 text-center rounded-md md:hidden bg-theme-cultured"
+          className="px-1 py-3 mr-1 text-center rounded-md md:hidden bg-theme-cultured"
           onChange={(e) => {
             if (e.target.value !== "logout") {
               navigate(e.target.value);
@@ -113,7 +112,7 @@ export function Navbar() {
         </select>
       </div>
       {!isAuthenticated && (
-        <Link to="/login" className="hidden md:flex font-semibold cursor-pointer hover:text-theme-orange group">
+        <Link to="/login" className="hidden font-semibold cursor-pointer md:flex hover:text-theme-orange group">
           Login
           <Svg
             type="arrow-right"
@@ -132,7 +131,7 @@ export function AppLogo({ forBanner = false, children }) {
   if (forBanner) {
     return (
       <div className="hidden relative flex-col justify-center items-center space-y-5 rounded-md cursor-pointer md:flex group">
-        <img src={threads} alt="threadit-logo" />
+        <img src={threads} alt="threadit-logo" className="object-cover" />
         <span
           className="hidden md:block absolute w-4 h-4
                     bg-theme-orange rounded-full bottom-[6rem] z-20 right-[7.9rem] group-hover:animate-bounce"></span>
@@ -145,7 +144,7 @@ export function AppLogo({ forBanner = false, children }) {
   }
   return (
     <Link to="/" className="flex relative items-center space-x-3 cursor-pointer group">
-      <img src={threads} className="w-10 h-10" alt="threadit-logo" />
+      <img src={threads} className="object-cover w-10 h-10" alt="threadit-logo" />
       <span
         className="hidden md:block absolute w-2 h-2 bg-theme-orange rounded-full
                     right-[1.3rem] top-[0.2rem] z-20 group-hover:animate-bounce"></span>
@@ -157,7 +156,6 @@ export function AppLogo({ forBanner = false, children }) {
 }
 
 function ThreadSearch() {
-  const { isAuthenticated } = AuthConsumer();
   const [showModal, setShowModal] = useState(false);
   const searchRef = useRef();
   const [search, setSearch] = useState("");
@@ -190,18 +188,18 @@ function ThreadSearch() {
         type="search"
         name="search"
         id="search"
-        className={`py-0.5 ${isAuthenticated ? "w-48" : "w-44"} md:w-full bg-neutral-100 focus:outline-none md:pr-20`}
+        className="py-0.5 w-48  md:w-full bg-neutral-100 focus:outline-none md:pr-20"
         placeholder="Find community"
       />
       {queryData.data && (
-        <ul className="flex absolute z-50 right-0 top-full flex-col p-5 mt-3 space-y-5 w-full list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue">
+        <ul className="flex absolute right-0 top-full z-50 flex-col p-5 mt-3 space-y-5 w-full list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue">
           {queryData.data.slice(0, 5).map((subthread) => (
             <Link
               to={`/${subthread.name}`}
               className={`flex space-x-5 cursor-pointer ${!subthread.logo && "pl-[3.75rem]"}`}
               key={subthread.name}
               onClick={() => setSearch("")}>
-              {subthread.logo && <img src={subthread.logo} className="w-10 h-10 rounded-full" />}
+              {subthread.logo && <img src={subthread.logo} className="object-cover w-10 h-10 rounded-full" />}
               <div className="flex flex-col">
                 <p className="text-sm font-semibold tracking-wide md:text-base">{subthread.name}</p>
                 <span className="text-xs font-light md:text-sm">{subthread.subscriberCount} Members</span>

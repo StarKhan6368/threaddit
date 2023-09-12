@@ -32,7 +32,7 @@ export function Inbox() {
               }`}
               key={message.message_id}
               onClick={() => setCurChat(message.sender)}>
-              <img src={message.sender.avatar || avatar} className="w-14 h-14 rounded-full" alt="" />
+              <img src={message.sender.avatar || avatar} className="object-cover w-14 h-14 rounded-full" alt="" />
               <div className="flex flex-col space-y-1 w-full">
                 <div className="flex justify-between items-center w-full">
                   <p className="font-medium">{message.sender.username}</p>
@@ -64,7 +64,7 @@ export function Inbox() {
             }`}
             key={message.message_id}
             onClick={() => setCurChat(message.sender)}>
-            <img src={message.sender.avatar || avatar} className="w-14 h-14 rounded-full" alt="" />
+            <img src={message.sender.avatar || avatar} className="object-cover w-14 h-14 rounded-full" alt="" />
             <div className="flex flex-col space-y-1 w-full">
               <div className="flex justify-between items-center w-full">
                 <p className="font-medium">{message.sender.username}</p>
@@ -157,7 +157,7 @@ export function Chat({ sender, setCurChat, newChat = false }) {
       exit={{ opacity: 0, x: 10, transition: { duration: 0.1 } }}>
       <div className="flex justify-between items-center p-3 mx-2 border-b-2">
         <div className="flex items-center space-x-4">
-          <img src={sender.avatar || avatar} alt="" className="w-14 h-14 rounded-full" />
+          <img src={sender.avatar || avatar} alt="" className="object-cover w-14 h-14 rounded-full" />
           <Link to={`/u/${sender.username}`} className="text-xl font-semibold text-blue-500">
             {sender.username}
           </Link>

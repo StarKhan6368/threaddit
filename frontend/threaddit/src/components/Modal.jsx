@@ -20,10 +20,10 @@ export default function Modal({ children, setShowModal }) {
   );
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0, background: "rgba(0,0,0,0)" }}
-      animate={{ opacity: 1, scale: 1, background: "rgba(0,0,0,0.5)" }}
+      initial={{ opacity: 0, background: "rgba(0,0,0,0)" }}
+      animate={{ opacity: 1, background: "rgba(0,0,0,0.9)" }}
       transition={{ duration: 0.25 }}
-      exit={{ opacity: 0, scale: 0, background: "rgba(0,0,0,0)" }}
+      exit={{ opacity: 0 }}
       ref={ref}
       style={{ margin: 0 }}
       className="flex fixed inset-0 z-20 justify-center items-center min-h-screen min-w-screen">

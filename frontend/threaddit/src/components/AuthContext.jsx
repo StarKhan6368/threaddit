@@ -20,7 +20,9 @@ export function AuthProvider({ children }) {
       return await axios
         .get("/api/user")
         .then((res) => {
-          login(res.data);
+          localStorage.setItem("user", JSON.stringify(res.data));
+          setUser(res.data);
+          setIsAuthenticated(true);
           return res.data;
         })
         .catch(() => {
@@ -40,6 +42,7 @@ export function AuthProvider({ children }) {
     localStorage.setItem("user", JSON.stringify(userInfo));
     setUser(userInfo);
     setIsAuthenticated(true);
+    queryClient.invalidateQueries();
   }
   function logout() {
     axios.get("api/user/logout").then(() => {

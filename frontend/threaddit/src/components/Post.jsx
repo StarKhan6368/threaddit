@@ -24,7 +24,9 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
   function onImageClick() {
     if (post?.post_info.media) {
       setShowModal(true);
-      setModalData(<img className="w-11/12 max-h-5/6 md:w-max md:max-h-screen" src={post?.post_info.media} alt="" />);
+      setModalData(
+        <img className="object-cover w-11/12 max-h-5/6 md:w-max md:max-h-screen" src={post?.post_info.media} alt="" />
+      );
     }
   }
   function onReplyClick() {
@@ -72,32 +74,43 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
               onClick={() => onImageClick()}
               src={post?.post_info.media}
               alt=""
-              className="rounded-md duration-500 cursor-pointer md:h-32 md:w-32 hover:scale-110"
+              className="object-cover rounded-md duration-500 cursor-pointer md:h-32 md:w-32 hover:scale-110"
             />
           )}
-          <div className="flex flex-col md:justify-between space-y-1 w-full md:cursor-pointer">
-            <Link to={`/post/${post?.post_info.id}`} className="flex flex-col space-y-2 w-full h-full">
-              <div className="w-full text-sm font-semibold md:text-lg text-ellipsis">{post?.post_info.title}</div>
-              {isExpanded && <p className="text-sm">{post?.post_info.content}</p>}
-            </Link>
+          <div className="flex flex-col space-y-1 w-full md:justify-between">
+            {isExpanded ? (
+              <div className="flex flex-col space-y-2 w-full h-full">
+                <div className="w-full font-semibold md:text-lg text-ellipsis">{post?.post_info.title}</div>
+                {isExpanded && <p className="text-sm">{post?.post_info.content}</p>}
+              </div>
+            ) : (
+              <Link to={`/post/${post?.post_info.id}`} className="flex flex-col space-y-2 w-full h-full">
+                <div className="w-full font-semibold md:text-lg text-ellipsis">{post?.post_info.title}</div>
+                {isExpanded && <p className="text-sm">{post?.post_info.content}</p>}
+              </Link>
+            )}
             <div className="flex justify-between md:space-x-2">
               <div className="flex space-x-2 w-full md:w-fit">
                 <div className="flex items-center space-x-2 text-xs md:text-sm">
                   <Link to={`/u/${post?.user_info.user_name}`}>
                     By{" "}
-                    <span className="hover:underline hover:text-blue-600 font-medium text-xs  md:text-sm">
+                    <span className="text-xs font-medium hover:underline hover:text-blue-600 md:text-sm">
                       u/{post?.user_info.user_name}
                     </span>
                   </Link>
-                  <img src={post?.user_info.user_avatar || avatar} alt="" className="w-6 h-6 rounded-full" />
+                  <img
+                    src={post?.user_info.user_avatar || avatar}
+                    alt=""
+                    className="object-cover w-6 h-6 rounded-full"
+                  />
                 </div>
                 <div className="flex items-center space-x-2">
                   <p className="text-xs md:text-sm">in</p>
                   <Link
                     to={`/${post?.thread_info.thread_name}`}
-                    className="hover:underline hover:text-theme-orange font-medium text-xs  md:text-sm">{` ${post?.thread_info.thread_name}`}</Link>
+                    className="text-xs font-medium hover:underline hover:text-theme-orange md:text-sm">{` ${post?.thread_info.thread_name}`}</Link>
                   {post?.thread_info.thread_logo && (
-                    <img src={post?.thread_info.thread_logo} alt="" className="w-6 h-6 rounded-full" />
+                    <img src={post?.thread_info.thread_logo} alt="" className="object-cover w-6 h-6 rounded-full" />
                   )}
                 </div>
                 <span onClick={() => navigate(`/post/${post?.post_info.id}`)} className="flex-1 md:hidden"></span>
@@ -143,6 +156,7 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
             setShowModal={setShowModal}
             setModalData={setModalData}
             handleShare={handleShare}
+            currentUser={post?.current_user}
           />
           <div className="flex items-center space-x-3 md:hidden">
             <Vote

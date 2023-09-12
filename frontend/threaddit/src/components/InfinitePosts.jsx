@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import PropTypes from "prop-types";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -54,9 +54,9 @@ export default function InfinitePostsLayout({ linkUrl, apiQueryKey, forSaved = f
   return (
     <div
       id="main-content"
-      className="flex flex-col flex-1 p-2 space-y-3 w-full h-full rounded-lg m-0.5 bg-theme-cultured md:bg-white md:m-3">
+      className="flex w-full flex-col flex-1 p-2 space-y-3 rounded-lg m-0.5 bg-theme-cultured md:bg-white md:m-3">
       {!forSaved && (
-        <header className="flex justify-between items-center w-full">
+        <header className="flex justify-between items-center">
           <div className="flex items-center space-x-2 md:hidden">
             <span>Sort by</span>
             <select
@@ -141,9 +141,17 @@ export default function InfinitePostsLayout({ linkUrl, apiQueryKey, forSaved = f
         </header>
       )}
       {isFetching && <Loader forPosts={true} />}
-      <div className="flex flex-col flex-1 space-y-2 w-full h-full md:space-y-3">
+      {data?.pages[0].length === 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
+          <p className="p-5 bg-white rounded-xl border-2 md:text-base hover:shadow-sm border-theme-gray-blue">
+            No posts with this filter were found, <br className="md:hidden" />
+            Be the first to add one!
+          </p>
+        </motion.div>
+      )}
+      <div className="flex flex-col space-y-2 md:space-y-3">
         {data?.pages.map((pageData, index) => (
-          <ul className="flex flex-col flex-1 space-y-2 w-full h-full md:space-y-3" key={index}>
+          <ul className="flex flex-col space-y-2 md:space-y-3" key={index}>
             <AnimatePresence initial={index == 0}>
               {pageData?.map((post, index) => (
                 <Post post={post} key={post.post_info.id} postIndex={index} />

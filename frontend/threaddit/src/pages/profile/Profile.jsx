@@ -38,7 +38,7 @@ export function Profile() {
     }
   }, [action, data, username, logout]);
   return (
-    <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
+    <div className="flex flex-col flex-1 items-center w-full bg-theme-cultured">
       {userIsFetching ? (
         <Loader forPosts={true} />
       ) : (
@@ -47,11 +47,15 @@ export function Profile() {
             <div className="flex flex-col flex-1 justify-between items-center p-2 w-full rounded-md md:flex-row md:rounded-full bg-theme-cultured">
               <img
                 src={data.avatar || avatar}
-                className="w-24 h-24 bg-white rounded-full cursor-pointer md:w-36 md:h-36"
+                className="object-cover w-24 h-24 bg-white rounded-full cursor-pointer md:w-36 md:h-36"
                 alt=""
                 onClick={() =>
                   setAction(
-                    <img src={data.avatar || avatar} className="w-11/12 max-h-5/6 md:w-max md:max-h-screen" alt="" />
+                    <img
+                      src={data.avatar || avatar}
+                      className="object-cover w-11/12 max-h-5/6 md:w-max md:max-h-screen"
+                      alt=""
+                    />
                   )
                 }
               />

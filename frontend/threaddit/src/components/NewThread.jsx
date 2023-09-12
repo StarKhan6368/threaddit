@@ -59,7 +59,7 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
       <div className="flex flex-col justify-around items-center p-4 space-y-3 bg-white rounded-xl md:flex-row md:space-y-0">
         <p>{edit ? "Editing" : "Creating"} Subthread as</p>
         <div className="flex items-center space-x-3">
-          <img src={user.avatar || avatar} className="w-9 h-9 rounded-full" alt="" />
+          <img src={user.avatar || avatar} className="object-cover w-9 h-9 rounded-full" alt="" />
           <p>{user.username}</p>
         </div>
       </div>

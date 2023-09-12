@@ -45,7 +45,9 @@ export function SubThread() {
         setModalData(<ManageMods mods={threadData.modList || []} threadId={threadData.id} />);
         break;
       case "logo":
-        setModalData(<img src={threadData?.logo} className="w-11/12 max-h-5/6 md:w-max md:max-h-screen" alt="" />);
+        setModalData(
+          <img src={threadData?.logo} className="object-cover w-11/12 max-h-5/6 md:w-max md:max-h-screen" alt="" />
+        );
         break;
       default:
         navigate(`/u/${value}`);
@@ -53,7 +55,7 @@ export function SubThread() {
     listRef.current.value = "more";
   }
   return (
-    <div className="flex flex-col flex-1 items-center p-2 w-full bg-theme-cultured">
+    <div className="flex flex-col flex-1 items-center w-full bg-theme-cultured">
       <div className="flex flex-col p-5 space-y-1 w-full bg-white rounded-md md:pb-3 md:space-y-3">
         {isFetching ? (
           <Loader forPosts={true} />
@@ -65,7 +67,7 @@ export function SubThread() {
             {threadData?.logo && (
               <img
                 src={threadData?.logo}
-                className="w-32 cursor-pointer h-32 rounded-full md:w-36 md:h-36"
+                className="object-cover w-32 h-32 rounded-full cursor-pointer md:w-36 md:h-36"
                 alt=""
                 onClick={() => handleChange("logo")}
               />
