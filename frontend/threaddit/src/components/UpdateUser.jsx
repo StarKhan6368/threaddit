@@ -27,9 +27,10 @@ export default function UpdateUser({ setModal }) {
     }
     await axios
       .patch("/api/user", formData, { headers: { "Content-Type": "multipart/form-data" } })
-      .then(() => {
+      .then((res) => {
         setModal(false);
-        queryClient.invalidateQueries({ queryKey: ["user", user.username] });
+        queryClient.setQueryData({ queryKey: ["user", user.username] }, () => res.data);
+        queryClient.setQueryData({ queryKey: ["user"] }, () => res.data);
       })
       .catch((err) => alert(`${err.message} check your fields`));
   }
@@ -67,7 +68,13 @@ export default function UpdateUser({ setModal }) {
           </select>
           {mediaType === "image" ? (
             <input
-              onChange={(e) => setMedia(e.target.files[0])}
+              onChange={(e) => {
+                if (e.target.files[0].size > 10485760) {
+                  alert("File too large, only upload files less than 10MB");
+                } else {
+                  setMedia(e.target.files[0]);
+                }
+              }}
               type="file"
               name="file"
               accept="image/*"

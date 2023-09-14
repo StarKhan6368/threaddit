@@ -89,7 +89,7 @@ In this project, I've implemented a set of features, which are shown below. It's
 - [x] Post Delete (by Mod, Admin, and Creator)
 - [x] Post Save & Unsave
 - [x] Ability to add an image to a post
-- [ ] Ability to add video and gifs
+- [x] Ability to add video and gifs
 - [ ] Report Posts
 - [ ] Use Markdown instead of plain text.
 

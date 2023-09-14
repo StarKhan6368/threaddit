@@ -27,12 +27,19 @@ export function SubThread() {
   const { mutate } = useMutation({
     mutationFn: async (has_subscribed) => {
       if (has_subscribed) {
-        return await axios.delete(`/api/threads/subscription/${threadData.id}`).then((res) => res.data);
+        axios.delete(`/api/threads/subscription/${threadData.id}`).then(() =>
+          queryClient.setQueryData({ queryKey: ["thread", params.threadName] }, (oldData) => {
+            return { threadData: { ...oldData.threadData, has_subscribed: false } };
+          })
+        );
       } else {
-        return await axios.post(`/api/threads/subscription/${threadData.id}`).then((res) => res.data);
+        axios.post(`/api/threads/subscription/${threadData.id}`).then(() =>
+          queryClient.setQueryData({ queryKey: ["thread", params.threadName] }, (oldData) => {
+            return { threadData: { ...oldData.threadData, has_subscribed: true } };
+          })
+        );
       }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["thread", params.threadName] }),
   });
   function handleChange(value) {
     switch (value) {

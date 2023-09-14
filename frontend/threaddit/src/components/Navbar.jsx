@@ -191,7 +191,7 @@ function ThreadSearch() {
         className="py-0.5 w-48  md:w-full bg-neutral-100 focus:outline-none md:pr-20"
         placeholder="Find community"
       />
-      {queryData.data && (
+      {queryData.data && search && (
         <ul className="flex absolute right-0 top-full z-50 flex-col p-5 mt-3 space-y-5 w-full list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue">
           {queryData.data.slice(0, 5).map((subthread) => (
             <Link
@@ -213,6 +213,7 @@ function ThreadSearch() {
                 className="flex justify-center items-center m-0 font-semibold cursor-pointer group"
                 onClick={() => {
                   setShowModal(true);
+                  setSearch("");
                 }}>
                 <p className="text-sm md:text-base">Create subthread &quot;{search}&quot;</p>
                 <Svg type="arrow-right" className="w-6 h-6 duration-500 group-hover:translate-x-1" />

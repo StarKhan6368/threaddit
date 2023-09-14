@@ -40,9 +40,9 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
     } else {
       await axios
         .patch(`/api/thread/${ogInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
-        .then(() => {
+        .then((res) => {
           setShowModal(false);
-          queryClient.invalidateQueries({ queryKey: ["thread", `${ogInfo.name.slice(2)}`] });
+          queryClient.setQueryData({ queryKey: ["thread", `${ogInfo.name.slice(2)}`] }, () => res.data.new_data);
         })
         .catch((err) => alert(`${err.message} check your fields`));
     }
@@ -104,7 +104,13 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
           </select>
           {mediaType === "image" ? (
             <input
-              onChange={(e) => setMedia(e.target.files[0])}
+              onChange={(e) => {
+                if (e.target.files[0].size > 10485760) {
+                  alert("File too large, only upload files less than 10MB");
+                } else {
+                  setMedia(e.target.files[0]);
+                }
+              }}
               type="file"
               name="file"
               accept="image/*"

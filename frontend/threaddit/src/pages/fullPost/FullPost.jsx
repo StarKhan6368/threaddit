@@ -31,7 +31,7 @@ export function FullPost() {
   return isFetching ? (
     <Loader forPosts={true} />
   ) : (
-    <div className="flex pb-20 md:pb-0">
+    <div className="flex pb-20">
       <ThreadsSidebar />
       <div className="flex flex-col p-2 space-y-2 w-full">
         <ul>

@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import PropTypes from "prop-types";
 import { useState } from "react";
@@ -24,11 +24,11 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
   const [title, setTitle] = useState(postInfo?.title || "");
   const [content, setContent] = useState(postInfo?.content || "");
   const [media, setMedia] = useState("");
-  const [mediaType, setMediaType] = useState("image");
+  const [mediaType, setMediaType] = useState("media");
   const [imageUrl, setImageUrl] = useState("");
   const [thread, setThread] = useState(threadInfo.thread_id || 1);
   const { user } = AuthConsumer();
-  async function handleSubmit(e) {
+  const { mutate: handleSubmit, status } = useMutation(async (e) => {
     e?.preventDefault();
     const formData = new FormData();
     formData.append("title", title);
@@ -47,13 +47,15 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
     } else {
       await axios
         .patch(`/api/post/${postInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
-        .then(() => {
-          queryClient.invalidateQueries({ queryKey: ["post/comment", `${postInfo.id}`] });
+        .then((res) => {
+          queryClient.setQueryData({ queryKey: ["post/comment", `${postInfo.id}`] }, (oldData) => {
+            return { ...oldData, post_info: res.data.new_data };
+          });
           setShowModal(false);
         })
         .catch((err) => alert(`${err.message} check your fields, Title is mandatory`));
     }
-  }
+  });
   if (isLoading) return <Loader />;
   return (
     <div className="flex flex-col p-5 space-y-5 w-5/6 rounded-md blur-none min-h-4/6 md:w-3/4 md:h-5/6 md:p-10 bg-theme-cultured">
@@ -63,6 +65,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
           <img src={user.avatar || avatar} className="object-cover w-8 h-8 rounded-full md:w-12 md:h-12" alt="" />
           <p>{user.username}</p>
         </div>
+        {status === "loading" && <Loader forPosts={true} />}
         <div className="flex items-center space-x-2 md:space-x-3">
           <p className="hidden md:block">Posting on</p>
           <p className="md:hidden">On</p>
@@ -108,21 +111,27 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
         <label htmlFor="media" className="flex flex-col items-center space-y-3 md:space-y-0 md:space-x-5 md:flex-row">
           <select
             className="px-10 py-2 bg-white rounded-md border md:px-12"
-            name="media"
-            id="media"
+            name="mediaType"
+            id="mediaType"
             onChange={(e) => setMediaType(e.target.value)}>
-            <option value="image">Image</option>
+            <option value="media">Media</option>
             <option value="url">URL</option>
           </select>
-          {mediaType === "image" ? (
-            <label htmlFor="image">
+          {mediaType === "media" ? (
+            <label htmlFor="media">
               <input
-                onChange={(e) => setMedia(e.target.files[0])}
+                onChange={(e) => {
+                  if (e.target.files[0].size > 10485760) {
+                    alert("File too large, only upload files less than 10MB");
+                  } else {
+                    setMedia(e.target.files[0]);
+                  }
+                }}
                 type="file"
-                name="image"
-                alt="image"
-                accept="image/*"
-                id="image"
+                name="media"
+                alt="media"
+                accept="image/*, video/*"
+                id="media"
                 className="w-full focus:outline-none"
               />
             </label>
@@ -143,8 +152,9 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
         )}
         <button
           onClick={handleSubmit}
+          disabled={status === "loading"}
           className="py-2 font-semibold text-white rounded-md bg-theme-orange active:scale-95">
-          Submit
+          {status === "loading" ? "Submitting..." : "Submit"}
         </button>
       </form>
     </div>

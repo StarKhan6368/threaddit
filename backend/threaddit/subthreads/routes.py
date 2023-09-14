@@ -106,7 +106,6 @@ def del_subscription(tid):
         user_id=current_user.id, subthread_id=tid
     ).first()
     if subscription:
-        subscription.delete_logo()
         Subscription.query.filter_by(user_id=current_user.id, subthread_id=tid).delete()
         db.session.commit()
     else:
@@ -136,7 +135,19 @@ def update_thread(tid):
     image = request.files.get("media")
     form_data = request.form.to_dict()
     thread.patch(form_data, image)
-    return jsonify({"message": "Thread updated"}), 200
+    return (
+        jsonify(
+            {
+                "message": "Thread updated",
+                "new_data": {
+                    "threadData": thread.as_dict(
+                        current_user.id if current_user.is_authenticated else None
+                    )
+                },
+            }
+        ),
+        200,
+    )
 
 
 @threads.route("/thread/mod/<tid>/<username>", methods=["PUT"])

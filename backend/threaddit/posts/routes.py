@@ -106,7 +106,15 @@ def update_post(pid):
     elif update_post.user_id != current_user.id:
         return jsonify({"message": "Unauthorized"}), 401
     update_post.patch(form_data, image)
-    return jsonify({"message": "Post udpated"}), 200
+    return (
+        jsonify(
+            {
+                "message": "Post udpated",
+                "new_data": update_post.post_info[0].as_dict(current_user.id),
+            }
+        ),
+        200,
+    )
 
 
 @posts.route("/post/<pid>", methods=["DELETE"])

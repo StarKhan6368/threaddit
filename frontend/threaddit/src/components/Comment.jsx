@@ -59,7 +59,7 @@ export default function Comment({ children, comment, threadID, commentIndex, par
   }
   return (
     <motion.li
-      className="py-3 pl-2 space-y-2 w-full bg-white rounded-xl md:text-base"
+      className={`py-3 pl-2 space-y-2 w-full bg-white rounded-xl md:text-base ${!parentDelete && "border"}`}
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay: commentIndex * 0.15 }}
@@ -97,7 +97,7 @@ export default function Comment({ children, comment, threadID, commentIndex, par
             name="more-options"
             title="More Options"
             id="more-options"
-            className="text-sm text-center bg-white md:px-2 md:text-base"
+            className="text-sm bg-white md:px-2 md:text-base"
             onChange={(e) => handleSelect(e.target.value)}>
             <option value="more">More</option>
             <option value="share">Share</option>

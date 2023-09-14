@@ -62,12 +62,23 @@ class Posts(db.Model):
         db.session.commit()
 
     def handle_media(self, content_type, image=None, url=None):
-        if content_type == "image" and image:
+        if content_type == "media" and image:
             self.delete_media()
-            image_data = uploader.upload(
-                image, public_id=f"{uuid.uuid4().hex}_{image.filename.rsplit('.')[0]}"
-            )
-            url = f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}/image/upload/f_auto,q_auto/{image_data.get('public_id')}"
+            url = None
+            filename = secure_filename(image.filename)
+            if image.content_type.startswith("image/"):
+                image_data = uploader.upload(
+                    image,
+                    public_id=f"{uuid.uuid4().hex}_{filename.rsplit('.')[0]}",
+                )
+                url = f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}/image/upload/f_auto,q_auto/{image_data.get('public_id')}"
+            elif image.content_type.startswith("video/"):
+                video_data = uploader.upload(
+                    image,
+                    resource_type="video",
+                    public_id=f"{uuid.uuid4().hex}_{filename.rsplit('.')[0]}",
+                )
+                url = video_data.get("playback_url")
             self.media = url
         elif content_type == "url" and url:
             self.media = url
