@@ -1,10 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import Markdown from "markdown-to-jsx";
 import PropTypes from "prop-types";
 import { useState } from "react";
 import avatar from "../assets/avatar.png";
 import AuthConsumer from "./AuthContext";
 import Loader from "./Loader";
+import { ThreadSearch } from "./Navbar";
+import Svg from "./Svg";
 
 NewPost.propTypes = {
   setShowModal: PropTypes.func,
@@ -14,19 +17,14 @@ NewPost.propTypes = {
 };
 
 export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, threadInfo = {} }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["threads"],
-    queryFn: async () => {
-      return axios.get("/api/threads/get/all").then((res) => res.data);
-    },
-  });
   const queryClient = useQueryClient();
   const [title, setTitle] = useState(postInfo?.title || "");
   const [content, setContent] = useState(postInfo?.content || "");
   const [media, setMedia] = useState("");
+  const [preMd, setPreMd] = useState(false);
   const [mediaType, setMediaType] = useState("media");
   const [imageUrl, setImageUrl] = useState("");
-  const [thread, setThread] = useState(threadInfo.thread_id || 1);
+  const [thread, setThread] = useState(isEdit ? { id: threadInfo.thread_id, name: threadInfo.thread_name } : false);
   const { user } = AuthConsumer();
   const { mutate: handleSubmit, status } = useMutation(async (e) => {
     e?.preventDefault();
@@ -38,7 +36,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
     if (media) {
       formData.append("media", media, media.name);
     }
-    formData.append("subthread_id", thread);
+    formData.append("subthread_id", thread.id);
     if (!isEdit) {
       await axios
         .post("/api/post", formData, { headers: { "Content-Type": "multipart/form-data" } })
@@ -56,36 +54,31 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
         .catch((err) => alert(`${err.message} check your fields, Title is mandatory`));
     }
   });
-  if (isLoading) return <Loader />;
   return (
-    <div className="flex flex-col p-5 space-y-5 w-5/6 rounded-md blur-none min-h-4/6 md:w-3/4 md:h-5/6 md:p-10 bg-theme-cultured">
+    <div className="flex flex-col p-5 space-y-5 w-5/6 h-4/6 rounded-md blur-none md:w-3/4 md:h-5/6 md:p-10 bg-theme-cultured">
       <div className="flex flex-col justify-between items-center p-4 space-y-3 bg-white rounded-xl md:flex-row md:space-y-0">
         <div className="flex items-center space-x-3">
-          <p>Posting as</p>
+          <p>{isEdit ? "Editing" : "Posting"} as</p>
           <img src={user.avatar || avatar} className="object-cover w-8 h-8 rounded-full md:w-12 md:h-12" alt="" />
           <p>{user.username}</p>
         </div>
         {status === "loading" && <Loader forPosts={true} />}
-        <div className="flex items-center space-x-2 md:space-x-3">
-          <p className="hidden md:block">Posting on</p>
+        <div className="flex items-center mr-2 space-x-2 md:space-x-3">
+          <p className="hidden md:block">{isEdit ? "Editing" : "Posting"} on</p>
           <p className="md:hidden">On</p>
-          <select
-            name="thread"
-            id="thread"
-            className="px-3 py-2 bg-white rounded-md border md:px-12"
-            value={thread}
-            onChange={(e) => setThread(Number(e.target.value))}>
-            {data?.map((thread) => (
-              <option key={thread.name} value={thread.id}>
-                {thread.name}
-              </option>
-            ))}
-          </select>
+          {thread ? (
+            <div className="flex items-center p-1 space-x-3">
+              <p className="tracking-wide medium text- md:text-base text-theme-orange">{thread.name}</p>
+              <Svg type="delete" className="w-7 h-7 text-theme-orange" onClick={() => setThread(false)} />
+            </div>
+          ) : (
+            <ThreadSearch callBackFunc={setThread} forPost={true} />
+          )}
         </div>
       </div>
       <form
         encType="multipart/form-data"
-        className="flex flex-col flex-1 justify-around p-3 space-y-5 w-full h-1/2 bg-white rounded-md">
+        className="flex flex-col flex-1 justify-around p-1.5 w-full h-1/2 bg-white rounded-md">
         <label htmlFor="title">
           <span>Title</span>
           <input
@@ -98,15 +91,31 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
             required
           />
         </label>
-        <label htmlFor="content">
-          <span>Content</span>
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            name="content"
-            id="content"
-            className="p-2 w-full max-h-28 border border-gray-800 focus:outline-none"
-          />
+        <label htmlFor="content" className="">
+          <span>{preMd ? "Markdown Preview" : "Content"}</span>
+          <button
+            type="button"
+            className="active:scale-90 ml-5 my-0.5 py-0.5 px-2 bg-blue-600 text-white font-semibold rounded-md"
+            onClick={() => setPreMd(!preMd)}>
+            {preMd ? "close preview" : "preview markdown"}
+          </button>
+          <div className="flex flex-col space-y-2">
+            {preMd ? (
+              <div className="overflow-auto p-2 max-w-full h-28 border border-gray-800 prose">
+                <Markdown options={{ forceBlock: true, wrapper: "div" }} className="w-full">
+                  {content.replace("\n", "<br />\n") || "This is markdown preview"}
+                </Markdown>
+              </div>
+            ) : (
+              <textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                name="content"
+                id="content"
+                className="p-2 w-full h-28 border border-gray-800 md:max-h-32 focus:outline-none"
+              />
+            )}
+          </div>
         </label>
         <label htmlFor="media" className="flex flex-col items-center space-y-3 md:space-y-0 md:space-x-5 md:flex-row">
           <select

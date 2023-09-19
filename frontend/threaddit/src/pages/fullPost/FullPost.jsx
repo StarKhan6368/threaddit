@@ -1,13 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { AnimatePresence } from "framer-motion";
-import { useParams } from "react-router-dom";
-import Comment, { CommentMode } from "../../components/Comment";
-import Post from "../../components/Post";
-import ThreadsSidebar from "../../components/ThreadsSidebar";
-import Loader from "../../components/Loader";
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import AuthConsumer from "../../components/AuthContext";
+import Comment, { CommentMode } from "../../components/Comment";
+import Loader from "../../components/Loader";
+import Post from "../../components/Post";
 
 export function FullPost() {
   const queryClient = useQueryClient();
@@ -28,43 +27,43 @@ export function FullPost() {
       });
     },
   });
-  return isFetching ? (
-    <Loader forPosts={true} />
-  ) : (
-    <div className="flex pb-20">
-      <ThreadsSidebar />
-      <div className="flex flex-col p-2 space-y-2 w-full">
-        <ul>
-          <Post post={data?.post_info} isExpanded={true} setCommentMode={setCommentMode} />
-        </ul>
-        {commentMode && (
-          <div className="py-3 pl-2 space-y-2 w-full bg-white rounded-xl md:text-base">
-            <CommentMode
-              user={user}
-              defaultValue=""
-              callBackSubmit={mutate}
-              callBackCancel={() => setCommentMode(false)}
-            />
-          </div>
-        )}
-        <>
-          {data?.comment_info.length > 0 ? (
-            <ul className="space-y-2 rounded-xl md:border-2 md:p-2 hover:shadow-sm border-theme-gray-blue">
-              <AnimatePresence>
-                {data?.comment_info.map((comment, index) => (
-                  <Comment key={comment.comment.comment_info.id} {...comment} commentIndex={index} />
-                ))}
-              </AnimatePresence>
-            </ul>
-          ) : (
-            <div>
-              <p className="p-5 text-sm bg-white rounded-xl border-2 md:text-base hover:shadow-sm border-theme-gray-blue">
-                This post has no comments, be the first to reply!
-              </p>
-            </div>
-          )}
-        </>
+  if (isFetching) {
+    return (
+      <div className="flex flex-col justify-center items-center w-full h-screen">
+        <Loader forPosts={true} />
       </div>
+    );
+  }
+  return (
+    <div className="flex flex-col p-2 space-y-2 w-full">
+      <ul>
+        <Post post={data?.post_info} isExpanded={true} setCommentMode={setCommentMode} />
+      </ul>
+      {commentMode && (
+        <div className="py-3 pl-2 space-y-2 w-full bg-white rounded-xl md:text-base">
+          <CommentMode
+            user={user}
+            defaultValue=""
+            callBackSubmit={mutate}
+            callBackCancel={() => setCommentMode(false)}
+          />
+        </div>
+      )}
+      {data?.comment_info.length > 0 ? (
+        <ul className="space-y-2 rounded-xl md:border-2 md:p-2 hover:shadow-sm border-theme-gray-blue">
+          <AnimatePresence>
+            {data?.comment_info.map((comment, index) => (
+              <Comment key={comment.comment.comment_info.id} {...comment} commentIndex={index} />
+            ))}
+          </AnimatePresence>
+        </ul>
+      ) : (
+        <div>
+          <p className="p-5 text-sm bg-white rounded-xl border-2 md:text-base hover:shadow-sm border-theme-gray-blue">
+            This post has no comments, be the first to reply!
+          </p>
+        </div>
+      )}
     </div>
   );
 }

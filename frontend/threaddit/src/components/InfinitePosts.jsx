@@ -141,25 +141,26 @@ export default function InfinitePostsLayout({ linkUrl, apiQueryKey, forSaved = f
         </header>
       )}
       {isFetching && <Loader forPosts={true} />}
-      {data?.pages[0].length === 0 && (
+      {data?.pages[0].length === 0 ? (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
           <p className="p-5 bg-white rounded-xl border-2 md:text-base hover:shadow-sm border-theme-gray-blue">
             No posts with this filter were found, <br className="md:hidden" />
             Be the first to add one!
           </p>
         </motion.div>
+      ) : (
+        <div className="flex flex-col space-y-2 md:space-y-3">
+          {data?.pages.map((pageData, index) => (
+            <ul className="flex flex-col space-y-2 md:space-y-3" key={index}>
+              <AnimatePresence initial={index == 0}>
+                {pageData?.map((post, index) => (
+                  <Post post={post} key={post.post_info.id} postIndex={index} />
+                ))}
+              </AnimatePresence>
+            </ul>
+          ))}
+        </div>
       )}
-      <div className="flex flex-col space-y-2 md:space-y-3">
-        {data?.pages.map((pageData, index) => (
-          <ul className="flex flex-col space-y-2 md:space-y-3" key={index}>
-            <AnimatePresence initial={index == 0}>
-              {pageData?.map((post, index) => (
-                <Post post={post} key={post.post_info.id} postIndex={index} />
-              ))}
-            </AnimatePresence>
-          </ul>
-        ))}
-      </div>
     </div>
   );
 }

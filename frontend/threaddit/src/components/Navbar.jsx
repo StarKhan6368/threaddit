@@ -47,7 +47,7 @@ export function Navbar() {
             <h2 className="font-semibold group-hover:text-theme-orange">All</h2>
           </NavLink>
         </div>
-        <ThreadSearch />
+        <ThreadSearch callBackFunc={(threadUrl) => navigate(threadUrl)} />
       </div>
       <div className="flex items-center md:space-x-6">
         {isAuthenticated && (
@@ -155,7 +155,11 @@ export function AppLogo({ forBanner = false, children }) {
   );
 }
 
-function ThreadSearch() {
+ThreadSearch.propTypes = {
+  callBackFunc: PropTypes.func,
+  forPost: PropTypes.bool,
+};
+export function ThreadSearch({ callBackFunc, forPost = false }) {
   const [showModal, setShowModal] = useState(false);
   const searchRef = useRef();
   const [search, setSearch] = useState("");
@@ -194,22 +198,24 @@ function ThreadSearch() {
       {queryData.data && search && (
         <ul className="flex absolute right-0 top-full z-50 flex-col p-5 mt-3 space-y-5 w-full list-none bg-white rounded-md border shadow-xl border-y-theme-gray-blue">
           {queryData.data.slice(0, 5).map((subthread) => (
-            <Link
-              to={`/${subthread.name}`}
+            <li
               className={`flex space-x-5 cursor-pointer ${!subthread.logo && "pl-[3.75rem]"}`}
               key={subthread.name}
-              onClick={() => setSearch("")}>
+              onClick={() => {
+                callBackFunc(forPost ? { id: subthread.id, name: subthread.name } : subthread.name);
+                setSearch("");
+              }}>
               {subthread.logo && <img src={subthread.logo} className="object-cover w-10 h-10 rounded-full" />}
               <div className="flex flex-col">
                 <p className="text-sm font-semibold tracking-wide md:text-base">{subthread.name}</p>
                 <span className="text-xs font-light md:text-sm">{subthread.subscriberCount} Members</span>
               </div>
-            </Link>
+            </li>
           ))}
-          {!threadNames.includes(`t/${search}`) && (
+          {!threadNames.includes(`t/${search}`) && !forPost && (
             <>
               <span className="w-full border border-theme-orange"></span>
-              <li
+              <div
                 className="flex justify-center items-center m-0 font-semibold cursor-pointer group"
                 onClick={() => {
                   setShowModal(true);
@@ -217,7 +223,7 @@ function ThreadSearch() {
                 }}>
                 <p className="text-sm md:text-base">Create subthread &quot;{search}&quot;</p>
                 <Svg type="arrow-right" className="w-6 h-6 duration-500 group-hover:translate-x-1" />
-              </li>
+              </div>
             </>
           )}
         </ul>

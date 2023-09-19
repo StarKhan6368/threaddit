@@ -4,6 +4,7 @@ import { Navigate, RouterProvider, createBrowserRouter } from "react-router-dom"
 import AppLayout from "./components/AppLayout.jsx";
 import { AuthProvider } from "./components/AuthContext.jsx";
 import Error from "./components/Error.jsx";
+import FeedLayout from "./components/FeedLayout.jsx";
 import Loader from "./components/Loader.jsx";
 import RequireAuth from "./components/PrivateRoute.jsx";
 import Login from "./pages/login/Login.jsx";
@@ -24,15 +25,21 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Navigate to="/all" />,
-      },
-      {
-        path: "/:feedName",
-        element: <Feed />,
-      },
-      {
-        path: "/post/:postId",
-        element: <FullPost />,
+        element: <FeedLayout />,
+        children: [
+          {
+            path: "/",
+            element: <Navigate to="/all" />,
+          },
+          {
+            path: "/:feedName",
+            element: <Feed />,
+          },
+          {
+            path: "/post/:postId",
+            element: <FullPost />,
+          },
+        ],
       },
       {
         path: "/u/:username",

@@ -9,6 +9,7 @@ import Modal from "./Modal";
 import PostMoreOptions from "./PostMoreOptions";
 import Svg from "./Svg";
 import Vote from "./Vote";
+import Markdown from "markdown-to-jsx";
 
 Post.propTypes = {
   post: PropTypes.object,
@@ -94,7 +95,7 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
                 controls
                 muted={!isExpanded}
                 loop
-                playing={isExpanded || inView}
+                playing={vidRef.current && vidRef.current.offsetWidth > 256 && inView}
                 style={{ position: "absolute", top: 0, left: 0 }}
               />
             ) : (
@@ -113,13 +114,18 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
           <div className="flex flex-col space-y-1 w-full md:justify-between">
             {isExpanded ? (
               <div className="flex flex-col space-y-2 w-full h-full">
-                <div className="w-full text-sm font-semibold md:text-lg text-ellipsis">{post?.post_info.title}</div>
-                {isExpanded && <p className="text-sm">{post?.post_info.content}</p>}
+                <div className={`w-full font-semibold text-ellipsis ${post.post_info.content && "border-b-2 pb-2"}`}>
+                  {post?.post_info.title}
+                </div>
+                {post.post_info.content && (
+                  <div className="max-w-full text-black prose prose-sm md:prose-base prose-blue">
+                    <Markdown className="[&>*:first-child]:mt-0">{post?.post_info.content}</Markdown>
+                  </div>
+                )}
               </div>
             ) : (
               <Link to={`/post/${post?.post_info.id}`} className="flex flex-col space-y-2 w-full h-full">
                 <div className="w-full font-semibold text-ellipsis">{post?.post_info.title}</div>
-                {isExpanded && <p className="text-sm">{post?.post_info.content}</p>}
               </Link>
             )}
             <div className="flex justify-between items-center">
@@ -127,7 +133,7 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
                 <div className="flex items-center space-x-2 text-xs">
                   <Link to={`/u/${post?.user_info.user_name}`}>
                     By{" "}
-                    <span className="text-xs font-medium hover:underline hover:text-blue-600">
+                    <span className="text-xs font-medium text-blue-600 hover:underline">
                       u/{post?.user_info.user_name}
                     </span>
                   </Link>
@@ -141,7 +147,7 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
                   <p className="text-xs">in</p>
                   <Link
                     to={`/${post?.thread_info.thread_name}`}
-                    className="text-xs font-medium hover:underline hover:text-theme-orange">{` ${post?.thread_info.thread_name}`}</Link>
+                    className="text-xs font-medium hover:underline text-theme-orange">{` ${post?.thread_info.thread_name}`}</Link>
                   {post?.thread_info.thread_logo && (
                     <img src={post?.thread_info.thread_logo} alt="" className="object-cover w-6 h-6 rounded-full" />
                   )}

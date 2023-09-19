@@ -47,7 +47,6 @@ The project's backend relies on PostgreSQL, a robust and open-source relational 
 
 ![Schema](https://github.com/StarKhan6368/threaddit/assets/77010375/8e60b685-e3a1-4a72-b219-61399fec79a5)
 
-
 # Features
 
 In this project, I've implemented a set of features, which are shown below. It's important to note that features may be added or removed depending on development progress and evolving project goals. Additionally, there are pending features currently in development, as this project remains a work in progress.
@@ -71,7 +70,6 @@ In this project, I've implemented a set of features, which are shown below. It's
 - [x] Leave Subthread
 - [x] Search Subthreads
 - [x] Subthread Logo and Descriptions
-- [ ] Use Markdown instead of plain text.
 - [ ] Banner & Rules
 
 ## Posts Browsing
@@ -91,7 +89,7 @@ In this project, I've implemented a set of features, which are shown below. It's
 - [x] Ability to add an image to a post
 - [x] Ability to add video and gifs
 - [ ] Report Posts
-- [ ] Use Markdown instead of plain text.
+- [x] Use Markdown instead of plain text.
 
 ## Comments
 
@@ -101,7 +99,7 @@ In this project, I've implemented a set of features, which are shown below. It's
 - [x] Comment Tree with on-demand expansion
 - [ ] Media as Comment
 - [ ] Save Comments
-- [ ] Use Markdown instead of plain text.
+- [x] Use Markdown instead of plain text.
 
 ## Messages
 

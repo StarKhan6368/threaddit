@@ -1,0 +1,1 @@
+import{A as a,u as o,a as i,j as n}from"./index-0070d07d.js";import{I as r}from"./InfinitePosts-94b16538.js";import"./Post-338b1ea3.js";function p(){const{isAuthenticated:e}=a(),s=o(),{feedName:t}=i();return t=="home"&&!e?s("/login"):n.jsx(r,{linkUrl:`posts/${t||"all"}`,apiQueryKey:t})}export{p as Feed,p as default};

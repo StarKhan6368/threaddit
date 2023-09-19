@@ -8,6 +8,7 @@ import { timeAgo } from "../pages/fullPost/utils";
 import AuthConsumer from "./AuthContext";
 import Svg from "./Svg";
 import Vote from "./Vote";
+import Markdown from "markdown-to-jsx";
 
 Comment.propTypes = {
   children: PropTypes.array,
@@ -69,6 +70,7 @@ export default function Comment({ children, comment, threadID, commentIndex, par
           callBackSubmit={(data) => {
             updateComment(data);
             setEditMode(false);
+            listRef.current.value = "more";
           }}
           callBackCancel={() => {
             setEditMode(false);
@@ -81,11 +83,15 @@ export default function Comment({ children, comment, threadID, commentIndex, par
         <>
           <div className="flex items-center space-x-2 text-sm font-medium">
             <img src={userInfo.user_avatar || avatar} alt="" className="object-cover w-5 h-5 rounded-full" />
-            <Link to={`/u/${userInfo.user_name}`}>{userInfo.user_name}</Link>
+            <Link to={`/u/${userInfo.user_name}`} className="font-medium text-blue-600 hover:underline">
+              {userInfo.user_name}
+            </Link>
             <p>{timePassed}</p>
             <p>{commentInfo.is_edited && "Edited"}</p>
           </div>
-          <p className="mr-2 ml-1 text-sm md:text-base">{commentInfo.content}</p>
+          <div className="max-w-full text-black prose prose-sm md:prose-base prose-blue">
+            <Markdown className="[&>*:first-child]:mt-0">{commentInfo.content}</Markdown>
+          </div>
         </>
       )}
       <div className="flex justify-around items-center md:justify-between md:mx-10">
@@ -110,7 +116,11 @@ export default function Comment({ children, comment, threadID, commentIndex, par
             <p className="text-sm cursor-pointer md:text-base">Share</p>
           </div>
         )}
-        <div className="flex items-center space-x-1" onClick={() => setIsReply(!isReply)}>
+        <div
+          className="flex items-center space-x-1"
+          onClick={() => {
+            isAuthenticated ? setIsReply(!isReply) : alert("You need to be logged in.");
+          }}>
           <Svg type="comment" className="w-4 h-4" />
           <p className="text-sm cursor-pointer md:text-base">Reply</p>
         </div>
@@ -135,11 +145,15 @@ export default function Comment({ children, comment, threadID, commentIndex, par
       {isReply && (
         <CommentMode
           callBackSubmit={(data) => {
+            listRef.current.value = "more";
             addComment(data);
             setIsReply(false);
             setExpandChildren(true);
           }}
-          callBackCancel={() => setIsReply(false)}
+          callBackCancel={() => {
+            setIsReply(false);
+            listRef.current.value = "more";
+          }}
           colorSquence={colorSquence}
           user={user}
         />
@@ -171,6 +185,9 @@ CommentMode.propTypes = {
 };
 
 export function CommentMode({ user, colorSquence, callBackSubmit, callBackCancel, defaultValue = null }) {
+  const { isAuthenticated } = AuthConsumer();
+  const [preMD, setPreMD] = useState(false);
+  const [content, setContent] = useState(defaultValue || "");
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -189,20 +206,39 @@ export function CommentMode({ user, colorSquence, callBackSubmit, callBackCancel
         className="flex flex-col space-y-2"
         onSubmit={(e) => {
           e.preventDefault();
-          callBackSubmit(e.target[0].value);
+          if (isAuthenticated) {
+            callBackSubmit(content);
+          } else {
+            alert("You need to be logged in.");
+          }
         }}>
-        <textarea
-          autoFocus
-          defaultValue={defaultValue}
-          className="p-2 w-full text-sm rounded-md border md:text-base focus:outline-none"
-        />
+        {preMD ? (
+          <div className="overflow-auto p-2 max-w-full h-24 rounded-md border prose">
+            <Markdown options={{ forceBlock: true }}>
+              {content.replace("\n", "<br />\n") || "This is markdown preview"}
+            </Markdown>
+          </div>
+        ) : (
+          <textarea
+            autoFocus
+            defaultValue={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="p-2 w-full h-24 text-sm rounded-md border md:text-base focus:outline-none"
+          />
+        )}
         <div className="flex self-end space-x-2">
-          <button type="submit" className="px-2 py-1 font-bold text-white bg-blue-500 rounded-md md:px-5">
+          <button type="submit" className="px-2 py-1 font-bold text-white bg-blue-600 rounded-md md:px-5">
             Submit
           </button>
           <button
+            onClick={() => setPreMD(!preMD)}
+            type="button"
+            className="px-2 py-1 font-bold text-white bg-green-600 rounded-md md:px-5">
+            {preMD ? "Close Preview" : "Preview"}
+          </button>
+          <button
             onClick={() => callBackCancel()}
-            className="px-2 py-1 font-bold text-white bg-red-500 rounded-md md:px-5">
+            className="px-2 py-1 font-bold text-white bg-red-600 rounded-md md:px-5">
             Cancel
           </button>
         </div>

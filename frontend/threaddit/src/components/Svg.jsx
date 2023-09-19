@@ -92,13 +92,13 @@ export function Svg({ type, className, onClick, active, defaultStyle = true }) {
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
       onClick={onClick}
-      className={`${
+      className={`${className} ${
         active && (defaultStyle ? "text-theme-red-coral" : "text-sky-600")
       } md:cursor-pointer fill-current ${
         defaultStyle
           ? "group-hover:text-theme-red-coral active:text-theme-red-coral hover:text-theme-red-coral"
           : "group-hover:text-sky-600 hover:text-sky-600 active:text-sky-600"
-      }  text-inherit ${className}`}>
+      }  text-inherit`}>
       {svgTypes[type]}
     </svg>
   );
