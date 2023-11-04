@@ -82,7 +82,7 @@ export default function Comment({ children, comment, threadID, commentIndex, par
       ) : (
         <>
           <div className="flex items-center space-x-2 text-sm font-medium">
-            <img src={userInfo.user_avatar || avatar} alt="" className="object-cover w-5 h-5 rounded-full" />
+            <img loading="lazy" width="auto" height="100%" src={userInfo.user_avatar || avatar} alt="" className="object-cover w-5 h-5 rounded-full" />
             <Link to={`/u/${userInfo.user_name}`} className="font-medium text-blue-600 hover:underline">
               {userInfo.user_name}
             </Link>

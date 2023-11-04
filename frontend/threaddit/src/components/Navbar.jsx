@@ -61,7 +61,7 @@ export function Navbar() {
             <Link
               to={`/u/${user.username}`}
               className="hidden md:flex items-center space-x-2 bg-theme-cultured rounded-3xl pr-3 py-0.5">
-              <img
+              <img loading="lazy" width="auto" height="100%"
                 src={user.avatar || avatar}
                 className="object-cover w-10 h-10 rounded-full duration-500 cursor-pointer hover:scale-125 md:block"
               />
@@ -134,8 +134,8 @@ export function AppLogo({ forBanner = false, children }) {
         <img src={threads} alt="threadit-logo" className="object-cover" />
         <span
           className="hidden md:block absolute w-4 h-4
-                    bg-theme-orange rounded-full bottom-[6rem] z-20 right-[7.9rem] group-hover:animate-bounce"></span>
-        <span className="hidden md:block absolute w-4 h-4 bg-theme-cultured rounded-full bottom-[6rem] z-10 right-[7.9rem]"></span>
+                    bg-theme-orange rounded-full bottom-[5.6rem] z-20 right-[8.4rem] group-hover:animate-bounce"></span>
+        <span className="hidden md:block absolute w-4 h-4 bg-theme-cultured rounded-full bottom-[5.6rem] z-10 right-[8.4rem]"></span>
         <h1 className="font-mono text-6xl font-bold tracking-tight">Threaddit</h1>
         <p className="text-lg font-semibold">The Internet Home Place, where many communities reside</p>
         {children}
@@ -147,8 +147,8 @@ export function AppLogo({ forBanner = false, children }) {
       <img src={threads} className="object-cover w-10 h-10" alt="threadit-logo" />
       <span
         className="hidden md:block absolute w-2 h-2 bg-theme-orange rounded-full
-                    right-[1.3rem] top-[0.2rem] z-20 group-hover:animate-bounce"></span>
-      <span className="hidden md:block absolute w-2 h-2.5 bg-white rounded-full right-[1.3rem] top-[0.1rem] z-10"></span>
+                    right-[1.2rem] top-[0.4rem] z-20 group-hover:animate-bounce"></span>
+      <span className="hidden md:block absolute w-2 h-2 bg-white rounded-full right-[1.2rem] top-[0.4rem] z-10"></span>
       <h1 className="hidden font-mono text-3xl font-bold tracking-tight md:block">Threaddit</h1>
       {children}
     </Link>

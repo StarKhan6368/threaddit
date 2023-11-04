@@ -93,6 +93,7 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
                 width="100%"
                 height="100%"
                 controls
+                loading="lazy"
                 muted={!isExpanded}
                 loop
                 playing={vidRef.current && vidRef.current.offsetWidth > 256 && inView}
@@ -101,10 +102,11 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
             ) : (
               <img
                 onClick={() => onMediaClick("image")}
+                loading="lazy" width="auto" height="100%"
                 src={post.post_info.media}
                 alt=""
                 className={`object-cover w-full h-full rounded-md duration-500 md:cursor-pointer ${
-                  !isExpanded && "hover:scale-105"
+                  !isExpanded && "hover:scale-105" 
                 }`}
               />
             )}

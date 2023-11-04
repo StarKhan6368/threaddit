@@ -46,3 +46,4 @@ backend/threaddit/comments/__pycache__/utils.cpython-311.pyc
 backend/threaddit/messages/__pycache__/__init__.cpython-311.pyc
 backend/threaddit/messages/__pycache__/models.cpython-311.pyc
 backend/threaddit/messages/__pycache__/routes.cpython-311.pyc
+backend/threaddit/__pycache__/__init__.cpython-312.pyc
