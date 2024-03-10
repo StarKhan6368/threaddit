@@ -10,19 +10,19 @@ messages = Blueprint("messages", __name__, url_prefix="/api")
 
 @messages.route("/messages", methods=["POST"])
 def new_message():
-    form_data = request.json
-    if form_data["content"]:
-        receiver_id = User.query.filter_by(username=form_data["receiver"]).first().id
-        new_message = Messages(
-            sender_id=current_user.id,
-            receiver_id=receiver_id,
-            content=form_data["content"],
-        )
-        db.session.add(new_message)
-        db.session.commit()
-        return jsonify(new_message.as_dict()), 200
-    else:
-        return jsonify({"message": "Content is required"}), 400
+    if form_data := request.json:
+        receiver_id = User.query.filter_by(username=form_data["receiver"]).first()
+        if receiver_id:
+            new_message = Messages(
+                sender_id=current_user.id,
+                receiver_id=receiver_id.id,
+                content=form_data["content"],
+            )
+            db.session.add(new_message)
+            db.session.commit()
+            return jsonify(new_message.as_dict()), 200
+        return jsonify({"message": "User not found"}), 404
+    return jsonify({"message": "Content is required"}), 400
 
 
 @messages.route("/messages/inbox")
@@ -34,14 +34,16 @@ def get_inbox():
 @messages.route("/messages/all/<user_name>")
 @login_required
 def get_messages(user_name):
-    user_id = User.query.filter_by(username=user_name).first().id
-    messages = Messages.query.filter(
-        and_(Messages.receiver_id == user_id, Messages.sender_id == current_user.id)
-        | and_(Messages.sender_id == user_id, Messages.receiver_id == current_user.id)
-    ).order_by(Messages.created_at)
-    for m in messages:
-        if m.receiver_id == current_user.id and m.seen == False:
-            m.seen = True
-            m.seen_at = db.func.now()
-    db.session.commit()
-    return jsonify([m.as_dict() for m in messages.all()]), 200
+    user_id = User.query.filter_by(username=user_name).first()
+    if user_id:
+        messages = Messages.query.filter(
+            and_(Messages.receiver_id == user_id.id, Messages.sender_id == current_user.id)
+            | and_(Messages.sender_id == user_id.id, Messages.receiver_id == current_user.id)
+        ).order_by(Messages.created_at)
+        for m in messages:
+            if m.receiver_id == current_user.id and m.seen == False:
+                m.seen = True
+                m.seen_at = db.func.now()
+        db.session.commit()
+        return jsonify([m.as_dict() for m in messages.all()]), 200
+    return jsonify({"message": "User not found"}), 404

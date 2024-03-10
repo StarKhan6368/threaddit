@@ -1,6 +1,5 @@
-from threaddit import db, app
-import base64, os
-from sqlalchemy import case, func, select
+from threaddit import db
+from sqlalchemy import case, func
 
 
 class Messages(db.Model):
@@ -11,12 +10,8 @@ class Messages(db.Model):
     content = db.Column(db.Text, nullable=False)
     seen = db.Column(db.Boolean, default=False)
     seen_at = db.Column(db.DateTime(timezone=True))
-    created_at = db.Column(
-        db.DateTime(timezone=True), nullable=False, default=db.func.now()
-    )
-    user_sender = db.relationship(
-        "User", back_populates="sender", primaryjoin="Messages.sender_id == User.id"
-    )
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=db.func.now())
+    user_sender = db.relationship("User", back_populates="sender", primaryjoin="Messages.sender_id == User.id")
     user_receiver = db.relationship(
         "User",
         back_populates="receiver",
@@ -45,7 +40,8 @@ class Messages(db.Model):
             "seen_at": self.seen_at,
         }
 
-    def get_inbox(user_id):
+    @classmethod
+    def get_inbox(cls, user_id):
         my_case = case(
             (Messages.sender_id == user_id, Messages.receiver_id),
             else_=Messages.sender_id,
@@ -64,11 +60,7 @@ class Messages(db.Model):
         )
         messages_list = []
         for message in messages:
-            sender = (
-                message.user_receiver
-                if message.sender_id == user_id
-                else message.user_sender
-            )
+            sender = message.user_receiver if message.sender_id == user_id else message.user_sender
             messages_list.append(
                 message.as_dict()
                 | {

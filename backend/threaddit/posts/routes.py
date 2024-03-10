@@ -1,17 +1,14 @@
-import os
 from flask import Blueprint, jsonify, request
-from threaddit import db, app
+from threaddit import db
 from flask_login import current_user, login_required
 from threaddit.posts.models import (
     PostInfo,
     Posts,
-    Reactions,
     PostValidator,
     get_filters,
     SavedPosts,
 )
 from threaddit.subthreads.models import Subscription, SubthreadInfo
-from werkzeug.utils import secure_filename
 
 posts = Blueprint("posts", __name__, url_prefix="/api")
 
@@ -27,30 +24,15 @@ def get_posts(feed_name):
     except Exception:
         return jsonify({"message": "Invalid Request"}), 400
     if feed_name == "home" and current_user.is_authenticated:
-        threads = [
-            subscription.subthread.id
-            for subscription in Subscription.query.filter_by(user_id=current_user.id)
-        ]
+        threads = [subscription.subthread.id for subscription in Subscription.query.filter_by(user_id=current_user.id)]
     elif feed_name == "all":
-        threads = (
-            thread.id
-            for thread in SubthreadInfo.query.order_by(
-                SubthreadInfo.members_count.desc()
-            ).limit(25)
-        )
+        threads = (thread.id for thread in SubthreadInfo.query.order_by(SubthreadInfo.members_count.desc()).limit(25))
     elif feed_name == "popular":
-        threads = (
-            thread.id
-            for thread in SubthreadInfo.query.order_by(
-                SubthreadInfo.posts_count.desc()
-            ).limit(25)
-        )
+        threads = (thread.id for thread in SubthreadInfo.query.order_by(SubthreadInfo.posts_count.desc()).limit(25))
     else:
         return jsonify({"message": "Invalid Request"}), 400
     post_list = [
-        pinfo.as_dict(
-            cur_user=current_user.id if current_user.is_authenticated else None
-        )
+        pinfo.as_dict(cur_user=current_user.id if current_user.is_authenticated else None)
         for pinfo in PostInfo.query.filter(PostInfo.thread_id.in_(threads))
         .order_by(sortBy)
         .filter(durationBy)
@@ -128,9 +110,7 @@ def delete_post(pid):
         Posts.query.filter_by(id=pid).delete()
         db.session.commit()
         return jsonify({"message": "Post deleted"}), 200
-    current_user_mod_in = [
-        r.subthread_id for r in current_user.user_role if r.role.slug == "mod"
-    ]
+    current_user_mod_in = [r.subthread_id for r in current_user.user_role if r.role.slug == "mod"]
     if post.subthread_id in current_user_mod_in:
         post.delete_media()
         Posts.query.filter_by(id=pid).delete()
@@ -188,12 +168,7 @@ def get_posts_of_user(user_name):
 def get_saved():
     limit = request.args.get("limit", default=20, type=int)
     offset = request.args.get("offset", default=0, type=int)
-    saved_posts = (
-        SavedPosts.query.filter(SavedPosts.user_id == current_user.id)
-        .offset(offset)
-        .limit(limit)
-        .all()
-    )
+    saved_posts = SavedPosts.query.filter(SavedPosts.user_id == current_user.id).offset(offset).limit(limit).all()
     post_infos = [PostInfo.query.filter_by(post_id=pid.post_id) for pid in saved_posts]
     return (
         jsonify([p.first().as_dict(current_user.id) for p in post_infos]),
@@ -204,9 +179,7 @@ def get_saved():
 @posts.route("/posts/saved/<pid>", methods=["DELETE"])
 @login_required
 def delete_saved(pid):
-    saved_post = SavedPosts.query.filter_by(
-        user_id=current_user.id, post_id=pid
-    ).first()
+    saved_post = SavedPosts.query.filter_by(user_id=current_user.id, post_id=pid).first()
     if not saved_post:
         return jsonify({"message": "Invalid Post ID"}), 400
     SavedPosts.query.filter_by(user_id=current_user.id, post_id=pid).delete()

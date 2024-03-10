@@ -1,9 +1,5 @@
 from threaddit import db, app
-from flask import url_for
 import cloudinary.uploader as uploader
-from werkzeug.utils import secure_filename
-import os
-from threaddit.models import UserRole
 import uuid
 
 
@@ -12,9 +8,7 @@ class Subthread(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.Text, nullable=False)
     description = db.Column(db.Text)
-    created_at = db.Column(
-        db.DateTime(timezone=True), nullable=False, default=db.func.now()
-    )
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=db.func.now())
     logo = db.Column(db.Text)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     user = db.relationship("User", back_populates="subthread")
@@ -26,27 +20,19 @@ class Subthread(db.Model):
 
     @classmethod
     def add(cls, form_data, image, created_by):
-        name = (
-            form_data.get("name")
-            if form_data.get("name").startswith("t/")
-            else f"t/{form_data.get('name')}"
-        )
+        name = form_data.get("name") if form_data.get("name").startswith("t/") else f"t/{form_data.get('name')}"
         new_sub = Subthread(
             name=name,
             description=form_data.get("description"),
             created_by=created_by,
         )
-        new_sub.handle_logo(
-            form_data.get("content_type"), image, form_data.get("content_url")
-        )
+        new_sub.handle_logo(form_data.get("content_type"), image, form_data.get("content_url"))
         db.session.add(new_sub)
         db.session.commit()
         return new_sub
 
     def patch(self, form_data, image):
-        self.handle_logo(
-            form_data.get("content_type"), image, form_data.get("content_url")
-        )
+        self.handle_logo(form_data.get("content_type"), image, form_data.get("content_url"))
         if form_data.get("description"):
             self.description = form_data.get("description")
         db.session.commit()
@@ -54,18 +40,14 @@ class Subthread(db.Model):
     def handle_logo(self, content_type, image=None, url=None):
         if content_type == "image" and image:
             self.delete_logo()
-            image_data = uploader.upload(
-                image, public_id=f"{uuid.uuid4().hex}_{image.filename.rsplit('.')[0]}"
-            )
+            image_data = uploader.upload(image, public_id=f"{uuid.uuid4().hex}_{image.filename.rsplit('.')[0]}")
             url = f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}/image/upload/f_auto,q_auto/{image_data.get('public_id')}"
             self.logo = url
         elif content_type == "url" and url:
             self.logo = url
 
     def delete_logo(self):
-        if self.logo and self.logo.startswith(
-            f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}"
-        ):
+        if self.logo and self.logo.startswith(f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}"):
             res = uploader.destroy(self.logo.split("/")[-1])
             print(f"Cloudinary Image Destory Response for {self.name}: ", res)
 
@@ -80,15 +62,11 @@ class Subthread(db.Model):
             "CommentsCount": sum([len(p.comment) for p in self.post]),
             "created_by": self.user.username if self.user else None,
             "subscriberCount": len(self.subscription),
-            "modList": [
-                r.user.username for r in self.user_role if r.role.slug == "mod"
-            ],
+            "modList": [r.user.username for r in self.user_role if r.role.slug == "mod"],
         }
         if cur_user_id:
             data["has_subscribed"] = bool(
-                Subscription.query.filter_by(
-                    user_id=cur_user_id, subthread_id=self.id
-                ).first()
+                Subscription.query.filter_by(user_id=cur_user_id, subthread_id=self.id).first()
             )
         return data
 

@@ -45,11 +45,11 @@ export default function InfinitePostsLayout({ linkUrl, apiQueryKey, forSaved = f
   }, [fetchNextPage, isFetching, hasNextPage]);
   function handleDurationChange(newDuration) {
     searchParams.set("duration", newDuration);
-    setSearchParams(searchParams);
+    setSearchParams(searchParams, { replace: true });
   }
   function handleSortByChange(newSortBy) {
     searchParams.set("sortBy", newSortBy);
-    setSearchParams(searchParams);
+    setSearchParams(searchParams, { replace: true });
   }
   return (
     <div
@@ -87,53 +87,46 @@ export default function InfinitePostsLayout({ linkUrl, apiQueryKey, forSaved = f
           </div>
           <ul className="hidden space-x-2 list-none md:flex">
             <li
-              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
-                duration === "day" && "bg-theme-gray-blue"
-              }`}
+              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${duration === "day" && "bg-theme-gray-blue"
+                }`}
               onClick={() => handleDurationChange("day")}>
               Today
             </li>
             <li
-              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
-                duration === "week" && "bg-theme-gray-blue"
-              }`}
+              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${duration === "week" && "bg-theme-gray-blue"
+                }`}
               onClick={() => handleDurationChange("week")}>
               Week
             </li>
             <li
-              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
-                duration === "month" && "bg-theme-gray-blue"
-              }`}
+              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${duration === "month" && "bg-theme-gray-blue"
+                }`}
               onClick={() => handleDurationChange("month")}>
               Month
             </li>
             <li
-              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
-                duration === "alltime" && "bg-theme-gray-blue"
-              }`}
+              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${duration === "alltime" && "bg-theme-gray-blue"
+                }`}
               onClick={() => handleDurationChange("alltime")}>
               All
             </li>
           </ul>
           <ul className="hidden mr-5 space-x-5 list-none md:flex">
             <li
-              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
-                sortBy === "hot" && "bg-theme-gray-blue"
-              }`}
+              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${sortBy === "hot" && "bg-theme-gray-blue"
+                }`}
               onClick={() => handleSortByChange("hot")}>
               Hot
             </li>
             <li
-              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
-                sortBy === "new" && "bg-theme-gray-blue"
-              }`}
+              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${sortBy === "new" && "bg-theme-gray-blue"
+                }`}
               onClick={() => handleSortByChange("new")}>
               New
             </li>
             <li
-              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${
-                sortBy === "top" && "bg-theme-gray-blue"
-              }`}
+              className={`p-2 hover:bg-theme-gray-blue rounded-md px-4 text-lg cursor-pointer ${sortBy === "top" && "bg-theme-gray-blue"
+                }`}
               onClick={() => handleSortByChange("top")}>
               Top
             </li>

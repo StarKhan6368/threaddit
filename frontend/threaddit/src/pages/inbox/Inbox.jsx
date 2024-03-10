@@ -18,6 +18,17 @@ export function Inbox() {
       return await axios.get("/api/messages/inbox").then((res) => res.data);
     },
   });
+  useEffect(() => {
+    if (curChat) {
+      document.title = `Inbox | ${curChat.username}`;
+    }
+    else {
+      document.title = "Threaddit | Inbox";
+    }
+    return () => {
+      document.title = "Threaddit";
+    };
+  })
   return (
     <div className="flex flex-1">
       {!curChat && (
@@ -27,9 +38,8 @@ export function Inbox() {
           </div>
           {data?.map((message) => (
             <li
-              className={`w-full flex items-center p-3 space-x-2 rounded-xl cursor-pointer ${
-                curChat.username === message.sender.username ? "bg-blue-200" : "hover:bg-blue-200"
-              }`}
+              className={`w-full flex items-center p-3 space-x-2 rounded-xl cursor-pointer ${curChat.username === message.sender.username ? "bg-blue-200" : "hover:bg-blue-200"
+                }`}
               key={message.message_id}
               onClick={() => setCurChat(message.sender)}>
               <img src={message.sender.avatar || avatar} className="object-cover w-14 h-14 rounded-full" alt="" />
@@ -59,9 +69,8 @@ export function Inbox() {
             initial={{ opacity: 0, x: -100 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.25, delay: index * 0.25 }}
-            className={`flex items-center w-full p-3 space-x-2 rounded-xl cursor-pointer ${
-              curChat.username === message.sender.username ? "bg-blue-200" : "hover:bg-blue-200"
-            }`}
+            className={`flex items-center w-full p-3 space-x-2 rounded-xl cursor-pointer ${curChat.username === message.sender.username ? "bg-blue-200" : "hover:bg-blue-200"
+              }`}
             key={message.message_id}
             onClick={() => setCurChat(message.sender)}>
             <img src={message.sender.avatar || avatar} className="object-cover w-14 h-14 rounded-full" alt="" />
@@ -216,9 +225,8 @@ function Message({ message, toUser, messageIndex }) {
       initial={{ opacity: 0, x: toUser ? 100 : -100 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.25, delay: messageIndex * 0.1 }}
-      className={` pl-2 py-1 w-fit rounded-md ${message.seen ? "bg-green-100" : "bg-blue-100"} ${
-        toUser ? "ml-auto pr-2" : "pr-10"
-      }`}>
+      className={` pl-2 py-1 w-fit rounded-md ${message.seen ? "bg-green-100" : "bg-blue-100"} ${toUser ? "ml-auto pr-2" : "pr-10"
+        }`}>
       <p className={`break-all pt-1 font-medium ${toUser && "pl-1"}`}>{message.content}</p>
       <p className={`mt-0.5 text-xs font-light ${toUser && "text-right"}`}>{sentDate.toLocaleString()}</p>
     </motion.li>

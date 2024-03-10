@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useInView } from "framer-motion";
 import PropTypes from "prop-types";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactPlayer from "react-player";
 import { Link, ScrollRestoration, useNavigate } from "react-router-dom";
 import avatar from "../assets/avatar.png";
@@ -25,6 +25,16 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
   const inView = useInView(vidRef, { amount: "all" });
   const [modalShow, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(<></>);
+  useEffect(() => {
+    if (isExpanded) {
+      document.title = post.post_info.title;
+    }
+    return () => {
+      if (isExpanded) {
+        document.title = "Threaddit";
+      }
+    }
+  }, [isExpanded])
   function onMediaClick(mediaType) {
     if (post?.post_info.media) {
       setShowModal(true);
@@ -32,7 +42,7 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
         setModalData(<ReactPlayer playing controls url={post?.post_info.media} />);
       } else {
         setModalData(
-          <img className="object-cover w-11/12 max-h-5/6 md:w-max md:max-h-screen" src={post?.post_info.media} alt="" />
+          <img className="object-cover w-11/12 max-h-5/6 md:w-max md:max-h-screen" src={post?.post_info.media.replace("additional_args", "c_auto,g_auto")} alt="" />
         );
       }
     }
@@ -70,9 +80,8 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
   return (
     <>
       <motion.li
-        className={`flex flex-col p-1 pb-3 bg-white rounded-xl border-2 md:pb-0 hover:drop-shadow-md ${
-          !isExpanded && "md:flex-row"
-        } border-theme-gray-blue`}
+        className={`flex flex-col p-1 pb-3 bg-white rounded-xl border-2 md:pb-0 hover:drop-shadow-md ${!isExpanded && "md:flex-row"
+          } border-theme-gray-blue`}
         variants={PostVariant}
         initial={postIndex < 5 || isExpanded ? "hidden" : "empty"}
         animate={postIndex < 5 || isExpanded ? "animate" : "empty"}
@@ -83,9 +92,8 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
         }}>
         {post.post_info.media && (
           <div
-            className={`relative ${isExpanded ? "h-full md:h-96" : "md:w-64 md:h-32"} md:pt-0 ${
-              !isImage(post.post_info.media) && "pt-[56.25%] aspect-video"
-            } rounded-md my-auto bg-black`}
+            className={`relative overflow-hidden ${isExpanded ? "h-full md:h-96" : "md:w-64 md:h-32"} md:pt-0 ${!isImage(post.post_info.media) && "pt-[56.25%] aspect-video"
+              } rounded-md my-auto bg-black`}
             ref={vidRef}>
             {!isImage(post.post_info.media) ? (
               <ReactPlayer
@@ -105,9 +113,8 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
                 loading="lazy" width="auto" height="100%"
                 src={post.post_info.media}
                 alt=""
-                className={`object-cover w-full h-full rounded-md duration-500 md:cursor-pointer ${
-                  !isExpanded && "hover:scale-105" 
-                }`}
+                className={`object-cover w-full h-full rounded-md duration-500 md:cursor-pointer ${!isExpanded && "hover:scale-105"
+                  }`}
               />
             )}
           </div>
@@ -145,7 +152,7 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
                     className="object-cover w-6 h-6 rounded-full"
                   />
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 ">
                   <p className="text-xs">in</p>
                   <Link
                     to={`/${post?.thread_info.thread_name}`}
@@ -173,9 +180,8 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
         </div>
         <div className={`flex ${isExpanded && "items-center justify-between mx-5 md:-mt-4"}`}>
           <div
-            className={`flex justify-around w-full md:w-fit md:justify-evenly  ${
-              !isExpanded ? "md:flex-col md:px-10" : "space-x-10"
-            }`}>
+            className={`flex justify-around w-full md:w-fit md:justify-evenly  ${!isExpanded ? "md:flex-col md:px-10" : "space-x-10"
+              }`}>
             {isExpanded ? (
               <div className="flex items-center space-x-1">
                 <Svg type="comment" className="w-4 h-4 md:w-5 md:h-5" onClick={() => onReplyClick()} />
@@ -216,9 +222,8 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
             </div>
           </div>
           <div
-            className={`hidden justify-around items-center my-2 space-y-1  md:flex border-theme-gray-blue ${
-              isExpanded ? "flex-row space-x-10" : "flex-col px-5 border-l"
-            }`}>
+            className={`hidden justify-around items-center my-2 space-y-1  md:flex border-theme-gray-blue ${isExpanded ? "flex-row space-x-10" : "flex-col px-5 border-l"
+              }`}>
             <Vote
               {...{
                 intitalVote: post?.current_user?.has_upvoted,

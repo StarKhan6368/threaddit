@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthConsumer from "../../components/AuthContext.jsx";
 import { AppLogo } from "../../components/Navbar.jsx";
@@ -20,6 +20,12 @@ export function Register() {
     },
     onSuccess: () => navigate("/home"),
   });
+  useEffect(() => {
+    document.title = "Threaddit | Signup";
+    return () => {
+      document.title = "Threaddit";
+    }
+  })
   if (isAuthenticated) {
     return navigate("/home");
   }
@@ -124,7 +130,8 @@ export function Register() {
           </button>
         </form>
         <div className="flex justify-between">
-          <Link to="/forgot_password" className="flex font-semibold cursor-pointer group hover:text-theme-orange">
+          {/* TODO: Implement forgot password */}
+          <Link to="/register" className="flex font-semibold cursor-pointer group hover:text-theme-orange">
             Forgot Password
             <Svg
               type="arrow-right"

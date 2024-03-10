@@ -1,8 +1,7 @@
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from marshmallow import ValidationError
-import os
 import cloudinary
 from flask_login import LoginManager
 from threaddit.config import (
@@ -52,7 +51,7 @@ def not_found(e):
     return app.send_static_file("index.html")
 
 
-# flake8: noqa
+# noqa
 from threaddit.users.routes import user
 from threaddit.subthreads.routes import threads
 from threaddit.posts.routes import posts

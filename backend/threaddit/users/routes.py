@@ -1,12 +1,10 @@
 from flask import Blueprint, request, jsonify
-from marshmallow.exceptions import ValidationError
 from threaddit import db
 from threaddit.users.models import (
     UserLoginValidator,
     UserRegisterValidator,
     User,
 )
-from threaddit.config import SECRET_KEY
 from threaddit.auth.decorators import auth_role
 from bcrypt import hashpw, checkpw, gensalt
 from flask_login import login_user, logout_user, current_user, login_required
@@ -18,14 +16,12 @@ user = Blueprint("users", __name__, url_prefix="/api")
 def user_login():
     if current_user.is_authenticated:
         return jsonify({"message": "Already logged in"}), 409
-    login_form = request.json
-    UserLoginValidator().load(login_form)
-    user_info = User.query.filter_by(email=login_form.get("email")).first()
-    if user_info and checkpw(
-        login_form.get("password").encode(), user_info.password_hash.encode()
-    ):
-        login_user(user_info)
-        return jsonify(user_info.as_dict()), 200
+    if login_form := request.json:
+        UserLoginValidator().load(login_form)
+        user_info = User.query.filter_by(email=login_form.get("email")).first()
+        if user_info and checkpw(login_form.get("password").encode(), user_info.password_hash.encode()):
+            login_user(user_info)
+            return jsonify(user_info.as_dict()), 200
     return jsonify({"message": "Invalid credentials"}), 401
 
 
@@ -40,15 +36,16 @@ def user_logout():
 def user_register():
     if current_user.is_authenticated:
         return jsonify({"message": "Already logged in"}), 409
-    register_form = request.json
-    UserRegisterValidator().load(register_form)
-    new_user = User(
-        register_form.get("username"),
-        register_form.get("email"),
-        hashpw(register_form.get("password").encode(), gensalt()).decode("utf-8"),
-    )
-    new_user.add()
-    return jsonify(new_user.as_dict()), 201
+    if register_form := request.json:
+        UserRegisterValidator().load(register_form)
+        new_user = User(
+            register_form.get("username"),
+            register_form.get("email"),
+            hashpw(register_form.get("password").encode(), gensalt()).decode("utf-8"),
+        )
+        new_user.add()
+        return jsonify(new_user.as_dict()), 201
+    return jsonify({"message": "Invalid credentials"}), 401
 
 
 @user.route("/user", methods=["PATCH"])

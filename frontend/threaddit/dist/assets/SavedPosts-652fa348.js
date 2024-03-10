@@ -1,1 +1,0 @@
-import{j as e}from"./index-0070d07d.js";import{I as s}from"./InfinitePosts-94b16538.js";import"./Post-338b1ea3.js";function a(){return e.jsx("div",{className:"flex items-center p-2 w-full",children:e.jsx(s,{apiQueryKey:"saved",linkUrl:"posts/saved",forSaved:!0})})}export{a as default};

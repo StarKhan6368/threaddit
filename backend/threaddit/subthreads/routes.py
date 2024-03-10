@@ -18,16 +18,11 @@ def get_subthreads():
     if current_user.is_authenticated:
         subscribed_threads = [
             subscription.subthread.as_dict(cur_user)
-            for subscription in Subscription.query.filter_by(user_id=current_user.id)
-            .limit(limit)
-            .offset(offset)
-            .all()
+            for subscription in Subscription.query.filter_by(user_id=current_user.id).limit(limit).offset(offset).all()
         ]
     all_threads = [
         subinfo.as_dict()
-        for subinfo in SubthreadInfo.query.filter(
-            SubthreadInfo.members_count.is_not(None)
-        )
+        for subinfo in SubthreadInfo.query.filter(SubthreadInfo.members_count.is_not(None))
         .order_by(SubthreadInfo.members_count.desc())
         .limit(limit)
         .offset(offset)
@@ -35,9 +30,7 @@ def get_subthreads():
     ]
     popular_threads = [
         subinfo.as_dict()
-        for subinfo in SubthreadInfo.query.filter(
-            SubthreadInfo.posts_count.is_not(None)
-        )
+        for subinfo in SubthreadInfo.query.filter(SubthreadInfo.posts_count.is_not(None))
         .order_by(SubthreadInfo.posts_count.desc())
         .limit(limit)
         .offset(offset)
@@ -59,10 +52,7 @@ def get_subthreads():
 def subthread_search(thread_name):
     thread_name = f"%{thread_name}%"
     subthread_list = [
-        subthread.as_dict()
-        for subthread in SubthreadInfo.query.filter(
-            SubthreadInfo.name.ilike(thread_name)
-        ).all()
+        subthread.as_dict() for subthread in SubthreadInfo.query.filter(SubthreadInfo.name.ilike(thread_name)).all()
     ]
     return jsonify(subthread_list), 200
 
@@ -77,15 +67,13 @@ def get_all_thread():
 def get_thread_by_name(thread_name):
     thread_info = SubthreadInfo.query.filter_by(name=f"t/{thread_name}").first()
     subthread = Subthread.query.filter_by(name=f"t/{thread_name}").first()
-    if not thread_info:
+    if not thread_info and subthread:
         return jsonify({"message": "Thread not found"}), 404
     return (
         jsonify(
             {
                 "threadData": thread_info.as_dict()
-                | subthread.as_dict(
-                    current_user.id if current_user.is_authenticated else None
-                )
+                | subthread.as_dict(current_user.id if current_user.is_authenticated else None)
             }
         ),
         200,
@@ -102,9 +90,7 @@ def new_subscription(tid):
 @threads.route("threads/subscription/<tid>", methods=["DELETE"])
 @login_required
 def del_subscription(tid):
-    subscription = Subscription.query.filter_by(
-        user_id=current_user.id, subthread_id=tid
-    ).first()
+    subscription = Subscription.query.filter_by(user_id=current_user.id, subthread_id=tid).first()
     if subscription:
         Subscription.query.filter_by(user_id=current_user.id, subthread_id=tid).delete()
         db.session.commit()
@@ -139,11 +125,7 @@ def update_thread(tid):
         jsonify(
             {
                 "message": "Thread updated",
-                "new_data": {
-                    "threadData": thread.as_dict(
-                        current_user.id if current_user.is_authenticated else None
-                    )
-                },
+                "new_data": {"threadData": thread.as_dict(current_user.id if current_user.is_authenticated else None)},
             }
         ),
         200,
@@ -155,8 +137,10 @@ def update_thread(tid):
 @auth_role(["admin", "mod"])
 def new_mod(tid, username):
     user = User.query.filter_by(username=username).first()
-    UserRole.add_moderator(user.id, tid)
-    return jsonify({"message": "Moderator added"}), 200
+    if user:
+        UserRole.add_moderator(user.id, tid)
+        return jsonify({"message": "Moderator added"}), 200
+    return jsonify({"message": "Invalid User"}), 400
 
 
 @threads.route("/thread/mod/<tid>/<username>", methods=["DELETE"])
@@ -165,8 +149,10 @@ def new_mod(tid, username):
 def delete_mod(tid, username):
     user = User.query.filter_by(username=username).first()
     thread = Subthread.query.filter_by(id=tid).first()
-    if thread.created_by == user.id and not current_user.has_role("admin"):
-        return jsonify({"message": "Cannot Remove Thread Creator"}), 400
-    existing_role = UserRole.query.filter_by(user_id=user.id, subthread_id=tid).delete()
-    db.session.commit()
-    return jsonify({"message": "Moderator deleted"}), 200
+    if user and thread:
+        if thread.created_by == user.id and not current_user.has_role("admin"):
+            return jsonify({"message": "Cannot Remove Thread Creator"}), 400
+        UserRole.query.filter_by(user_id=user.id, subthread_id=tid).delete()
+        db.session.commit()
+        return jsonify({"message": "Moderator deleted"}), 200
+    return jsonify({"message": "Invalid User"}), 400

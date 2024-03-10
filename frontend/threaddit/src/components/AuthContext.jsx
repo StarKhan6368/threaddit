@@ -48,8 +48,7 @@ export function AuthProvider({ children }) {
     axios.get("api/user/logout").then(() => {
       localStorage.removeItem("user");
       queryClient.invalidateQueries();
-      setUser({});
-      setIsAuthenticated(false);
+      window.location.href = "/all";
     });
   }
   return <AuthContext.Provider value={{ isAuthenticated, login, logout, user }}>{children}</AuthContext.Provider>;

@@ -8,9 +8,7 @@ class Reactions(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey("posts.id"))
     comment_id = db.Column(db.Integer, db.ForeignKey("comments.id"))
     is_upvote = db.Column(db.Boolean)
-    created_at = db.Column(
-        db.DateTime(timezone=True), nullable=False, default=db.func.now()
-    )
+    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=db.func.now())
     user = db.relationship("User", back_populates="reaction")
     comment = db.relationship("Comments", back_populates="reaction")
     post = db.relationship("Posts", back_populates="reaction")
@@ -23,9 +21,7 @@ class Reactions(db.Model):
 
     @classmethod
     def add(cls, user_id, is_upvote, post_id=None, comment_id=None):
-        new_reaction = Reactions(
-            user_id=user_id, is_upvote=is_upvote, post_id=post_id, comment_id=comment_id
-        )
+        new_reaction = Reactions(user_id=user_id, is_upvote=is_upvote, post_id=post_id, comment_id=comment_id)
         db.session.add(new_reaction)
         db.session.commit()
 

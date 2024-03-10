@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { AnimatePresence } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AuthConsumer from "../../components/AuthContext";
 import InfinitePostsLayout from "../../components/InfinitePosts";
@@ -23,6 +23,7 @@ export function SubThread() {
       return await axios.get(`/api/threads/${params.threadName}`).then((res) => res.data);
     },
   });
+  useEffect(() => { document.title = "t/" + params.threadName; return () => { document.title = "Threaddit" } }, [params.threadName]);
   const threadData = data?.threadData;
   const { mutate } = useMutation({
     mutationFn: async (has_subscribed) => {
@@ -68,9 +69,8 @@ export function SubThread() {
           <Loader forPosts={true} />
         ) : (
           <div
-            className={`flex p-2 flex-col md:flex-row items-center rounded-md md:rounded-full bg-theme-cultured ${
-              !threadData?.logo && "py-5"
-            }`}>
+            className={`flex p-2 flex-col md:flex-row items-center rounded-md md:rounded-full bg-theme-cultured ${!threadData?.logo && "py-5"
+              }`}>
             {threadData?.logo && (
               <img
                 src={threadData?.logo}
@@ -101,9 +101,8 @@ export function SubThread() {
         <div className="flex flex-col justify-around space-y-3 md:space-x-10 md:flex-row md:space-y-0">
           {isAuthenticated && (
             <button
-              className={`px-32 py-2 text-white rounded-full active:scale-90 ${
-                threadData?.has_subscribed ? "bg-blue-400" : "bg-theme-red-coral"
-              } `}
+              className={`px-32 py-2 text-white rounded-full active:scale-90 ${threadData?.has_subscribed ? "bg-blue-400" : "bg-theme-red-coral"
+                } `}
               onClick={() => mutate(threadData?.has_subscribed)}>
               {threadData?.has_subscribed ? "Leave" : "Join"}
             </button>

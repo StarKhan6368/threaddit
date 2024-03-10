@@ -1,12 +1,9 @@
 from sqlalchemy import func
-from flask import url_for
 import cloudinary.uploader as uploader
-import uuid, cloudinary
+import uuid
 from threaddit import db, login_manager, app
 from flask_login import UserMixin
 from threaddit import ma, app
-from threaddit.models import Role, UserRole
-from werkzeug.utils import secure_filename
 from flask_marshmallow.fields import fields
 from marshmallow.exceptions import ValidationError
 
@@ -24,9 +21,7 @@ class User(db.Model, UserMixin):
     password_hash: str = db.Column(db.Text, nullable=False)
     avatar: str = db.Column(db.Text)
     bio: str = db.Column(db.Text)
-    registration_date = db.Column(
-        db.DateTime(timezone=True), nullable=False, default=db.func.now()
-    )
+    registration_date = db.Column(db.DateTime(timezone=True), nullable=False, default=db.func.now())
     subthread = db.relationship("Subthread", back_populates="user")
     user_role = db.relationship("UserRole", back_populates="user")
     subscription = db.relationship("Subscription", back_populates="user")
@@ -36,12 +31,8 @@ class User(db.Model, UserMixin):
     comment = db.relationship("Comments", back_populates="user")
     reaction = db.relationship("Reactions", back_populates="user")
     saved_post = db.relationship("SavedPosts", back_populates="user")
-    sender = db.relationship(
-        "Messages", back_populates="user_sender", foreign_keys="Messages.sender_id"
-    )
-    receiver = db.relationship(
-        "Messages", back_populates="user_receiver", foreign_keys="Messages.receiver_id"
-    )
+    sender = db.relationship("Messages", back_populates="user_sender", foreign_keys="Messages.sender_id")
+    receiver = db.relationship("Messages", back_populates="user_receiver", foreign_keys="Messages.receiver_id")
 
     def __init__(self, username: str, email: str, password_hash: str):
         self.username = username
@@ -49,7 +40,7 @@ class User(db.Model, UserMixin):
         self.password_hash = password_hash
 
     def get_id(self):
-        return self.id
+        return str(self.id)
 
     def add(self):
         db.session.add(self)
@@ -58,9 +49,7 @@ class User(db.Model, UserMixin):
     def patch(self, image, form_data):
         if form_data.get("content_type") == "image" and image:
             self.delete_avatar()
-            image_data = uploader.upload(
-                image, public_id=f"{uuid.uuid4().hex}_{image.filename.rsplit('.')[0]}"
-            )
+            image_data = uploader.upload(image, public_id=f"{uuid.uuid4().hex}_{image.filename.rsplit('.')[0]}")
             url = f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}/image/upload/f_auto,q_auto/{image_data.get('public_id')}"
             self.avatar = url
         elif form_data.get("content_type") == "url":
@@ -69,9 +58,7 @@ class User(db.Model, UserMixin):
         db.session.commit()
 
     def delete_avatar(self):
-        if self.avatar and self.avatar.startswith(
-            f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}"
-        ):
+        if self.avatar and self.avatar.startswith(f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}"):
             res = uploader.destroy(self.avatar.split("/")[-1])
             print(f"Cloudinary Image Destory Response for {self.username}: ", res)
 
@@ -94,9 +81,7 @@ class User(db.Model, UserMixin):
                 "registrationDate": self.registration_date,
                 "roles": list({r.role.slug for r in self.user_role}),
                 "karma": self.user_karma[0].as_dict(),
-                "mod_in": [
-                    r.subthread_id for r in self.user_role if r.role.slug == "mod"
-                ],
+                "mod_in": [r.subthread_id for r in self.user_role if r.role.slug == "mod"],
             }
             if not include_all
             else {"id": self.id, "email": self.email, **self.as_dict()}
@@ -104,11 +89,7 @@ class User(db.Model, UserMixin):
 
 
 def username_validator(username: str):
-    if (
-        db.session.query(User)
-        .filter(func.lower(User.username) == username.lower())
-        .first()
-    ):
+    if db.session.query(User).filter(func.lower(User.username) == username.lower()).first():
         raise ValidationError("Username already exists")
 
 
@@ -132,9 +113,7 @@ class UserRegisterValidator(ma.SQLAlchemySchema):
     username = fields.Str(
         required=True,
         validate=[
-            fields.validate.Length(
-                min=4, max=15, error="Username must be between 1 and 50 characters"
-            ),
+            fields.validate.Length(min=4, max=15, error="Username must be between 1 and 50 characters"),
             fields.validate.Regexp(
                 "^[a-zA-Z][a-zA-Z0-9_]*$",
                 error="Username must start with a letter, and contain only \
@@ -149,9 +128,7 @@ class UserRegisterValidator(ma.SQLAlchemySchema):
 
 class UsersKarma(db.Model):
     __tablename__: str = "user_info"
-    user_id: int = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, primary_key=True
-    )
+    user_id: int = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, primary_key=True)
     user_karma: int = db.Column(db.Integer, nullable=False)
     comments_count: int = db.Column(db.Integer, nullable=False)
     comments_karma: int = db.Column(db.Integer, nullable=False)

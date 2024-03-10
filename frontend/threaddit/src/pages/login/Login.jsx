@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthConsumer from "../../components/AuthContext.jsx";
 import Loader from "../../components/Loader.jsx";
@@ -19,6 +19,12 @@ export function Login() {
     },
     onSuccess: () => navigate("/home"),
   });
+  useEffect(() => {
+    document.title = "Threaddit | Login";
+    return () => {
+      document.title = "Threaddit";
+    }
+  })
   if (isAuthenticated) {
     return navigate("/home");
   }
@@ -32,9 +38,8 @@ export function Login() {
           </AppLogo>
         </div>
         <h1
-          className={`font-semibold ${status !== "loading" && "text-2xl "} tracking-wide ${
-            error && "font-bold uppercase text-theme-orange"
-          }`}>
+          className={`font-semibold ${status !== "loading" && "text-2xl "} tracking-wide ${error && "font-bold uppercase text-theme-orange"
+            }`}>
           {error ? error.response.data.message : status === "loading" ? <Loader forPosts={true} /> : "Welcome Back!"}
         </h1>
         <form
@@ -89,7 +94,8 @@ export function Login() {
           </button>
         </form>
         <div className="flex justify-between">
-          <Link to="/forgot_password" className="flex font-semibold cursor-pointer group hover:text-theme-orange">
+          {/* TODO: Implement forgot password */}
+          <Link to="/login" className="flex font-semibold cursor-pointer group hover:text-theme-orange">
             Forgot Password
             <Svg
               type="arrow-right"
