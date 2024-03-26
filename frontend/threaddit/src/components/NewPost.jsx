@@ -26,8 +26,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
   const [imageUrl, setImageUrl] = useState("");
   const [thread, setThread] = useState(isEdit ? { id: threadInfo.thread_id, name: threadInfo.thread_name } : false);
   const { user } = AuthConsumer();
-  const { mutate: handleSubmit, status } = useMutation(async (e) => {
-    e?.preventDefault();
+  const { mutate: handleSubmit, status } = useMutation(async () => {
     const formData = new FormData();
     formData.append("title", title);
     formData.append("content_type", mediaType);
@@ -78,6 +77,11 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
       </div>
       <form
         encType="multipart/form-data"
+        method="post"
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
         className="flex flex-col flex-1 justify-around p-1.5 w-full h-1/2 bg-white rounded-md">
         <label htmlFor="title">
           <span>Title</span>
@@ -159,10 +163,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
             Only Add Image if you want to modify the original image if empty the original will be used.
           </span>
         )}
-        <button
-          onClick={handleSubmit}
-          disabled={status === "loading"}
-          className="py-2 font-semibold text-white rounded-md bg-theme-orange active:scale-95">
+        <button className="py-2 font-semibold text-white rounded-md bg-theme-orange active:scale-95">
           {status === "loading" ? "Submitting..." : "Submit"}
         </button>
       </form>

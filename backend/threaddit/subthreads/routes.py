@@ -1,10 +1,11 @@
-from threaddit.subthreads.models import Subthread, SubthreadInfo, Subscription
-from flask_login import current_user, login_required
-from threaddit.users.models import User
 from flask import Blueprint, jsonify, request
-from threaddit.models import UserRole
+from flask_login import current_user, login_required
+
 from threaddit import db
 from threaddit.auth.decorators import auth_role
+from threaddit.models import UserRole
+from threaddit.subthreads.models import Subscription, Subthread
+from threaddit.users.models import User
 
 threads = Blueprint("threads", __name__, url_prefix="/api")
 
@@ -15,26 +16,14 @@ def get_subthreads():
     offset = request.args.get("offset", default=0, type=int)
     cur_user = current_user.id if current_user.is_authenticated else None
     subscribed_threads = []
-    if current_user.is_authenticated:
-        subscribed_threads = [
-            subscription.subthread.as_dict(cur_user)
-            for subscription in Subscription.query.filter_by(user_id=current_user.id).limit(limit).offset(offset).all()
-        ]
+    if cur_user:
+        subscribed_threads = [sup.subthread.as_dict() for sup in current_user.subscription]
     all_threads = [
-        subinfo.as_dict()
-        for subinfo in SubthreadInfo.query.filter(SubthreadInfo.members_count.is_not(None))
-        .order_by(SubthreadInfo.members_count.desc())
-        .limit(limit)
-        .offset(offset)
-        .all()
+        sub.as_dict()
+        for sub in Subthread.query.order_by(Subthread.subscriber_count.desc()).limit(limit).offset(offset).all()
     ]
     popular_threads = [
-        subinfo.as_dict()
-        for subinfo in SubthreadInfo.query.filter(SubthreadInfo.posts_count.is_not(None))
-        .order_by(SubthreadInfo.posts_count.desc())
-        .limit(limit)
-        .offset(offset)
-        .all()
+        sub.as_dict() for sub in Subthread.query.order_by(Subthread.post_count.desc()).limit(limit).offset(offset).all()
     ]
     return (
         jsonify(
@@ -51,9 +40,7 @@ def get_subthreads():
 @threads.route("/threads/search/<thread_name>", methods=["GET"])
 def subthread_search(thread_name):
     thread_name = f"%{thread_name}%"
-    subthread_list = [
-        subthread.as_dict() for subthread in SubthreadInfo.query.filter(SubthreadInfo.name.ilike(thread_name)).all()
-    ]
+    subthread_list = [sub.as_dict() for sub in Subthread.query.filter(Subthread.name.ilike(thread_name)).all()]
     return jsonify(subthread_list), 200
 
 
@@ -65,17 +52,11 @@ def get_all_thread():
 
 @threads.route("/threads/<thread_name>")
 def get_thread_by_name(thread_name):
-    thread_info = SubthreadInfo.query.filter_by(name=f"t/{thread_name}").first()
     subthread = Subthread.query.filter_by(name=f"t/{thread_name}").first()
-    if not thread_info and subthread:
+    if not subthread:
         return jsonify({"message": "Thread not found"}), 404
     return (
-        jsonify(
-            {
-                "threadData": thread_info.as_dict()
-                | subthread.as_dict(current_user.id if current_user.is_authenticated else None)
-            }
-        ),
+        jsonify({"threadData": subthread.as_dict(current_user.id if current_user.is_authenticated else None)}),
         200,
     )
 
@@ -83,7 +64,11 @@ def get_thread_by_name(thread_name):
 @threads.route("threads/subscription/<tid>", methods=["POST"])
 @login_required
 def new_subscription(tid):
-    Subscription.add(tid, current_user.id)
+    subthread = Subthread.query.filter_by(id=tid).first()
+    subscription = Subscription.query.filter_by(user_id=current_user.id, subthread_id=tid).first()
+    if subscription or not subthread:
+        return jsonify({"message": "Invalid Subscription"}), 400
+    Subscription.add(tid, current_user.id, subthread)
     return jsonify({"message": "Subscribed"}), 200
 
 
@@ -92,8 +77,7 @@ def new_subscription(tid):
 def del_subscription(tid):
     subscription = Subscription.query.filter_by(user_id=current_user.id, subthread_id=tid).first()
     if subscription:
-        Subscription.query.filter_by(user_id=current_user.id, subthread_id=tid).delete()
-        db.session.commit()
+        subscription.remove()
     else:
         return jsonify({"message": "Invalid Subscription"}), 400
     return jsonify({"message": "UnSubscribed"}), 200
@@ -104,6 +88,8 @@ def del_subscription(tid):
 def new_thread():
     image = request.files.get("media")
     form_data = request.form.to_dict()
+    if not form_data.get("name", "").strip():
+        return jsonify({"message": "Thread name is required"}), 400
     subthread = Subthread.add(form_data, image, current_user.id)
     if subthread:
         UserRole.add_moderator(current_user.id, subthread.id)

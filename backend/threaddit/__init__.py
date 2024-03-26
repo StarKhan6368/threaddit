@@ -1,9 +1,11 @@
 from flask import Flask, jsonify
+from flask_login.utils import login_required
 from flask_sqlalchemy import SQLAlchemy
-from flask_marshmallow import Marshmallow
 from marshmallow import ValidationError
 import cloudinary
 from flask_login import LoginManager
+from sqlalchemy import text
+from threaddit.auth.decorators import auth_role
 from threaddit.config import (
     DATABASE_URI,
     SECRET_KEY,
@@ -27,7 +29,6 @@ app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 app.config["SECRET_KEY"] = SECRET_KEY
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
-ma = Marshmallow(app)
 
 
 @login_manager.unauthorized_handler
@@ -41,6 +42,21 @@ def catch_all(path):
     return app.send_static_file("index.html")
 
 
+@app.route("/api/recalculate")
+@login_required
+@auth_role(["admin"])
+def recalculate():
+    try:
+        with open("threaddit/recalculate.sql", "r") as f:
+            sql = text(f.read())
+        db.session.execute(sql)
+        db.session.commit()
+        return jsonify({"message": "Recalculated"}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"message": "Failed"}), 400
+
+
 @app.errorhandler(ValidationError)
 def handle_marshmallow_validation(err):
     return jsonify({"errors": err.messages}), 400
@@ -51,13 +67,12 @@ def not_found(e):
     return app.send_static_file("index.html")
 
 
-# noqa
-from threaddit.users.routes import user
-from threaddit.subthreads.routes import threads
-from threaddit.posts.routes import posts
-from threaddit.comments.routes import comments
-from threaddit.reactions.routes import reactions
-from threaddit.messages.routes import messages
+from threaddit.users.routes import user  # noqa
+from threaddit.subthreads.routes import threads  # noqa
+from threaddit.posts.routes import posts  # noqa
+from threaddit.comments.routes import comments  # noqa
+from threaddit.reactions.routes import reactions  # noqa
+from threaddit.messages.routes import messages  # noqa
 
 app.register_blueprint(user)
 app.register_blueprint(threads)

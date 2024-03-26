@@ -57,7 +57,7 @@ export default function MoreOptions({
       await axios.delete(`/api/posts/saved/${postInfo?.id}`);
       setPostSaved(false);
     } else {
-      await axios.put(`/api/posts/saved/${postInfo?.id}`);
+      await axios.post(`/api/posts/saved/${postInfo?.id}`);
       setPostSaved(true);
     }
     queryClient.invalidateQueries({ queryKey: ["saved"] });
@@ -65,34 +65,51 @@ export default function MoreOptions({
   }
   function handleEdit() {
     setShowModal(true);
-    setModalData(<NewPost isEdit={true} postInfo={postInfo} setShowModal={setShowModal} threadInfo={threadInfo} />);
+    setModalData(
+      <NewPost
+        isEdit={true}
+        postInfo={postInfo}
+        setShowModal={setShowModal}
+        threadInfo={threadInfo}
+      />,
+    );
   }
   const shouldBeAbleToDelete =
     isAuthenticated &&
     (creatorInfo.user_name === user.username ||
       user.roles.includes("admin") ||
-      (user.roles.includes("mod") && user.mod_in.includes(threadInfo.thread_id)));
+      (user.roles.includes("mod") &&
+        user.mod_in.includes(threadInfo.thread_id)));
   return (
     <>
-      <div ref={myRef} className="flex relative items-center md:cursor-pointer group" onClick={() => setExpand(true)}>
+      <div
+        ref={myRef}
+        className="flex relative items-center md:cursor-pointer group"
+        onClick={() => setExpand(true)}
+      >
         <Svg className="w-4 h-4 md:w-6 md:h-6" type="more" />
         <p className="ml-2 text-sm md:cursor-pointer md:text-base">More</p>
         {expand && (
           <ul className="absolute top-full z-20 p-1 mt-1 space-y-1 w-24 list-none bg-white rounded-md border-2 border-theme-cultured">
-            <li className="p-1 text-sm md:cursor-pointer md:text-base hover:bg-theme-cultured" onClick={handleSaved}>
+            <li
+              className="p-1 text-sm md:cursor-pointer md:text-base hover:bg-theme-cultured"
+              onClick={handleSaved}
+            >
               {postSaved ? "Unsave" : "Save"}
             </li>
             {shouldBeAbleToDelete && (
               <li
                 className="p-1 text-sm text-red-500 md:cursor-pointer active:bg-theme-cultured md:text-base hover:bg-theme-cultured"
-                onClick={handleDelte}>
+                onClick={handleDelte}
+              >
                 Delete
               </li>
             )}
             {creatorInfo.user_name === user.username && (
               <li
                 onClick={handleEdit}
-                className="p-1 text-sm md:cursor-pointer active:bg-theme-cultured md:text-base hover:bg-theme-cultured">
+                className="p-1 text-sm md:cursor-pointer active:bg-theme-cultured md:text-base hover:bg-theme-cultured"
+              >
                 Edit
               </li>
             )}
@@ -100,7 +117,8 @@ export default function MoreOptions({
               className="p-1 text-sm md:cursor-pointer active:bg-theme-cultured md:hidden md:text-base hover:bg-theme-cultured"
               onClick={() => {
                 handleShare().then(() => setExpand(false));
-              }}>
+              }}
+            >
               Share
             </li>
           </ul>

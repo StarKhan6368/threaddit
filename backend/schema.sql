@@ -1,443 +1,464 @@
-CREATE TABLE public.comments (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
-    post_id integer NOT NULL,
-    parent_id integer,
-    has_parent boolean,
-    content text NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    is_edited boolean DEFAULT false
+CREATE TABLE PUBLIC.COMMENTS (
+	ID INTEGER NOT NULL,
+	USER_ID INTEGER NOT NULL,
+	POST_ID INTEGER NOT NULL,
+	PARENT_ID INTEGER,
+	HAS_PARENT BOOLEAN,
+	CONTENT TEXT NOT NULL,
+	CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+	IS_EDITED BOOLEAN DEFAULT FALSE,
+	KARMA_COUNT INTEGER DEFAULT 0 NOT NULL,
+	IS_DELETED BOOLEAN DEFAULT FALSE NOT NULL
 );
 
-
-CREATE TABLE public.posts (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
-    subthread_id integer NOT NULL,
-    title text NOT NULL,
-    media text,
-    content text,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    is_edited boolean DEFAULT false
+CREATE TABLE PUBLIC.REACTIONS (
+	ID INTEGER NOT NULL,
+	USER_ID INTEGER NOT NULL,
+	POST_ID INTEGER,
+	COMMENT_ID INTEGER,
+	IS_UPVOTE BOOLEAN NOT NULL,
+	CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE VIEW PUBLIC.COMMENT_INFO AS
+SELECT
+	C.ID AS COMMENT_ID,
+	COALESCE(
+		SUM(
+			CASE
+				WHEN (R.IS_UPVOTE IS TRUE) THEN 1
+				WHEN (R.IS_UPVOTE IS FALSE) THEN '-1'::INTEGER
+				ELSE 0
+			END
+		),
+		(0)::BIGINT
+	) AS COMMENT_KARMA
+FROM
+	(
+		PUBLIC.COMMENTS C
+		LEFT JOIN PUBLIC.REACTIONS R ON ((R.COMMENT_ID = C.ID))
+	)
+GROUP BY
+	C.ID;
 
-CREATE TABLE public.reactions (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
-    post_id integer,
-    comment_id integer,
-    is_upvote boolean NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+CREATE SEQUENCE PUBLIC.COMMENTS_ID_SEQ AS INTEGER START
+WITH
+	1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+
+ALTER SEQUENCE PUBLIC.COMMENTS_ID_SEQ OWNED BY PUBLIC.COMMENTS.ID;
+
+CREATE TABLE PUBLIC.MESSAGES (
+	ID INTEGER NOT NULL,
+	SENDER_ID INTEGER NOT NULL,
+	RECEIVER_ID INTEGER NOT NULL,
+	CONTENT TEXT NOT NULL,
+	CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+	SEEN BOOLEAN DEFAULT FALSE NOT NULL,
+	SEEN_AT TIMESTAMP WITH TIME ZONE,
+	IS_EDITED BOOLEAN DEFAULT FALSE NOT NULL
 );
 
+CREATE SEQUENCE PUBLIC.MESSAGES_ID_SEQ AS INTEGER START
+WITH
+	1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
-CREATE TABLE public.users (
-    id integer NOT NULL,
-    username text NOT NULL,
-    password_hash text NOT NULL,
-    email text NOT NULL,
-    avatar text,
-    bio text,
-    registration_date timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+ALTER SEQUENCE PUBLIC.MESSAGES_ID_SEQ OWNED BY PUBLIC.MESSAGES.ID;
+
+CREATE TABLE PUBLIC.POSTS (
+	ID INTEGER NOT NULL,
+	USER_ID INTEGER NOT NULL,
+	SUBTHREAD_ID INTEGER NOT NULL,
+	TITLE TEXT NOT NULL,
+	MEDIA TEXT,
+	CONTENT TEXT,
+	CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+	IS_EDITED BOOLEAN DEFAULT FALSE,
+	KARMA_COUNT INTEGER DEFAULT 0 NOT NULL,
+	COMMENT_COUNT INTEGER DEFAULT 0 NOT NULL
 );
 
+CREATE VIEW PUBLIC.POST_INFO AS
+SELECT
+	P.ID AS POST_ID,
+	COALESCE(R.POST_KARMA, (0)::BIGINT) AS POST_KARMA,
+	COUNT(DISTINCT C.ID) AS COMMENT_COUNT
+FROM
+	(
+		(
+			PUBLIC.POSTS P
+			LEFT JOIN (
+				SELECT
+					REACTIONS.POST_ID,
+					SUM(
+						CASE
+							WHEN (REACTIONS.IS_UPVOTE IS TRUE) THEN 1
+							WHEN (REACTIONS.IS_UPVOTE IS FALSE) THEN '-1'::INTEGER
+							ELSE 0
+						END
+					) AS POST_KARMA
+				FROM
+					PUBLIC.REACTIONS
+				GROUP BY
+					REACTIONS.POST_ID
+			) R ON ((R.POST_ID = P.ID))
+		)
+		LEFT JOIN PUBLIC.COMMENTS C ON (
+			(
+				(C.POST_ID = P.ID)
+				AND (C.IS_DELETED IS FALSE)
+			)
+		)
+	)
+GROUP BY
+	P.ID,
+	R.POST_KARMA;
 
-CREATE VIEW public.comment_info AS
- SELECT c.id AS comment_id,
-    u.username AS user_name,
-    u.avatar AS user_avatar,
-    ckarma.comment_karma,
-    c.has_parent,
-    c.parent_id,
-    c.is_edited,
-    c.content,
-    c.created_at,
-    p.id AS post_id
-   FROM (((public.posts p
-     FULL JOIN public.comments c ON ((c.post_id = p.id)))
-     FULL JOIN ( SELECT c_1.id AS comment_id,
-            COALESCE(sum(
-                CASE
-                    WHEN (r.is_upvote = true) THEN 1
-                    WHEN (r.is_upvote = false) THEN '-1'::integer
-                    ELSE 0
-                END), (0)::bigint) AS comment_karma
-           FROM (public.comments c_1
-             FULL JOIN public.reactions r ON ((r.comment_id = c_1.id)))
-          GROUP BY c_1.id
-         HAVING (c_1.id IS NOT NULL)) ckarma ON ((ckarma.comment_id = c.id)))
-     FULL JOIN public.users u ON ((u.id = c.user_id)));
+CREATE SEQUENCE PUBLIC.POSTS_ID_SEQ AS INTEGER START
+WITH
+	1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
-CREATE SEQUENCE public.comments_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+ALTER SEQUENCE PUBLIC.POSTS_ID_SEQ OWNED BY PUBLIC.POSTS.ID;
 
-ALTER SEQUENCE public.comments_id_seq OWNED BY public.comments.id;
+CREATE SEQUENCE PUBLIC.REACTIONS_ID_SEQ AS INTEGER START
+WITH
+	1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
-CREATE TABLE public.messages (
-    id integer NOT NULL,
-    sender_id integer NOT NULL,
-    receiver_id integer NOT NULL,
-    content text NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    seen boolean DEFAULT false NOT NULL,
-    seen_at timestamp with time zone
+ALTER SEQUENCE PUBLIC.REACTIONS_ID_SEQ OWNED BY PUBLIC.REACTIONS.ID;
+
+CREATE TABLE PUBLIC.ROLES (
+	ID INTEGER NOT NULL,
+	NAME TEXT NOT NULL,
+	SLUG TEXT NOT NULL
 );
 
-CREATE SEQUENCE public.messages_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE SEQUENCE PUBLIC.ROLES_ID_SEQ AS INTEGER START
+WITH
+	1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
-ALTER SEQUENCE public.messages_id_seq OWNED BY public.messages.id;
+ALTER SEQUENCE PUBLIC.ROLES_ID_SEQ OWNED BY PUBLIC.ROLES.ID;
 
-CREATE TABLE public.subthreads (
-    id integer NOT NULL,
-    name character varying(20) NOT NULL,
-    description text,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    logo text,
-    created_by integer
+CREATE TABLE PUBLIC.SAVED (
+	ID INTEGER NOT NULL,
+	USER_ID INTEGER NOT NULL,
+	POST_ID INTEGER NOT NULL,
+	CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE VIEW public.post_info AS
- SELECT t.id AS thread_id,
-    t.name AS thread_name,
-    t.logo AS thread_logo,
-    p.id AS post_id,
-    k.karma AS post_karma,
-    p.title,
-    p.media,
-    p.is_edited,
-    p.content,
-    p.created_at,
-    u.id AS user_id,
-    u.username AS user_name,
-    u.avatar AS user_avatar,
-    c.comments_count
-   FROM ((((public.posts p
-     JOIN ( SELECT p_1.id AS post_id,
-            COALESCE(sum(
-                CASE
-                    WHEN (r.is_upvote = true) THEN 1
-                    WHEN (r.is_upvote = false) THEN '-1'::integer
-                    ELSE 0
-                END), (0)::bigint) AS karma
-           FROM (public.posts p_1
-             FULL JOIN public.reactions r ON ((r.post_id = p_1.id)))
-          GROUP BY p_1.id) k ON ((k.post_id = p.id)))
-     JOIN ( SELECT p_1.id AS post_id,
-            count(c_1.id) AS comments_count
-           FROM (public.posts p_1
-             FULL JOIN public.comments c_1 ON ((c_1.post_id = p_1.id)))
-          GROUP BY p_1.id) c ON ((c.post_id = p.id)))
-     JOIN public.subthreads t ON ((t.id = p.subthread_id)))
-     JOIN public.users u ON ((u.id = p.user_id)));
+CREATE SEQUENCE PUBLIC.SAVED_ID_SEQ AS INTEGER START
+WITH
+	1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
-CREATE SEQUENCE public.posts_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+ALTER SEQUENCE PUBLIC.SAVED_ID_SEQ OWNED BY PUBLIC.SAVED.ID;
 
-ALTER SEQUENCE public.posts_id_seq OWNED BY public.posts.id;
-
-CREATE SEQUENCE public.reactions_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-ALTER SEQUENCE public.reactions_id_seq OWNED BY public.reactions.id;
-
-CREATE TABLE public.roles (
-    id integer NOT NULL,
-    name text NOT NULL,
-    slug text NOT NULL
+CREATE TABLE PUBLIC.SUBSCRIPTIONS (
+	ID INTEGER NOT NULL,
+	USER_ID INTEGER NOT NULL,
+	SUBTHREAD_ID INTEGER NOT NULL,
+	CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE SEQUENCE public.roles_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE SEQUENCE PUBLIC.SUBSCRIPTIONS_ID_SEQ AS INTEGER START
+WITH
+	1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
-ALTER SEQUENCE public.roles_id_seq OWNED BY public.roles.id;
+ALTER SEQUENCE PUBLIC.SUBSCRIPTIONS_ID_SEQ OWNED BY PUBLIC.SUBSCRIPTIONS.ID;
 
-CREATE TABLE public.saved (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
-    post_id integer NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE PUBLIC.SUBTHREADS (
+	ID INTEGER NOT NULL,
+	NAME CHARACTER VARYING(20) NOT NULL,
+	DESCRIPTION TEXT,
+	CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	LOGO TEXT,
+	CREATED_BY INTEGER NOT NULL,
+	POST_COUNT INTEGER DEFAULT 0 NOT NULL,
+	COMMENT_COUNT INTEGER DEFAULT 0 NOT NULL,
+	SUBSCRIBER_COUNT INTEGER DEFAULT 0 NOT NULL
 );
 
-CREATE SEQUENCE public.saved_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE VIEW PUBLIC.SUBTHREAD_INFO AS
+SELECT
+	T.ID AS SUBTHREAD_ID,
+	COUNT(DISTINCT P.ID) AS POST_COUNT,
+	COUNT(DISTINCT C.ID) AS COMMENT_COUNT,
+	COUNT(DISTINCT S.ID) AS SUBSCRIBER_COUNT
+FROM
+	(
+		(
+			(
+				PUBLIC.SUBTHREADS T
+				LEFT JOIN PUBLIC.POSTS P ON ((P.SUBTHREAD_ID = T.ID))
+			)
+			LEFT JOIN PUBLIC.COMMENTS C ON (
+				(
+					(C.POST_ID = P.ID)
+					AND (C.IS_DELETED IS FALSE)
+				)
+			)
+		)
+		LEFT JOIN PUBLIC.SUBSCRIPTIONS S ON ((S.SUBTHREAD_ID = T.ID))
+	)
+GROUP BY
+	T.ID;
 
-ALTER SEQUENCE public.saved_id_seq OWNED BY public.saved.id;
+CREATE SEQUENCE PUBLIC.SUBTHREADS_ID_SEQ AS INTEGER START
+WITH
+	1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
-CREATE TABLE public.subscriptions (
-    id integer NOT NULL,
-    user_id integer  NOT NULL,
-    subthread_id integer  NOT NULL,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+ALTER SEQUENCE PUBLIC.SUBTHREADS_ID_SEQ OWNED BY PUBLIC.SUBTHREADS.ID;
+
+CREATE TABLE PUBLIC.USERS (
+	ID INTEGER NOT NULL,
+	USERNAME TEXT NOT NULL,
+	PASSWORD_HASH TEXT NOT NULL,
+	EMAIL TEXT NOT NULL,
+	AVATAR TEXT,
+	BIO TEXT,
+	REGISTRATION_DATE TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+	POST_KARMA INTEGER DEFAULT 0 NOT NULL,
+	POST_COUNT INTEGER DEFAULT 0 NOT NULL,
+	COMMENT_KARMA INTEGER DEFAULT 0 NOT NULL,
+	COMMENT_COUNT INTEGER DEFAULT 0 NOT NULL
 );
 
-CREATE SEQUENCE public.subscriptions_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE VIEW PUBLIC.USER_INFO AS
+SELECT
+	U.ID AS USER_ID,
+	COALESCE(P.POST_COUNT, (0)::BIGINT) AS POST_COUNT,
+	COALESCE(P.POST_KARMA, (0)::BIGINT) AS POST_KARMA,
+	COALESCE(C.COMMENT_COUNT, (0)::BIGINT) AS COMMENT_COUNT,
+	COALESCE(C.COMMENT_KARMA, (0)::BIGINT) AS COMMENT_KARMA
+FROM
+	(
+		(
+			PUBLIC.USERS U
+			LEFT JOIN (
+				SELECT
+					COUNT(DISTINCT P_1.ID) AS POST_COUNT,
+					U_1.ID AS USER_ID,
+					COALESCE(
+						SUM(
+							CASE
+								WHEN (R.IS_UPVOTE IS TRUE) THEN 1
+								WHEN (R.IS_UPVOTE IS FALSE) THEN '-1'::INTEGER
+								ELSE 0
+							END
+						),
+						(0)::BIGINT
+					) AS POST_KARMA
+				FROM
+					(
+						(
+							PUBLIC.USERS U_1
+							JOIN PUBLIC.POSTS P_1 ON ((P_1.USER_ID = U_1.ID))
+						)
+						LEFT JOIN PUBLIC.REACTIONS R ON ((R.POST_ID = P_1.ID))
+					)
+				GROUP BY
+					U_1.ID
+			) P ON ((P.USER_ID = U.ID))
+		)
+		LEFT JOIN (
+			SELECT
+				COALESCE(COUNT(DISTINCT C_1.ID), (0)::BIGINT) AS COMMENT_COUNT,
+				U_1.ID AS USER_ID,
+				COALESCE(
+					SUM(
+						CASE
+							WHEN (R.IS_UPVOTE IS TRUE) THEN 1
+							WHEN (R.IS_UPVOTE IS FALSE) THEN '-1'::INTEGER
+							ELSE 0
+						END
+					),
+					(0)::BIGINT
+				) AS COMMENT_KARMA
+			FROM
+				(
+					(
+						PUBLIC.USERS U_1
+						JOIN PUBLIC.COMMENTS C_1 ON (
+							(
+								(C_1.USER_ID = U_1.ID)
+								AND (C_1.IS_DELETED IS FALSE)
+							)
+						)
+					)
+					LEFT JOIN PUBLIC.REACTIONS R ON ((R.COMMENT_ID = C_1.ID))
+				)
+			GROUP BY
+				U_1.ID
+		) C ON ((C.USER_ID = U.ID))
+	);
 
-ALTER SEQUENCE public.subscriptions_id_seq OWNED BY public.subscriptions.id;
-
-CREATE VIEW public.subthread_info AS
- SELECT subthreads.id,
-    subthreads.name,
-    subthreads.logo,
-    mcount.members_count,
-    pcount.posts_count,
-    ccount.comments_count
-   FROM (((public.subthreads
-     FULL JOIN ( SELECT subthreads_1.id AS subthread_id,
-            count(*) AS members_count
-           FROM (public.subthreads subthreads_1
-             JOIN public.subscriptions ON ((subscriptions.subthread_id = subthreads_1.id)))
-          GROUP BY subthreads_1.id) mcount ON ((mcount.subthread_id = subthreads.id)))
-     FULL JOIN ( SELECT subthreads_1.id AS subthread_id,
-            count(*) AS posts_count
-           FROM (public.subthreads subthreads_1
-             JOIN public.posts ON ((posts.subthread_id = subthreads_1.id)))
-          GROUP BY subthreads_1.id) pcount ON ((pcount.subthread_id = subthreads.id)))
-     FULL JOIN ( SELECT subthreads_1.id AS subthread_id,
-            count(*) AS comments_count
-           FROM ((public.subthreads subthreads_1
-             JOIN public.posts ON ((posts.subthread_id = subthreads_1.id)))
-             JOIN public.comments ON ((comments.post_id = posts.id)))
-          GROUP BY subthreads_1.id) ccount ON ((ccount.subthread_id = subthreads.id)));
-
-CREATE SEQUENCE public.subthreads_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-ALTER SEQUENCE public.subthreads_id_seq OWNED BY public.subthreads.id;
-
-CREATE VIEW public.user_info AS
- SELECT u.id AS user_id,
-    (c.karma + p.karma) AS user_karma,
-    c.comments_count,
-    c.karma AS comments_karma,
-    p.posts_count,
-    p.karma AS posts_karma
-   FROM ((public.users u
-     JOIN ( SELECT u_1.id AS user_id,
-            count(c_1.id) AS comments_count,
-            COALESCE(sum(
-                CASE
-                    WHEN ((r.is_upvote = true) AND (r.comment_id IS NOT NULL)) THEN 1
-                    WHEN ((r.is_upvote = false) AND (r.comment_id IS NOT NULL)) THEN '-1'::integer
-                    ELSE 0
-                END), (0)::bigint) AS karma
-           FROM ((public.users u_1
-             FULL JOIN public.comments c_1 ON ((c_1.user_id = u_1.id)))
-             FULL JOIN public.reactions r ON ((r.comment_id = c_1.id)))
-          GROUP BY u_1.id) c ON ((c.user_id = u.id)))
-     JOIN ( SELECT u_1.id AS user_id,
-            count(p_1.id) AS posts_count,
-            COALESCE(sum(
-                CASE
-                    WHEN ((r.is_upvote = true) AND (r.post_id IS NOT NULL)) THEN 1
-                    WHEN ((r.is_upvote = false) AND (r.post_id IS NOT NULL)) THEN '-1'::integer
-                    ELSE 0
-                END), (0)::bigint) AS karma
-           FROM ((public.users u_1
-             FULL JOIN public.posts p_1 ON ((p_1.user_id = u_1.id)))
-             FULL JOIN public.reactions r ON ((r.post_id = p_1.id)))
-          GROUP BY u_1.id) p ON ((p.user_id = u.id)));
-
-CREATE TABLE public.user_roles (
-    id integer NOT NULL,
-    user_id integer NOT NULL,
-    role_id integer NOT NULL,
-    subthread_id integer,
-    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE PUBLIC.USER_ROLES (
+	ID INTEGER NOT NULL,
+	USER_ID INTEGER NOT NULL,
+	ROLE_ID INTEGER NOT NULL,
+	SUBTHREAD_ID INTEGER,
+	CREATED_AT TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE SEQUENCE public.user_roles_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE SEQUENCE PUBLIC.USER_ROLES_ID_SEQ AS INTEGER START
+WITH
+	1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
-ALTER SEQUENCE public.user_roles_id_seq OWNED BY public.user_roles.id;
+ALTER SEQUENCE PUBLIC.USER_ROLES_ID_SEQ OWNED BY PUBLIC.USER_ROLES.ID;
 
-CREATE SEQUENCE public.users_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+CREATE SEQUENCE PUBLIC.USERS_ID_SEQ AS INTEGER START
+WITH
+	1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
 
-ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+ALTER SEQUENCE PUBLIC.USERS_ID_SEQ OWNED BY PUBLIC.USERS.ID;
 
-ALTER TABLE ONLY public.comments ALTER COLUMN id SET DEFAULT nextval('public.comments_id_seq'::regclass);
+ALTER TABLE ONLY PUBLIC.COMMENTS
+ALTER COLUMN ID
+SET DEFAULT NEXTVAL('public.comments_id_seq'::REGCLASS);
 
-ALTER TABLE ONLY public.messages ALTER COLUMN id SET DEFAULT nextval('public.messages_id_seq'::regclass);
+ALTER TABLE ONLY PUBLIC.MESSAGES
+ALTER COLUMN ID
+SET DEFAULT NEXTVAL('public.messages_id_seq'::REGCLASS);
 
-ALTER TABLE ONLY public.posts ALTER COLUMN id SET DEFAULT nextval('public.posts_id_seq'::regclass);
+ALTER TABLE ONLY PUBLIC.POSTS
+ALTER COLUMN ID
+SET DEFAULT NEXTVAL('public.posts_id_seq'::REGCLASS);
 
-ALTER TABLE ONLY public.reactions ALTER COLUMN id SET DEFAULT nextval('public.reactions_id_seq'::regclass);
+ALTER TABLE ONLY PUBLIC.REACTIONS
+ALTER COLUMN ID
+SET DEFAULT NEXTVAL('public.reactions_id_seq'::REGCLASS);
 
-ALTER TABLE ONLY public.roles ALTER COLUMN id SET DEFAULT nextval('public.roles_id_seq'::regclass);
+ALTER TABLE ONLY PUBLIC.ROLES
+ALTER COLUMN ID
+SET DEFAULT NEXTVAL('public.roles_id_seq'::REGCLASS);
 
-ALTER TABLE ONLY public.saved ALTER COLUMN id SET DEFAULT nextval('public.saved_id_seq'::regclass);
+ALTER TABLE ONLY PUBLIC.SAVED
+ALTER COLUMN ID
+SET DEFAULT NEXTVAL('public.saved_id_seq'::REGCLASS);
 
-ALTER TABLE ONLY public.subscriptions ALTER COLUMN id SET DEFAULT nextval('public.subscriptions_id_seq'::regclass);
+ALTER TABLE ONLY PUBLIC.SUBSCRIPTIONS
+ALTER COLUMN ID
+SET DEFAULT NEXTVAL('public.subscriptions_id_seq'::REGCLASS);
 
-ALTER TABLE ONLY public.subthreads ALTER COLUMN id SET DEFAULT nextval('public.subthreads_id_seq'::regclass);
+ALTER TABLE ONLY PUBLIC.SUBTHREADS
+ALTER COLUMN ID
+SET DEFAULT NEXTVAL('public.subthreads_id_seq'::REGCLASS);
 
-ALTER TABLE ONLY public.user_roles ALTER COLUMN id SET DEFAULT nextval('public.user_roles_id_seq'::regclass);
+ALTER TABLE ONLY PUBLIC.USER_ROLES
+ALTER COLUMN ID
+SET DEFAULT NEXTVAL('public.user_roles_id_seq'::REGCLASS);
 
-ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+ALTER TABLE ONLY PUBLIC.USERS
+ALTER COLUMN ID
+SET DEFAULT NEXTVAL('public.users_id_seq'::REGCLASS);
 
-ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT comments_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY PUBLIC.COMMENTS
+ADD CONSTRAINT COMMENTS_PKEY PRIMARY KEY (ID);
 
-ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT messages_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY PUBLIC.MESSAGES
+ADD CONSTRAINT MESSAGES_PKEY PRIMARY KEY (ID);
 
-ALTER TABLE ONLY public.posts
-    ADD CONSTRAINT posts_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY PUBLIC.POSTS
+ADD CONSTRAINT POSTS_PKEY PRIMARY KEY (ID);
 
-ALTER TABLE ONLY public.reactions
-    ADD CONSTRAINT reactions_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY PUBLIC.REACTIONS
+ADD CONSTRAINT REACTIONS_PKEY PRIMARY KEY (ID);
 
-ALTER TABLE ONLY public.reactions
-    ADD CONSTRAINT reactions_user_id_comment_id_key UNIQUE (user_id, comment_id);
+ALTER TABLE ONLY PUBLIC.REACTIONS
+ADD CONSTRAINT REACTIONS_USER_ID_COMMENT_ID_KEY UNIQUE (USER_ID, COMMENT_ID);
 
-ALTER TABLE ONLY public.reactions
-    ADD CONSTRAINT reactions_user_id_post_id_key UNIQUE (user_id, post_id);
+ALTER TABLE ONLY PUBLIC.REACTIONS
+ADD CONSTRAINT REACTIONS_USER_ID_POST_ID_KEY UNIQUE (USER_ID, POST_ID);
 
-ALTER TABLE ONLY public.roles
-    ADD CONSTRAINT roles_name_key UNIQUE (name);
+ALTER TABLE ONLY PUBLIC.ROLES
+ADD CONSTRAINT ROLES_NAME_KEY UNIQUE (NAME);
 
-ALTER TABLE ONLY public.roles
-    ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY PUBLIC.ROLES
+ADD CONSTRAINT ROLES_PKEY PRIMARY KEY (ID);
 
-ALTER TABLE ONLY public.roles
-    ADD CONSTRAINT roles_slug_key UNIQUE (slug);
+ALTER TABLE ONLY PUBLIC.ROLES
+ADD CONSTRAINT ROLES_SLUG_KEY UNIQUE (SLUG);
 
-ALTER TABLE ONLY public.saved
-    ADD CONSTRAINT saved_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY PUBLIC.SAVED
+ADD CONSTRAINT SAVED_PKEY PRIMARY KEY (ID);
 
-ALTER TABLE ONLY public.saved
-    ADD CONSTRAINT saved_user_id_post_id_key UNIQUE (user_id, post_id);
+ALTER TABLE ONLY PUBLIC.SAVED
+ADD CONSTRAINT SAVED_USER_ID_POST_ID_KEY UNIQUE (USER_ID, POST_ID);
 
-ALTER TABLE ONLY public.subscriptions
-    ADD CONSTRAINT subscriptions_pkey PRIMARY KEY (id);
-    
-ALTER TABLE ONLY public.subscriptions
-    ADD CONSTRAINT subscriptions_user_id_subthread_id_key UNIQUE (user_id, subthread_id);
+ALTER TABLE ONLY PUBLIC.SUBSCRIPTIONS
+ADD CONSTRAINT SUBSCRIPTIONS_PKEY PRIMARY KEY (ID);
 
-ALTER TABLE ONLY public.subthreads
-    ADD CONSTRAINT subthreads_name_key UNIQUE (name);
+ALTER TABLE ONLY PUBLIC.SUBSCRIPTIONS
+ADD CONSTRAINT SUBSCRIPTIONS_USER_ID_SUBTHREAD_ID_KEY UNIQUE (USER_ID, SUBTHREAD_ID);
 
-ALTER TABLE ONLY public.subthreads
-    ADD CONSTRAINT subthreads_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY PUBLIC.SUBTHREADS
+ADD CONSTRAINT SUBTHREADS_NAME_KEY UNIQUE (NAME);
 
-ALTER TABLE ONLY public.user_roles
-    ADD CONSTRAINT user_roles_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY PUBLIC.SUBTHREADS
+ADD CONSTRAINT SUBTHREADS_PKEY PRIMARY KEY (ID);
 
-ALTER TABLE ONLY public.user_roles
-    ADD CONSTRAINT user_roles_user_id_role_id_subthread_id_key UNIQUE (user_id, role_id, subthread_id);
+ALTER TABLE ONLY PUBLIC.USER_ROLES
+ADD CONSTRAINT USER_ROLES_PKEY PRIMARY KEY (ID);
 
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_email_key UNIQUE (email);
+ALTER TABLE ONLY PUBLIC.USER_ROLES
+ADD CONSTRAINT USER_ROLES_USER_ID_ROLE_ID_SUBTHREAD_ID_KEY UNIQUE (USER_ID, ROLE_ID, SUBTHREAD_ID);
 
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY PUBLIC.USERS
+ADD CONSTRAINT USERS_EMAIL_KEY UNIQUE (EMAIL);
 
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_username_key UNIQUE (username);
+ALTER TABLE ONLY PUBLIC.USERS
+ADD CONSTRAINT USERS_PKEY PRIMARY KEY (ID);
 
-ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT comments_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES public.comments(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.USERS
+ADD CONSTRAINT USERS_USERNAME_KEY UNIQUE (USERNAME);
 
-ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT comments_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.COMMENTS
+ADD CONSTRAINT COMMENTS_PARENT_ID_FKEY FOREIGN KEY (PARENT_ID) REFERENCES PUBLIC.COMMENTS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.comments
-    ADD CONSTRAINT comments_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.COMMENTS
+ADD CONSTRAINT COMMENTS_POST_ID_FKEY FOREIGN KEY (POST_ID) REFERENCES PUBLIC.POSTS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT messages_receiver_id_fkey FOREIGN KEY (receiver_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.COMMENTS
+ADD CONSTRAINT COMMENTS_USER_ID_FKEY FOREIGN KEY (USER_ID) REFERENCES PUBLIC.USERS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.messages
-    ADD CONSTRAINT messages_sender_id_fkey FOREIGN KEY (sender_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.MESSAGES
+ADD CONSTRAINT MESSAGES_RECEIVER_ID_FKEY FOREIGN KEY (RECEIVER_ID) REFERENCES PUBLIC.USERS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.posts
-    ADD CONSTRAINT posts_subthread_id_fkey FOREIGN KEY (subthread_id) REFERENCES public.subthreads(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.MESSAGES
+ADD CONSTRAINT MESSAGES_SENDER_ID_FKEY FOREIGN KEY (SENDER_ID) REFERENCES PUBLIC.USERS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.posts
-    ADD CONSTRAINT posts_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.POSTS
+ADD CONSTRAINT POSTS_SUBTHREAD_ID_FKEY FOREIGN KEY (SUBTHREAD_ID) REFERENCES PUBLIC.SUBTHREADS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.reactions
-    ADD CONSTRAINT reactions_comment_id_fkey FOREIGN KEY (comment_id) REFERENCES public.comments(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.POSTS
+ADD CONSTRAINT POSTS_USER_ID_FKEY FOREIGN KEY (USER_ID) REFERENCES PUBLIC.USERS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.reactions
-    ADD CONSTRAINT reactions_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.REACTIONS
+ADD CONSTRAINT REACTIONS_COMMENT_ID_FKEY FOREIGN KEY (COMMENT_ID) REFERENCES PUBLIC.COMMENTS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.reactions
-    ADD CONSTRAINT reactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.REACTIONS
+ADD CONSTRAINT REACTIONS_POST_ID_FKEY FOREIGN KEY (POST_ID) REFERENCES PUBLIC.POSTS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.saved
-    ADD CONSTRAINT saved_post_id_fkey FOREIGN KEY (post_id) REFERENCES public.posts(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.REACTIONS
+ADD CONSTRAINT REACTIONS_USER_ID_FKEY FOREIGN KEY (USER_ID) REFERENCES PUBLIC.USERS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.saved
-    ADD CONSTRAINT saved_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.SAVED
+ADD CONSTRAINT SAVED_POST_ID_FKEY FOREIGN KEY (POST_ID) REFERENCES PUBLIC.POSTS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.subscriptions
-    ADD CONSTRAINT subscriptions_subthread_id_fkey FOREIGN KEY (subthread_id) REFERENCES public.subthreads(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.SAVED
+ADD CONSTRAINT SAVED_USER_ID_FKEY FOREIGN KEY (USER_ID) REFERENCES PUBLIC.USERS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.subscriptions
-    ADD CONSTRAINT subscriptions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
-    
-ALTER TABLE ONLY public.subthreads
-    ADD CONSTRAINT subthreads_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE SET NULL NOT VALID;
+ALTER TABLE ONLY PUBLIC.SUBSCRIPTIONS
+ADD CONSTRAINT SUBSCRIPTIONS_SUBTHREAD_ID_FKEY FOREIGN KEY (SUBTHREAD_ID) REFERENCES PUBLIC.SUBTHREADS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.user_roles
-    ADD CONSTRAINT user_roles_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.roles(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.SUBSCRIPTIONS
+ADD CONSTRAINT SUBSCRIPTIONS_USER_ID_FKEY FOREIGN KEY (USER_ID) REFERENCES PUBLIC.USERS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
 
-ALTER TABLE ONLY public.user_roles
-    ADD CONSTRAINT user_roles_subthread_id_fkey FOREIGN KEY (subthread_id) REFERENCES public.subthreads(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.SUBTHREADS
+ADD CONSTRAINT SUBTHREADS_CREATED_BY_FKEY FOREIGN KEY (CREATED_BY) REFERENCES PUBLIC.USERS (ID) ON UPDATE CASCADE ON DELETE SET NULL NOT VALID;
 
-ALTER TABLE ONLY public.user_roles
-    ADD CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+ALTER TABLE ONLY PUBLIC.USER_ROLES
+ADD CONSTRAINT USER_ROLES_ROLE_ID_FKEY FOREIGN KEY (ROLE_ID) REFERENCES PUBLIC.ROLES (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+
+ALTER TABLE ONLY PUBLIC.USER_ROLES
+ADD CONSTRAINT USER_ROLES_SUBTHREAD_ID_FKEY FOREIGN KEY (SUBTHREAD_ID) REFERENCES PUBLIC.SUBTHREADS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+
+ALTER TABLE ONLY PUBLIC.USER_ROLES
+ADD CONSTRAINT USER_ROLES_USER_ID_FKEY FOREIGN KEY (USER_ID) REFERENCES PUBLIC.USERS (ID) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;

@@ -1,33 +1,43 @@
-from threaddit import db
+from datetime import datetime
+
 from flask import jsonify
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.schema import ForeignKey
+from typing_extensions import TYPE_CHECKING
+
+from threaddit import db
+
+if TYPE_CHECKING:
+    from threaddit.subthreads.models import Subthread
+    from threaddit.users.models import User
 
 
 class Role(db.Model):
     __tablename__: str = "roles"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.Text, nullable=False)
-    slug = db.Column(db.Text, unique=True, nullable=False)
-    user_role = db.relationship("UserRole", back_populates="role")
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    slug: Mapped[str] = mapped_column(unique=True, nullable=False)
+    user_role: Mapped[list["UserRole"]] = relationship(back_populates="role")
 
 
 class UserRole(db.Model):
     __tablename__ = "user_roles"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, primary_key=True)
-    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"), nullable=False, primary_key=True)
-    subthread_id = db.Column(db.Integer, db.ForeignKey("subthreads.id"))
-    user = db.relationship("User", back_populates="user_role")
-    role = db.relationship("Role", back_populates="user_role")
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=db.func.now())
-    subthread = db.relationship("Subthread", back_populates="user_role")
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False, primary_key=True)
+    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"), nullable=False, primary_key=True)
+    subthread_id: Mapped[int | None] = mapped_column(ForeignKey("subthreads.id"), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=db.func.now())
+    user: Mapped["User"] = relationship(back_populates="user_role")
+    role: Mapped["Role"] = relationship(back_populates="user_role")
+    subthread: Mapped["Subthread"] = relationship(back_populates="user_role")
 
-    def __init__(self, user_id: int, subthread_id: int, role_id: int) -> None:
+    def __init__(self, user_id: int, subthread_id: int, role_id: int):
         self.user_id = user_id
         self.subthread_id = subthread_id
         self.role_id = role_id
 
     @classmethod
-    def add_moderator(cls, user_id, subthread_id):
+    def add_moderator(cls, user_id: int, subthread_id: int):
         check_mod = UserRole.query.filter_by(user_id=user_id, subthread_id=subthread_id, role_id=1).first()
         if check_mod:
             return jsonify({"message": "Moderator already exists"}), 400

@@ -29,14 +29,19 @@ export default function useComment({ children, comment }) {
 
   const { mutate: addComment } = useMutation({
     mutationFn: async (data) => {
-      if (data.length === 0) {
+      if (data.trim().length === 0) {
         return;
       }
       await axios
         .post(
           "/api/comments",
-          { post_id: postId, content: data, has_parent: true, parent_id: comment.comment_info.id },
-          { headers: { "Content-Type": "application/json" } }
+          {
+            post_id: postId,
+            content: data,
+            has_parent: true,
+            parent_id: comment.comment_info.id,
+          },
+          { headers: { "Content-Type": "application/json" } },
         )
         .then((res) => {
           setCommentChildren([...commentChildren, res.data.new_comment]);
@@ -68,13 +73,18 @@ export default function useComment({ children, comment }) {
       if (data.length === 0) {
         return;
       }
-      await axios.patch(`/api/comments/${commentInfo.id}`, { content: data }).then(() => {
-        setCommentInfo({
-          user_info: userInfo,
-          current_user: currentUser,
-          comment_info: { ...commentInfo, content: data, is_edited: true },
+      await axios
+        .patch(`/api/comments/${commentInfo.id}`, {
+          content: data,
+          post_id: postId,
+        })
+        .then(() => {
+          setCommentInfo({
+            user_info: userInfo,
+            current_user: currentUser,
+            comment_info: { ...commentInfo, content: data, is_edited: true },
+          });
         });
-      });
     },
   });
 

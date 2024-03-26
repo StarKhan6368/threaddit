@@ -1,13 +1,10 @@
-from flask import Blueprint, request, jsonify
+from bcrypt import checkpw, gensalt, hashpw
+from flask import Blueprint, jsonify, request
+from flask_login import current_user, login_required, login_user, logout_user
+
 from threaddit import db
-from threaddit.users.models import (
-    UserLoginValidator,
-    UserRegisterValidator,
-    User,
-)
 from threaddit.auth.decorators import auth_role
-from bcrypt import hashpw, checkpw, gensalt
-from flask_login import login_user, logout_user, current_user, login_required
+from threaddit.users.models import LoginSchema, RegisterSchema, User
 
 user = Blueprint("users", __name__, url_prefix="/api")
 
@@ -17,7 +14,7 @@ def user_login():
     if current_user.is_authenticated:
         return jsonify({"message": "Already logged in"}), 409
     if login_form := request.json:
-        UserLoginValidator().load(login_form)
+        LoginSchema().load(login_form)
         user_info = User.query.filter_by(email=login_form.get("email")).first()
         if user_info and checkpw(login_form.get("password").encode(), user_info.password_hash.encode()):
             login_user(user_info)
@@ -37,7 +34,7 @@ def user_register():
     if current_user.is_authenticated:
         return jsonify({"message": "Already logged in"}), 409
     if register_form := request.json:
-        UserRegisterValidator().load(register_form)
+        RegisterSchema().load(register_form)
         new_user = User(
             register_form.get("username"),
             register_form.get("email"),

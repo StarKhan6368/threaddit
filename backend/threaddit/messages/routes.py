@@ -1,9 +1,10 @@
-from threaddit.messages.models import Messages
 from flask import Blueprint, jsonify, request
-from threaddit import db
+from flask_login import current_user, login_required
 from sqlalchemy import and_
+
+from threaddit import db
+from threaddit.messages.models import MessageSchema, Messages
 from threaddit.users.models import User
-from flask_login import login_required, current_user
 
 messages = Blueprint("messages", __name__, url_prefix="/api")
 
@@ -13,16 +14,32 @@ def new_message():
     if form_data := request.json:
         receiver_id = User.query.filter_by(username=form_data["receiver"]).first()
         if receiver_id:
-            new_message = Messages(
-                sender_id=current_user.id,
-                receiver_id=receiver_id.id,
-                content=form_data["content"],
-            )
-            db.session.add(new_message)
-            db.session.commit()
-            return jsonify(new_message.as_dict()), 200
+            MessageSchema().load(form_data)
+            message = Messages.add(current_user.id, receiver_id.id, form_data["content"])
+            return jsonify(message.as_dict()), 200
         return jsonify({"message": "User not found"}), 404
     return jsonify({"message": "Content is required"}), 400
+
+
+@messages.route("/messages/<message_id>", methods=["PATCH"])
+def update_message(message_id):
+    if form_data := request.json:
+        message = Messages.query.filter_by(id=message_id).first()
+        if message:
+            MessageSchema().load(form_data)
+            message.patch(form_data.get("content", message.content))
+            return jsonify(message.as_dict()), 200
+        return jsonify({"message": "Message not found"}), 404
+    return jsonify({"message": "Content is required"}), 400
+
+
+@messages.route("/messages/<message_id>", methods=["DELETE"])
+def delete_message(message_id):
+    message = Messages.query.filter_by(id=message_id).first()
+    if message:
+        message.remove()
+        return jsonify({"message": "Message deleted"}), 200
+    return jsonify({"message": "Message not found"}), 404
 
 
 @messages.route("/messages/inbox")
@@ -41,7 +58,7 @@ def get_messages(user_name):
             | and_(Messages.sender_id == user_id.id, Messages.receiver_id == current_user.id)
         ).order_by(Messages.created_at)
         for m in messages:
-            if m.receiver_id == current_user.id and m.seen == False:
+            if m.receiver_id == current_user.id and not m.seen:
                 m.seen = True
                 m.seen_at = db.func.now()
         db.session.commit()

@@ -1,22 +1,18 @@
-from threaddit.comments.models import Comments, CommentInfo
-from threaddit import db
-from threaddit.posts.models import PostInfo
 from flask import Blueprint, jsonify, request
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
+
+from threaddit.comments.models import CommentSchema, Comments
 from threaddit.comments.utils import create_comment_tree
+from threaddit.posts.models import Posts
 
 comments = Blueprint("comments", __name__, url_prefix="/api")
 
 
 @comments.route("/comments/post/<pid>", methods=["GET"])
-def get_comments(pid):
-    comments = (
-        CommentInfo.query.filter_by(post_id=pid).order_by(CommentInfo.has_parent.desc(), CommentInfo.comment_id).all()
-    )
-    if not comments:
-        return jsonify({"message": "Invalid Post ID"}), 400
+def get_comments(pid: int):
+    comments = Comments.query.filter_by(post_id=pid).order_by(Comments.has_parent.desc(), Comments.id).all()
     cur_user = current_user.id if current_user.is_authenticated else None
-    post_info = PostInfo.query.filter_by(post_id=pid).first()
+    post_info = Posts.query.filter_by(id=pid).first()
     if post_info:
         return (
             jsonify(
@@ -37,6 +33,7 @@ def update_comment(cid):
     if not comment:
         return jsonify({"message": "Invalid Comment"}), 400
     if comment.user_id == current_user.id and request.json:
+        CommentSchema().load(request.json)
         comment.patch(request.json.get("content"))
         return jsonify({"message": "Comment updated"}), 200
     return jsonify({"message": "Unauthorized"}), 401
@@ -49,13 +46,11 @@ def delete_comment(cid):
     if not comment:
         return jsonify({"message": "Invalid Comment"}), 400
     elif comment.user_id == current_user.id or current_user.has_role("admin"):
-        Comments.query.filter_by(id=cid).delete()
-        db.session.commit()
+        comment.remove()
         return jsonify({"message": "Comment deleted"}), 200
     current_user_mod_in = [r.subthread_id for r in current_user.user_role if r.role.slug == "mod"]
     if comment.post.subthread_id in current_user_mod_in:
-        Comments.query.filter_by(id=cid).delete()
-        db.session.commit()
+        comment.remove()
         return jsonify({"message": "Comment deleted"}), 200
     return jsonify({"message": "Unauthorized"}), 401
 
@@ -64,7 +59,13 @@ def delete_comment(cid):
 @login_required
 def new_comment():
     form_data = request.json
-    new_comment = Comments.add(form_data, current_user.id)
+    if not form_data:
+        return jsonify({"message": "Invalid Comment"}), 400
+    post = Posts.query.filter_by(id=form_data["post_id"]).first()
+    if not post:
+        return jsonify({"message": "Invalid Post"}), 400
+    CommentSchema().load(form_data)
+    new_comment = Comments.add(form_data, current_user.id, post=post)
     return (
         jsonify(
             {
