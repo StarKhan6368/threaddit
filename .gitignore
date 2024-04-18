@@ -1,13 +1,4 @@
-.idea/.gitignore
-.idea/dataSources.xml
-.idea/misc.xml
-.idea/modules.xml
-.idea/sqldialects.xml
-.idea/threaddit.iml
-.idea/inspectionProfiles/profiles_settings.xml
-.idea/inspectionProfiles/Project_Default.xml
-.vscode/launch.json
-.env
-.venv
-__pycache__
-frontend/package-lock.json
+/**/.idea
+backend/.venv
+/**/__pycache__
+backend/.env

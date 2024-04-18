@@ -1,77 +1,176 @@
-from flask import Blueprint, jsonify, request
-from flask_login import current_user, login_required
+from typing import TYPE_CHECKING
 
-from threaddit.comments.models import CommentSchema, Comments
-from threaddit.comments.utils import create_comment_tree
-from threaddit.posts.models import Posts
+import sqlalchemy as sa
+from flask import Blueprint, abort, jsonify, request
+from flask_jwt_extended import current_user, jwt_required
 
-comments = Blueprint("comments", __name__, url_prefix="/api")
+from threaddit import db
+from threaddit.comments.models import Comments
+from threaddit.comments.schemas import (
+    CommentBodySchema,
+    CommentBodyType,
+    CommentSchema,
+    CommentsPaginateSchema,
+    CommentsPaginateType,
+    CommentsResponseSchema,
+)
+from threaddit.saves.models import Saves
 
+if TYPE_CHECKING:
+    from threaddit.posts.models import Posts
+    from threaddit.threads.models import Thread
+    from threaddit.users.models import User
 
-@comments.route("/comments/post/<pid>", methods=["GET"])
-def get_comments(pid: int):
-    comments = Comments.query.filter_by(post_id=pid).order_by(Comments.has_parent.desc(), Comments.id).all()
-    cur_user = current_user.id if current_user.is_authenticated else None
-    post_info = Posts.query.filter_by(id=pid).first()
-    if post_info:
-        return (
-            jsonify(
-                {
-                    "post_info": post_info.as_dict(cur_user),
-                    "comment_info": create_comment_tree(comments=comments, cur_user=cur_user),
-                }
-            ),
-            200,
-        )
-    return jsonify({"message": "Invalid Post ID"}), 400
-
-
-@comments.route("/comments/<cid>", methods=["PATCH"])
-@login_required
-def update_comment(cid):
-    comment = Comments.query.filter_by(id=cid).first()
-    if not comment:
-        return jsonify({"message": "Invalid Comment"}), 400
-    if comment.user_id == current_user.id and request.json:
-        CommentSchema().load(request.json)
-        comment.patch(request.json.get("content"))
-        return jsonify({"message": "Comment updated"}), 200
-    return jsonify({"message": "Unauthorized"}), 401
+comments = Blueprint("comments", __name__)
+comment_schema = CommentSchema()
+comments_resp_schema = CommentsResponseSchema()
+comment_paginate_schema = CommentsPaginateSchema()
+comment_body_schema = CommentBodySchema()
 
 
-@comments.route("/comments/<cid>", methods=["DELETE"])
-@login_required
-def delete_comment(cid):
-    comment = Comments.query.filter_by(id=cid).first()
-    if not comment:
-        return jsonify({"message": "Invalid Comment"}), 400
-    elif comment.user_id == current_user.id or current_user.has_role("admin"):
-        comment.remove()
-        return jsonify({"message": "Comment deleted"}), 200
-    current_user_mod_in = [r.subthread_id for r in current_user.user_role if r.role.slug == "mod"]
-    if comment.post.subthread_id in current_user_mod_in:
-        comment.remove()
-        return jsonify({"message": "Comment deleted"}), 200
-    return jsonify({"message": "Unauthorized"}), 401
+@comments.route("/threads/<thread_id:thread>/posts/<post_id:post>/comments", methods=["POST"])
+@jwt_required()
+def post_comment_add(thread: "Thread", post: "Posts"):
+    if thread.id != post.thread_id:
+        return abort(400, {"message": f"Post {post.id} not found in thread {thread.id}"})
+    data: "CommentBodyType" = comment_body_schema.load(request.form | request.files)
+    comment: "Comments" = Comments.add(data, user=current_user, post=post, thread=thread)
+    db.session.commit()
+    return comment_schema.dump(comment), 201
 
 
-@comments.route("/comments", methods=["POST"])
-@login_required
-def new_comment():
-    form_data = request.json
-    if not form_data:
-        return jsonify({"message": "Invalid Comment"}), 400
-    post = Posts.query.filter_by(id=form_data["post_id"]).first()
-    if not post:
-        return jsonify({"message": "Invalid Post"}), 400
-    CommentSchema().load(form_data)
-    new_comment = Comments.add(form_data, current_user.id, post=post)
-    return (
-        jsonify(
-            {
-                "message": "Comment created",
-                "new_comment": {"comment": new_comment, "children": []},
-            }
-        ),
-        200,
+@comments.route("/threads/<thread_id:thread>/posts/<post_id:post>/comments/<comment_id:comment>", methods=["GET"])
+@jwt_required()
+def post_comment_get(thread: "Thread", post: "Posts", comment: "Comments"):
+    if thread.id != post.thread_id or post.id != comment.post_id:
+        return abort(404, {"message": f"Comment not found in thread {thread.id} and post {post.id}"})
+    return comment_schema.dump(comment), 200
+
+
+@comments.route("/threads/<thread_id:thread>/posts/<post_id:post>/comments/<comment_id:comment>", methods=["PATCH"])
+@jwt_required()
+def post_comment_update(thread: "Thread", post: "Posts", comment: "Comments"):
+    if thread.id != post.thread_id or post.id != comment.post_id:
+        return abort(404, {"message": f"Comment not found in thread {thread.id} and post {post.id}"})
+    body: "CommentBodyType" = comment_body_schema.load(request.form | request.files)
+    if comment.user_id == current_user.id:
+        comment.update(body)
+        db.session.commit()
+        return comment_schema.dump(comment), 200
+    return abort(403, {"error": "Unauthorized", "message": "Only the author can update this comment"})
+
+
+@comments.route("/threads/<thread_id:thread>/posts/<post_id:post>/comments/<comment_id:comment>", methods=["DELETE"])
+@jwt_required()
+def post_comment_delete(thread: "Thread", post: "Posts", comment: "Comments"):
+    if thread.id != post.thread_id or post.id != comment.post_id:
+        return abort(404, {"message": f"Comment not found in thread {thread.id} and post {post.id}"})
+    if comment.user_id == current_user.id or current_user.is_admin or current_user.moderator_in(thread):
+        comment.delete(post=post, thread=thread, user=current_user)
+        db.session.commit()
+        return jsonify(message="Comment deleted"), 200
+    return abort(
+        403,
+        {
+            "error": "Unauthorized",
+            "message": f"Only author, admin and {thread.name} moderators can delete this comment",
+        },
     )
+
+
+@comments.route(
+    "/threads/<thread_id:thread>/posts/<post_id:post>/comments/<comment_id:comment>/replies", methods=["POST"]
+)
+@jwt_required()
+def comment_reply_add(thread: "Thread", post: "Posts", comment: "Comments"):
+    if thread.id != post.thread_id or post.id != comment.post_id:
+        return abort(404, {"message": f"Comment not found in thread {thread.id} and post {post.id}"})
+    data: "CommentBodyType" = comment_body_schema.load(request.form | request.files)
+    reply: "Comments" = comment.add(data, user=current_user, post=post, comment=comment, thread=thread)
+    return comment_schema.dump(reply), 201
+
+
+# noinspection DuplicatedCode
+@comments.route("/users/<user_name:user>/comments", methods=["GET"])
+def user_comments_get(user: "User"):
+    args: "CommentsPaginateType" = comment_paginate_schema.load(request.args)
+    query = (
+        sa.select(Comments)
+        .where(Comments.user_id == user.id, Comments.parent_id == None)  # noqa: E711
+        .order_by(args["sort_by"])
+        .limit(args["limit"])
+        .offset(args["offset"])
+    )
+    pagination = db.paginate(query, page=args["page"], per_page=args["limit"], error_out=False)
+    return comments_resp_schema.dump(pagination), 200
+
+
+# noinspection DuplicatedCode
+@comments.route("/threads/<thread_id:thread>/comments", methods=["GET"])
+@jwt_required(optional=True)
+def thread_comments_get(thread: "Thread"):
+    args: "CommentsPaginateType" = comment_paginate_schema.load(request.args)
+    query = (
+        sa.select(Comments)
+        .where(Comments.thread_id == thread.id, Comments.parent_id == None)  # noqa: E711
+        .order_by(args["sort_by"])
+        .limit(args["limit"])
+        .offset(args["offset"])
+    )
+    pagination = db.paginate(query, page=args["page"], per_page=args["limit"], error_out=False)
+    return comments_resp_schema.dump(pagination), 200
+
+
+# noinspection DuplicatedCode
+@comments.route("/threads/<thread_id:thread>/posts/<post_id:post>/comments", methods=["GET"])
+@jwt_required(optional=True)
+def post_comments_get(thread: "Thread", post: "Posts"):
+    if post.thread_id != thread.id:
+        return abort(404, {"message": f"Post {post.id} not found in thread {thread.id}"})
+    args: "CommentsPaginateType" = comment_paginate_schema.load(request.args)
+    query = (
+        sa.select(Comments)
+        .where(Comments.post_id == post.id, Comments.parent_id == None)  # noqa: E711
+        .order_by(args["sort_by"])
+        .limit(args["limit"])
+        .offset(args["offset"])
+    )
+    pagination = db.paginate(query, page=args["page"], per_page=args["limit"], error_out=False)
+    return comments_resp_schema.dump(pagination), 200
+
+
+@comments.route(
+    "/threads/<thread_id:thread>/posts/<post_id:post>/comments/<comment_id:comment>/replies", methods=["GET"]
+)
+@jwt_required(optional=True)
+def comment_replies_get(thread: "Thread", post: "Posts", comment: "Comments"):
+    if thread.id != post.thread_id or post.id != comment.post_id:
+        return abort(404, {"message": f"Comment {comment.id} not found in thread {thread.id} and post {post.id}"})
+    args: "CommentsPaginateType" = comment_paginate_schema.load(request.args)
+    query = (
+        sa.select(Comments)
+        .where(Comments.parent_id == comment.id)
+        .order_by(Comments.parent_id.asc(), args["sort_by"])
+        .limit(args["limit"])
+        .offset(args["offset"])
+    )
+    pagination = db.paginate(query, page=args["page"], per_page=args["limit"], error_out=False)
+    return comments_resp_schema.dump(pagination), 200
+
+
+@comments.route("/users/<user_name:user>/comments/saves", methods=["GET"])
+@jwt_required()
+def user_saved_posts_get(user: "User"):
+    if current_user.id != user.id:
+        return abort(403, {"message": "Unauthorized"})
+    query: "CommentsPaginateType" = comment_paginate_schema.load(request.args)
+    comments_list = db.paginate(
+        sa.select(Comments)
+        .join(Saves)
+        .where(Saves.user_id == user.id, Saves.comment_id != None)  # noqa: E711
+        .order_by(Comments.parent_id.asc(), query["sort_by"]),
+        page=query["page"],
+        per_page=query["limit"],
+        error_out=False,
+    )
+    return comments_resp_schema.dump(comments_list), 200

@@ -1,17 +1,20 @@
+from datetime import timedelta
+
+import cloudinary
+import sqlalchemy as sa
 from flask import Flask, jsonify
-from flask_login.utils import login_required
+from flask_jwt_extended import JWTManager
+from flask_marshmallow import Marshmallow
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow import ValidationError
-import cloudinary
-from flask_login import LoginManager
-from sqlalchemy import text
-from threaddit.auth.decorators import auth_role
+from werkzeug.exceptions import HTTPException
+
 from threaddit.config import (
+    CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET,
+    CLOUDINARY_NAME,
     DATABASE_URI,
     SECRET_KEY,
-    CLOUDINARY_API_SECRET,
-    CLOUDINARY_API_KEY,
-    CLOUDINARY_NAME,
 )
 
 app = Flask(
@@ -26,57 +29,94 @@ cloudinary.config(
 )
 app.config["CLOUDINARY_NAME"] = CLOUDINARY_NAME
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
-app.config["SECRET_KEY"] = SECRET_KEY
+app.config["JWT_SECRET_KEY"] = SECRET_KEY
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+app.config["IMAGE_EXTENSIONS"] = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif"]
+app.config["VIDEO_EXTENSIONS"] = [".mp4", ".webm", ".ogg", ".avi", ".mov", ".wmv", ".mpg", ".mpeg", ".flv", ".mkv"]
 db = SQLAlchemy(app)
-login_manager = LoginManager(app)
-
-
-@login_manager.unauthorized_handler
-def callback():
-    return jsonify({"message": "Unauthorized"}), 401
+ma = Marshmallow(app)
+jwt = JWTManager(app)
 
 
 @app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def catch_all(path):
+@app.route("/<path:_>")
+def catch_all(_):
     return app.send_static_file("index.html")
-
-
-@app.route("/api/recalculate")
-@login_required
-@auth_role(["admin"])
-def recalculate():
-    try:
-        with open("threaddit/recalculate.sql", "r") as f:
-            sql = text(f.read())
-        db.session.execute(sql)
-        db.session.commit()
-        return jsonify({"message": "Recalculated"}), 200
-    except Exception as e:
-        print(e)
-        return jsonify({"message": "Failed"}), 400
 
 
 @app.errorhandler(ValidationError)
-def handle_marshmallow_validation(err):
-    return jsonify({"errors": err.messages}), 400
+def handle_validation_error(error: "ValidationError"):
+    """
+    Error Handler for Marshmallow Validation Errors
+    """
+    return jsonify(error.messages), 400
 
 
-@app.errorhandler(404)
-def not_found(e):
-    return app.send_static_file("index.html")
+@app.errorhandler(HTTPException)
+def handle_http_exception(error: "HTTPException"):
+    """
+    Error Handler for HTTP Exceptions
+    """
+    return jsonify(error.description), error.code
 
 
-from threaddit.users.routes import user  # noqa
-from threaddit.subthreads.routes import threads  # noqa
-from threaddit.posts.routes import posts  # noqa
-from threaddit.comments.routes import comments  # noqa
-from threaddit.reactions.routes import reactions  # noqa
-from threaddit.messages.routes import messages  # noqa
+# Import and register custom converters
+from threaddit.comments.converters import CommentConverter  # noqa: E402
+from threaddit.messages.converters import MessageConverter  # noqa: E402
+from threaddit.posts.converters import PostConverter  # noqa: E402
+from threaddit.threads.converters import ThreadConverter  # noqa: E402
+from threaddit.users.converters import UserConverter  # noqa: E402
 
-app.register_blueprint(user)
-app.register_blueprint(threads)
-app.register_blueprint(posts)
+app.url_map.converters["comment_id"] = CommentConverter
+app.url_map.converters["message_id"] = MessageConverter
+app.url_map.converters["post_id"] = PostConverter
+app.url_map.converters["thread_id"] = ThreadConverter
+app.url_map.converters["user_name"] = UserConverter
+
+# Declaring models before initiating Schemas
+import threaddit.auth.models  # noqa: E402
+import threaddit.comments.models  # noqa: E402
+import threaddit.media.models  # noqa: E402
+import threaddit.messages.models  # noqa: E402
+import threaddit.moderations.models  # noqa: E402
+import threaddit.notifications.models  # noqa: E402
+import threaddit.posts.models  # noqa: E402
+import threaddit.reactions.models  # noqa: E402
+import threaddit.saves.models  # noqa: E402
+import threaddit.threads.models  # noqa: E402
+import threaddit.users.models  # noqa: E402
+
+
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(_, jwt_payload: dict):
+    jti = jwt_payload["jti"]
+    token: "threaddit.auth.models.TokenBlockList | None" = db.session.execute(
+        sa.select(threaddit.auth.models.TokenBlockList).filter_by(jti=jti)
+    ).scalar_one_or_none()
+    return token is not None
+
+
+@jwt.expired_token_loader
+def my_expired_token_callback(_, __):
+    return jsonify({"error": "Expired Token", "message": "The token has expired"}), 401
+
+
+# Import and register all blueprints
+from threaddit.comments.routes import comments  # noqa: E402
+from threaddit.messages.routes import messages  # noqa: E402
+from threaddit.moderations.routes import moderations  # noqa: E402
+from threaddit.posts.routes import posts  # noqa: E402
+from threaddit.reactions.routes import reactions  # noqa: E402
+from threaddit.saves.routes import saves  # noqa: E402
+from threaddit.threads.routes import threads  # noqa: E402
+from threaddit.users.routes import users  # noqa: E402f
+
 app.register_blueprint(comments)
-app.register_blueprint(reactions)
 app.register_blueprint(messages)
+app.register_blueprint(moderations)
+app.register_blueprint(posts)
+app.register_blueprint(reactions)
+app.register_blueprint(saves)
+app.register_blueprint(threads)
+app.register_blueprint(users)

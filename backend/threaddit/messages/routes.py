@@ -1,66 +1,82 @@
-from flask import Blueprint, jsonify, request
-from flask_login import current_user, login_required
-from sqlalchemy import and_
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
+
+import sqlalchemy as sa
+from flask import Blueprint, abort, jsonify, request
+from flask_jwt_extended import current_user, jwt_required
 
 from threaddit import db
-from threaddit.messages.models import MessageSchema, Messages
-from threaddit.users.models import User
+from threaddit.messages.models import Messages
+from threaddit.messages.schemas import MessageFormType, MessageSchema, NewMessageSchema
 
-messages = Blueprint("messages", __name__, url_prefix="/api")
+if TYPE_CHECKING:
+    from threaddit.users.models import User
 
-
-@messages.route("/messages", methods=["POST"])
-def new_message():
-    if form_data := request.json:
-        receiver_id = User.query.filter_by(username=form_data["receiver"]).first()
-        if receiver_id:
-            MessageSchema().load(form_data)
-            message = Messages.add(current_user.id, receiver_id.id, form_data["content"])
-            return jsonify(message.as_dict()), 200
-        return jsonify({"message": "User not found"}), 404
-    return jsonify({"message": "Content is required"}), 400
+messages = Blueprint("messages", __name__)
+new_message_schema = NewMessageSchema()
+message_schema = MessageSchema()
+messages_schema = MessageSchema(many=True)
 
 
-@messages.route("/messages/<message_id>", methods=["PATCH"])
-def update_message(message_id):
-    if form_data := request.json:
-        message = Messages.query.filter_by(id=message_id).first()
-        if message:
-            MessageSchema().load(form_data)
-            message.patch(form_data.get("content", message.content))
-            return jsonify(message.as_dict()), 200
-        return jsonify({"message": "Message not found"}), 404
-    return jsonify({"message": "Content is required"}), 400
+@messages.route("/users/<user_name:receiver>/messages", methods=["POST"])
+@jwt_required()
+def message_add(receiver: "User"):
+    if current_user.id != receiver.id:
+        return abort(403, {"message": "Unauthorized"})
+    form: "MessageFormType" = new_message_schema.load(request.form | request.files)
+    message = Messages.add(current_user, receiver, form)
+    return message_schema.dump(message), 201
 
 
-@messages.route("/messages/<message_id>", methods=["DELETE"])
-def delete_message(message_id):
-    message = Messages.query.filter_by(id=message_id).first()
-    if message:
-        message.remove()
-        return jsonify({"message": "Message deleted"}), 200
-    return jsonify({"message": "Message not found"}), 404
+@messages.route("/users/<user_name:user>/messages/<message_id:message>", methods=["PATCH"])
+@jwt_required()
+def message_update(user: "User", message: "Messages"):
+    if current_user.id != user.id or current_user.id != message.sender_id:
+        return abort(403, {"message": "Unauthorized"})
+    form: "MessageFormType" = new_message_schema.load(request.form | request.files)
+    message.patch(form)
+    return message_schema.dump(message), 200
 
 
-@messages.route("/messages/inbox")
-@login_required
-def get_inbox():
-    return jsonify(Messages.get_inbox(current_user.id)), 200
+@messages.route("/users/<user_name:user>/messages/<message_id:message>", methods=["DELETE"])
+@jwt_required()
+def message_del(user: "User", message: "Messages"):
+    if current_user.id != user.id or current_user.id != message.sender_id:
+        return abort(403, {"message": "Unauthorized"})
+    message.remove()
+    return jsonify(message="Message deleted"), 200
 
 
-@messages.route("/messages/all/<user_name>")
-@login_required
-def get_messages(user_name):
-    user_id = User.query.filter_by(username=user_name).first()
-    if user_id:
-        messages = Messages.query.filter(
-            and_(Messages.receiver_id == user_id.id, Messages.sender_id == current_user.id)
-            | and_(Messages.sender_id == user_id.id, Messages.receiver_id == current_user.id)
-        ).order_by(Messages.created_at)
-        for m in messages:
-            if m.receiver_id == current_user.id and not m.seen:
-                m.seen = True
-                m.seen_at = db.func.now()
-        db.session.commit()
-        return jsonify([m.as_dict() for m in messages.all()]), 200
-    return jsonify({"message": "User not found"}), 404
+@messages.route("/users/<user_name:user>/inbox")
+@jwt_required()
+def inbox_get(user: "User"):
+    if current_user.id != user.id:
+        return abort(403, {"message": "Unauthorized"})
+    subquery = (
+        sa.select(sa.func.max(Messages.id).label("latest_id"))
+        .where(sa.or_(Messages.sender_id == user.id, Messages.receiver_id == user.id))
+        .group_by(sa.case((Messages.sender_id == user.id, Messages.receiver_id), else_=Messages.sender_id))
+    )
+    messages_list = db.session.scalars(sa.select(Messages).where(Messages.id.in_(subquery))).all()
+    return messages_schema.dump(messages_list), 200
+
+
+@messages.route("/users/<user_name:sender>/messages/<user_name:receiver>", methods=["GET"])
+@jwt_required()
+def get_messages(sender: "User", receiver: "User"):
+    if current_user.id != sender.id:
+        return abort(403, {"message": "Unauthorized"})
+    messages_list = db.session.scalars(
+        sa.select(Messages)
+        .where(
+            sa.or_(
+                sa.and_(Messages.sender_id == sender.id, Messages.receiver_id == receiver.id),
+                sa.and_(Messages.sender_id == receiver.id, Messages.receiver_id == sender.id),
+            )
+        )
+        .order_by(Messages.id.desc())
+    ).all()
+    for message in messages_list:
+        if not message.seen_at and message.sender_id == receiver.id:
+            message.seen_at = datetime.now(tz=UTC)
+    return messages_schema.dump(messages_list), 200

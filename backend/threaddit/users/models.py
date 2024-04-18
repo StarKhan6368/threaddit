@@ -1,140 +1,98 @@
-import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-import cloudinary.uploader as uploader
-from flask_login import UserMixin
-from marshmallow import Schema, fields, validate
-from marshmallow.decorators import validates
-from marshmallow.exceptions import ValidationError
+import sqlalchemy as sa
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing_extensions import TYPE_CHECKING
+from werkzeug.security import check_password_hash, generate_password_hash
 
-from threaddit import app, db, login_manager
+from threaddit import db, jwt
+from threaddit.media.models import Media, OpType
 
 if TYPE_CHECKING:
+    from threaddit.auth.models import TokenBlockList
     from threaddit.comments.models import Comments
-    from threaddit.messages.models import Messages
-    from threaddit.models import UserRole
-    from threaddit.posts.models import Posts, SavedPosts
+    from threaddit.moderations.models import UserRole
+    from threaddit.notifications.models import Notifications
+    from threaddit.posts.models import Posts
     from threaddit.reactions.models import Reactions
-    from threaddit.subthreads.models import Subscription, Subthread
+    from threaddit.threads.models import Subscription, Thread
+    from threaddit.users.schemas import UserFormType
 
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(user_id)
-
-
-class User(db.Model, UserMixin):
+class User(db.Model):
     __tablename__: str = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(unique=True, nullable=False)
     email: Mapped[str] = mapped_column(unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(nullable=False)
-    avatar: Mapped[str] = mapped_column()
-    bio: Mapped[str] = mapped_column()
+    bio: Mapped[str | None] = mapped_column(nullable=True)
     post_karma: Mapped[int] = mapped_column(default=0, nullable=False)
     comment_karma: Mapped[int] = mapped_column(default=0, nullable=False)
     post_count: Mapped[int] = mapped_column(default=0, nullable=False)
     comment_count: Mapped[int] = mapped_column(default=0, nullable=False)
     registration_date: Mapped[datetime] = mapped_column(nullable=False, default=db.func.now())
-    subthread: Mapped[list["Subthread"]] = relationship(back_populates="user")
-    user_role: Mapped[list["UserRole"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    subscription: Mapped[list["Subscription"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    post: Mapped[list["Posts"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    comment: Mapped[list["Comments"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    reaction: Mapped[list["Reactions"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    saved_post: Mapped[list["SavedPosts"]] = relationship(back_populates="user", cascade="all, delete-orphan")
-    sender: Mapped[list["Messages"]] = relationship(
-        back_populates="user_sender", foreign_keys="Messages.sender_id", cascade="all, delete-orphan"
-    )
-    receiver: Mapped[list["Messages"]] = relationship(
-        back_populates="user_receiver",
-        foreign_keys="Messages.receiver_id",
-        cascade="all, delete-orphan",
-    )
+    media_id: Mapped[int] = mapped_column(ForeignKey("media.id"), nullable=True)
+    thread: Mapped[list["Thread"]] = relationship(back_populates="user")
+    blacklist_tokens: Mapped[list["TokenBlockList"]] = relationship(back_populates="user")
+    subscriptions: Mapped[list["Subscription"]] = relationship(back_populates="user")
+    posts: Mapped[list["Posts"]] = relationship(back_populates="user")
+    user_roles: Mapped[list["UserRole"]] = relationship(back_populates="user")
+    comments: Mapped[list["Comments"]] = relationship(back_populates="user")
+    reactions: Mapped[list["Reactions"]] = relationship(back_populates="user")
+    media: Mapped["Media"] = relationship()
+    notifications: Mapped[list["Notifications"]] = relationship(back_populates="user")
 
+    # noinspection PyTypeChecker
     def __init__(self, username: str, email: str, password_hash: str):
         self.username = username
         self.email = email
-        self.password_hash = password_hash
-
-    def get_id(self):
-        return str(self.id)
-
-    def add(self):
-        db.session.add(self)
-        db.session.commit()
-
-    def patch(self, image, form_data: dict):
-        if form_data.get("content_type") == "image" and image:
-            self.delete_avatar()
-            image_data = uploader.upload(image, public_id=f"{uuid.uuid4().hex}_{image.filename.rsplit('.')[0]}")
-            url = f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}/image/upload/f_auto,q_auto/{image_data.get('public_id')}"
-            self.avatar = url
-        elif form_data.get("content_type") == "url":
-            self.avatar = form_data.get("content_url", self.avatar)
-        self.bio = form_data.get("bio", self.bio)
-        db.session.commit()
-
-    def delete_avatar(self):
-        if self.avatar and self.avatar.startswith(f"https://res.cloudinary.com/{app.config['CLOUDINARY_NAME']}"):
-            res = uploader.destroy(self.avatar.split("/")[-1])
-            print(f"Cloudinary Image Destory Response for {self.username}: ", res)
-
-    def has_role(self, role: int):
-        return role in {r.role.slug for r in self.user_role}
+        self.password_hash = generate_password_hash(password_hash)
 
     @classmethod
-    def get_all(cls):
-        all_users: list[dict] = []
-        for user in cls.query.all():
-            all_users.append(user.as_dict(include_all=True))
-        return all_users
+    def add(cls, username: str, email: str, password_hash: str):
+        user = User(username, email, password_hash)
+        db.session.add(user)
+        return user
 
-    def as_dict(self, include_all=False) -> dict:
-        data = {
-            "username": self.username,
-            "avatar": self.avatar,
-            "bio": self.bio,
-            "registrationDate": self.registration_date,
-            "roles": list({r.role.slug for r in self.user_role}),
-            "karma": {
-                "comments_count": self.comment_count,
-                "comments_karma": self.comment_karma,
-                "posts_count": self.post_count,
-                "posts_karma": self.post_karma,
-                "user_karma": self.post_karma + self.comment_karma,
-            },
-            "mod_in": [r.subthread_id for r in self.user_role if r.role.slug == "mod"],
-        }
-        if not include_all:
-            return data
-        else:
-            return {"id": self.id, "email": self.email, **self.as_dict()}
+    # noinspection DuplicatedCode
+    def update(self, form: "UserFormType"):
+        if form["media_id"] and self.media_id == form["media_id"].id:
+            match form["operation"]:
+                case OpType.UPDATE:
+                    self.media.update(f"users/{self.username}", form=form)
+                case OpType.DELETE:
+                    self.media.delete()
+        elif not form["media_id"] and form["operation"] == OpType.ADD and not self.media_id:
+            self.media = Media.add(f"users/{self.username}", form=form)
+        self.bio = form["bio"] or self.bio
 
+    @property
+    def rolenames(self) -> list[str]:
+        return [r.role.slug for r in self.user_roles]
 
-class LoginSchema(Schema):
-    email = fields.Str(required=True)
-    password = fields.Str(required=True, validate=validate.Length(min=8))
+    @property
+    def is_admin(self):
+        return "admin" in self.rolenames
 
-    @validates("email")
-    def valid_email(self, value):
-        if not User.query.filter_by(email=value).first():
-            raise ValidationError("Email does not exist")
+    def moderator_in(self, thread: "Thread"):
+        return thread.id in self.modlist
+
+    @property
+    def modlist(self) -> list[int]:
+        return [role.thread_id for role in self.user_roles]
+
+    def check_password(self, password: str):
+        return check_password_hash(self.password_hash, password)
 
 
-class RegisterSchema(Schema):
-    username = fields.Str(required=True)
-    email = fields.Str(required=True)
-    password = fields.Str(required=True, validate=validate.Length(min=8))
+@jwt.user_identity_loader
+def user_identity_lookup(user_id: int) -> int | None:
+    user = db.session.scalar(sa.select(User).where(User.id == user_id))
+    return user.id if user else None
 
-    @validates("email")
-    def valid_email(self, value):
-        if User.query.filter_by(email=value).first():
-            raise ValidationError("Email already exists")
 
-    @validates("username")
-    def valid_username(self, value):
-        if User.query.filter_by(username=value).first():
-            raise ValidationError("Username already exists")
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    identity = jwt_data["sub"]
+    return db.session.scalar(sa.select(User).where(User.id == identity))

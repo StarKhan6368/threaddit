@@ -1,0 +1,37 @@
+line-length = 120
+target-version = "py312"
+select = ["ALL"]
+ignore = [
+    #### modules
+    "ANN", # flake8-annotations
+    "COM", # flake8-commas
+    "C90", # mccabe complexity
+    "DJ", # django
+    "EXE", # flake8-executable
+    "T10", # debugger
+    "TID", # flake8-tidy-imports
+
+    #### specific rules
+    "D100", # missing docstring in public module
+    "D101", # missing docstring in public class
+    "D102", # missing docstring in public method
+    "D103", # missing docstring in public function
+    "D104", # missing docstring in public package
+    "D105", # missing docstring in magic method
+    "D106", # missing docstring in nested class
+    "D107", # missing docstring in __init__
+    "D200", # docstring too long
+    "D205", # docstring not fully split across lines
+    "D212", # Multi-line docstring summary should start at the first line
+    "D400", # First line should be in imperative mood
+    "D401", # First line should be in imperative mood
+    "D415", # First line should end with a period
+    "TRY003", # Avoid specifying long messages outside the exception class
+    "TD002", # Missing return type annotation for public function
+    "TD003", # Missing return type annotation for public method
+    "FIX002", # docstring should start with a summary,
+    "EM101", # Exception must not use a string literal,
+    "FBT001", # boolean default value in function signature
+    "PLR0913", # Too many arguments
+    "FBT002", # boolean positional only argument
+]
