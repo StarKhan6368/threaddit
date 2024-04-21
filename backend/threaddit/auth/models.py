@@ -19,12 +19,13 @@ class TokenBlockList(db.Model):
     created_at: Mapped[datetime] = mapped_column(nullable=False, default=db.func.now())
     user: Mapped["User"] = relationship(back_populates="blacklist_tokens")
 
+    # noinspection PyTypeChecker
     def __init__(self, jti: str, token_type: str, user_id: int):
         self.jti = jti
         self.type = token_type
         self.user_id = user_id
 
-    @classmethod
-    def add(cls, jti: str, ttype: str, user: "User"):
-        token = cls(jti, ttype, user.id)
+    @staticmethod
+    def add(jti: str, ttype: str, user: "User"):
+        token = TokenBlockList(jti, ttype, user.id)
         db.session.add(token)

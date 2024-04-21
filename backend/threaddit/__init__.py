@@ -1,4 +1,5 @@
 from datetime import timedelta
+from http import HTTPStatus
 
 import cloudinary
 import sqlalchemy as sa
@@ -14,6 +15,8 @@ from threaddit.config import (
     CLOUDINARY_API_SECRET,
     CLOUDINARY_NAME,
     DATABASE_URI,
+    JWT_ACCESS_EXPIRE_MINUTES,
+    JWT_REFRESH_EXPIRE_MINUTES,
     SECRET_KEY,
 )
 
@@ -30,8 +33,8 @@ cloudinary.config(
 app.config["CLOUDINARY_NAME"] = CLOUDINARY_NAME
 app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
 app.config["JWT_SECRET_KEY"] = SECRET_KEY
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
-app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=JWT_ACCESS_EXPIRE_MINUTES)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(minutes=JWT_REFRESH_EXPIRE_MINUTES)
 app.config["IMAGE_EXTENSIONS"] = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif"]
 app.config["VIDEO_EXTENSIONS"] = [".mp4", ".webm", ".ogg", ".avi", ".mov", ".wmv", ".mpg", ".mpeg", ".flv", ".mkv"]
 db = SQLAlchemy(app)
@@ -45,12 +48,17 @@ def catch_all(_):
     return app.send_static_file("index.html")
 
 
+@app.route("/teapot")
+def ping():
+    return HTTPStatus.IM_A_TEAPOT
+
+
 @app.errorhandler(ValidationError)
 def handle_validation_error(error: "ValidationError"):
     """
     Error Handler for Marshmallow Validation Errors
     """
-    return jsonify(error.messages), 400
+    return jsonify(errors=error.messages), 400
 
 
 @app.errorhandler(HTTPException)
@@ -58,19 +66,26 @@ def handle_http_exception(error: "HTTPException"):
     """
     Error Handler for HTTP Exceptions
     """
-    return jsonify(error.description), error.code
+    return jsonify(errors=error.description), error.code
 
 
 # Import and register custom converters
 from threaddit.comments.converters import CommentConverter  # noqa: E402
 from threaddit.messages.converters import MessageConverter  # noqa: E402
+from threaddit.moderations.converters import InvConverter  # noqa: E402
+from threaddit.notifications.converters import NotificationConverter  # noqa: E402
 from threaddit.posts.converters import PostConverter  # noqa: E402
+from threaddit.reports.converters import ReportConverter, ReportTypeConverter  # noqa: E402
 from threaddit.threads.converters import ThreadConverter  # noqa: E402
 from threaddit.users.converters import UserConverter  # noqa: E402
 
 app.url_map.converters["comment_id"] = CommentConverter
 app.url_map.converters["message_id"] = MessageConverter
+app.url_map.converters["inv_id"] = InvConverter
+app.url_map.converters["notif_id"] = NotificationConverter
 app.url_map.converters["post_id"] = PostConverter
+app.url_map.converters["report_id"] = ReportConverter
+app.url_map.converters["report_type_id"] = ReportTypeConverter
 app.url_map.converters["thread_id"] = ThreadConverter
 app.url_map.converters["user_name"] = UserConverter
 
@@ -91,7 +106,7 @@ import threaddit.users.models  # noqa: E402
 @jwt.token_in_blocklist_loader
 def check_if_token_revoked(_, jwt_payload: dict):
     jti = jwt_payload["jti"]
-    token: "threaddit.auth.models.TokenBlockList | None" = db.session.execute(
+    token: "threaddit.auth.models.TokenBlockList|None" = db.session.execute(
         sa.select(threaddit.auth.models.TokenBlockList).filter_by(jti=jti)
     ).scalar_one_or_none()
     return token is not None
@@ -106,8 +121,10 @@ def my_expired_token_callback(_, __):
 from threaddit.comments.routes import comments  # noqa: E402
 from threaddit.messages.routes import messages  # noqa: E402
 from threaddit.moderations.routes import moderations  # noqa: E402
+from threaddit.notifications.routes import notifications  # noqa: E402
 from threaddit.posts.routes import posts  # noqa: E402
 from threaddit.reactions.routes import reactions  # noqa: E402
+from threaddit.reports.routes import reports  # noqa: E402
 from threaddit.saves.routes import saves  # noqa: E402
 from threaddit.threads.routes import threads  # noqa: E402
 from threaddit.users.routes import users  # noqa: E402f
@@ -115,7 +132,9 @@ from threaddit.users.routes import users  # noqa: E402f
 app.register_blueprint(comments)
 app.register_blueprint(messages)
 app.register_blueprint(moderations)
+app.register_blueprint(notifications)
 app.register_blueprint(posts)
+app.register_blueprint(reports)
 app.register_blueprint(reactions)
 app.register_blueprint(saves)
 app.register_blueprint(threads)

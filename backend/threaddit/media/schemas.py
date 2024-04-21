@@ -3,7 +3,7 @@ from typing import Any, TypedDict
 
 import urllib3
 from flask_marshmallow import validate as ma_validate
-from marshmallow import ValidationError, fields, pre_dump, validate, validates_schema
+from marshmallow import ValidationError, fields, validate, validates_schema
 from werkzeug.datastructures import FileStorage
 
 from threaddit import app, db, ma
@@ -14,10 +14,7 @@ class MediaSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Media
 
-    @pre_dump()
-    def parse_fields(self, data: "Media", **_kwargs):
-        data.media_type = data.media_type.value
-        return data
+    media_type = fields.Function(lambda obj: obj.media_type.value)
 
 
 class UrlOrFile(fields.Field):
@@ -143,7 +140,7 @@ class MediaId(fields.Field):
         if value and value < 0:
             raise ValidationError("Invalid Media ID", field_name=attr)
 
-        media: "Media | None" = db.session.execute(db.select(Media).filter_by(id=value)).scalar_one_or_none()
+        media: "Media|None" = db.session.execute(db.select(Media).filter_by(id=value)).scalar_one_or_none()
         if not media:
             raise ValidationError("Invalid Media ID", field_name=attr)
         return media
@@ -158,6 +155,8 @@ class MediaFormType(TypedDict):
     media_id: Media | None
     index: int
     operation: OpType
+    is_nsfw: bool
+    is_spoiler: bool
     media_type: MediaType | None
     media: _MediaType
 
@@ -198,6 +197,8 @@ class ImageSchema(ma.Schema):
     media_id = MediaId(required=False, load_default=None)
     operation = OperationType(required=False, load_default=OpType.NONE)
     index = fields.Int(required=False, load_default=None)
+    is_nsfw = fields.Bool(required=False, load_default=False)
+    is_spoiler = fields.Bool(required=False, load_default=False)
     media_type = TypeOfMedia(image_only=True, load_default=None)
     media = UrlOrFile(img_only=True, max_file_size=10, load_default=None)
 
@@ -210,6 +211,8 @@ class ImgVidSchema(ma.Schema):
     media_id = MediaId(required=False, load_default=None)
     operation = OperationType(required=False, load_default=OpType.NONE)
     index = fields.Int(required=False, load_default=None)
+    is_nsfw = fields.Bool(required=False, load_default=False)
+    is_spoiler = fields.Bool(required=False, load_default=False)
     media_type = TypeOfMedia(load_default=None)
     media = UrlOrFile(max_file_size=10, load_default=None)
 

@@ -2,14 +2,13 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
-from flask import abort
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from threaddit import db
 
 if TYPE_CHECKING:
-    from threaddit.comments.models import Comments  # noqa: ALL
+    from threaddit.comments.models import Comments
     from threaddit.posts.models import Posts
     from threaddit.threads.models import Thread
     from threaddit.users.models import User
@@ -30,8 +29,8 @@ class Saves(db.Model):
         self.post_id = post_id
         self.comment_id = comment_id
 
-    @classmethod
-    def add(cls, user: "User", post: "Posts", comment: "Comments | None" = None):
+    @staticmethod
+    def add(user: "User", post: "Posts", comment: "Comments|None" = None):
         new_save = Saves(user_id=user.id, post_id=post.id)
         if comment:
             comment.saved_count += 1
@@ -40,7 +39,7 @@ class Saves(db.Model):
             post.saved_count += 1
         db.session.add(new_save)
 
-    def delete(self, post: "Posts", comment: "Comments | None" = None):
+    def delete(self, post: "Posts", comment: "Comments|None" = None):
         if comment:
             comment.saved_count -= 1
         else:
@@ -48,12 +47,11 @@ class Saves(db.Model):
         db.session.delete(self)
 
     @staticmethod
-    def get_save(user: "User", thread: "Thread", post: "Posts", comment: "Comments | None" = None):
-        if thread.id != post.thread_id:
-            return abort(404, {"message": f"Post does not belong to thread {thread.id}"})
-        if comment and comment.post_id != post.id:
-            return abort(404, {"message": f"Comment not found in thread {thread.id} and post {post.id}"})
-
+    def get_save(user: "User", thread: "Thread", post: "Posts", comment: "Comments|None" = None):
+        if comment:
+            comment.validate_comment(thread, post)
+        else:
+            post.validate_post(thread)
         comment_id = comment.id if comment else None
 
         return db.session.scalar(

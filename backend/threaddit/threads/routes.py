@@ -3,13 +3,15 @@ from flask import Blueprint, abort, jsonify, request
 from flask_jwt_extended import current_user, jwt_required
 
 from threaddit import db
-from threaddit.auth.decorators import roles_accepted
+from threaddit.auth.decorators import admin_mod, admin_mod_author
 from threaddit.moderations.models import UserRole
 from threaddit.threads.models import Subscription, Thread
 from threaddit.threads.schemas import (
+    FlairsType,
     PaginationSchema,
     PaginationType,
     ThreadBarSchema,
+    ThreadFlairsSchema,
     ThreadFormSchema,
     ThreadFormType,
     ThreadLinkSchema,
@@ -23,6 +25,7 @@ thread_patch_schema = ThreadFormSchema(exclude=("name",))
 threads_link_schema = ThreadLinkSchema(many=True)
 threads_bar_schema = ThreadBarSchema()
 paginate_schema = PaginationSchema()
+thread_flairs_schema = ThreadFlairsSchema()
 
 
 @threads.route("/", methods=["GET"])
@@ -64,7 +67,7 @@ def thread_add():
     if thread:
         return abort(400, {"name": f"Thread with name {form.get("name")} already exists"})
     thread = Thread.add(form, current_user)
-    UserRole.add_moderator(current_user, thread)
+    UserRole.add_moderator(current_user, current_user, thread)
     db.session.commit()
     return thread_schema.dump(thread), 200
 
@@ -77,15 +80,12 @@ def thread_get(thread: "Thread"):
 
 @threads.route("/<thread_id:thread>", methods=["PATCH"])
 @jwt_required()
-@roles_accepted("admin", "moderator")
+@admin_mod_author()
 def thread_update(thread: "Thread"):
-    if current_user.is_admin or current_user.moderator_in(thread):
-        form: "ThreadFormType" = thread_patch_schema.load(request.form | request.files)
-        print(*[f"{key} = {val}" for key, val in form.items()], sep="\n")
-        thread.update(form)
-        db.session.commit()
-        return thread_schema.dump(thread), 200
-    return abort(403, {"message": "Unauthorized"})
+    form: "ThreadFormType" = thread_patch_schema.load(request.form | request.files)
+    thread.update(form)
+    db.session.commit()
+    return thread_schema.dump(thread), 200
 
 
 @threads.route("/search/<thread_name>", methods=["GET"])
@@ -94,6 +94,26 @@ def thread_search(thread_name: str):
     return threads_link_schema.dump(
         db.session.scalars(sa.select(Thread).where(Thread.name.ilike(f"%{thread_name}%"))).all()
     ), 200
+
+
+@threads.route("/<thread_id:thread>/flairs", methods=["POST"])
+@jwt_required()
+@admin_mod()
+def thread_flairs_add(thread: "Thread"):
+    body: "FlairsType" = thread_flairs_schema.load(request.json)
+    thread.flairs = list(set(thread.flairs).union(body["flairs"]))
+    db.session.commit()
+    return thread_schema.dump(thread), 200
+
+
+@threads.route("/<thread_id:thread>/flairs", methods=["DELETE"])
+@jwt_required()
+@admin_mod()
+def thread_flairs_del(thread: "Thread"):
+    body: "FlairsType" = thread_flairs_schema.load(request.json)
+    thread.flairs = list(set(thread.flairs).difference(body["flairs"]))
+    db.session.commit()
+    return thread_schema.dump(thread), 200
 
 
 @threads.route("/<thread_id:thread>/subscription", methods=["POST"])

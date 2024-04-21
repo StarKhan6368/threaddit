@@ -34,7 +34,7 @@ def message_update(user: "User", message: "Messages"):
     if current_user.id != user.id or current_user.id != message.sender_id:
         return abort(403, {"message": "Unauthorized"})
     form: "MessageFormType" = new_message_schema.load(request.form | request.files)
-    message.patch(form)
+    message.update(form)
     return message_schema.dump(message), 200
 
 
@@ -43,29 +43,26 @@ def message_update(user: "User", message: "Messages"):
 def message_del(user: "User", message: "Messages"):
     if current_user.id != user.id or current_user.id != message.sender_id:
         return abort(403, {"message": "Unauthorized"})
-    message.remove()
+    message.delete()
     return jsonify(message="Message deleted"), 200
 
 
-@messages.route("/users/<user_name:user>/inbox")
+@messages.route("/me/inbox")
 @jwt_required()
-def inbox_get(user: "User"):
-    if current_user.id != user.id:
-        return abort(403, {"message": "Unauthorized"})
+def inbox_get():
     subquery = (
         sa.select(sa.func.max(Messages.id).label("latest_id"))
-        .where(sa.or_(Messages.sender_id == user.id, Messages.receiver_id == user.id))
-        .group_by(sa.case((Messages.sender_id == user.id, Messages.receiver_id), else_=Messages.sender_id))
+        .where(sa.or_(Messages.sender_id == current_user.id, Messages.receiver_id == current_user.id))
+        .group_by(sa.case((Messages.sender_id == current_user.id, Messages.receiver_id), else_=Messages.sender_id))
     )
     messages_list = db.session.scalars(sa.select(Messages).where(Messages.id.in_(subquery))).all()
     return messages_schema.dump(messages_list), 200
 
 
-@messages.route("/users/<user_name:sender>/messages/<user_name:receiver>", methods=["GET"])
+@messages.route("/me/messages/<user_name:receiver>", methods=["GET"])
 @jwt_required()
-def get_messages(sender: "User", receiver: "User"):
-    if current_user.id != sender.id:
-        return abort(403, {"message": "Unauthorized"})
+def get_messages(receiver: "User"):
+    sender: "User" = current_user
     messages_list = db.session.scalars(
         sa.select(Messages)
         .where(

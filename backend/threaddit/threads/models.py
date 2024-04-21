@@ -1,13 +1,16 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import sqlalchemy as sa
 from flask_jwt_extended import current_user
+from sqlalchemy import String
+from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.schema import ForeignKey
 
 from threaddit import db
 from threaddit.media.models import Media, OpType
+from threaddit.notifications.models import Notifications, NotifType
 
 if TYPE_CHECKING:
     from threaddit.media.schemas import MediaFormType
@@ -22,7 +25,7 @@ class Thread(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
     description: Mapped[str | None] = mapped_column()
-    created_at: Mapped[datetime] = mapped_column(nullable=False, default=sa.func.now())
+    created_at: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now(tz=UTC))
     logo_id: Mapped[int] = mapped_column(ForeignKey("media.id"), nullable=True)
     banner_id: Mapped[int] = mapped_column(ForeignKey("media.id"), nullable=True)
     created_by: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
@@ -31,7 +34,10 @@ class Thread(db.Model):
     post_count: Mapped[int] = mapped_column(default=0, nullable=False)
     comment_count: Mapped[int] = mapped_column(default=0, nullable=False)
     subscriber_count: Mapped[int] = mapped_column(default=0, nullable=False)
-    user: Mapped["User"] = relationship(back_populates="thread")
+    is_locked: Mapped[bool] = mapped_column(default=False, nullable=False)
+    allow_nsfw: Mapped[bool] = mapped_column(default=True, nullable=False)
+    creator: Mapped["User"] = relationship(back_populates="thread")
+    flairs: Mapped[list[str]] = mapped_column(ARRAY(String(15)), nullable=True)
     subscription: Mapped[list["Subscription"]] = relationship(back_populates="thread")
     post: Mapped[list["Posts"]] = relationship(back_populates="thread")
     logo: Mapped["Media"] = relationship(foreign_keys=[logo_id])
@@ -53,8 +59,8 @@ class Thread(db.Model):
         self.description = description
         self.created_by = created_by
 
-    @classmethod
-    def add(cls, form: "ThreadFormType", user: "User"):
+    @staticmethod
+    def add(form: "ThreadFormType", user: "User"):
         new_sub = Thread(
             name=form["name"],
             description=form["description"],
@@ -93,10 +99,19 @@ class Subscription(db.Model):
     user: Mapped["User"] = relationship(back_populates="subscriptions")
     thread: Mapped["Thread"] = relationship(back_populates="subscription")
 
-    @classmethod
-    def add(cls, user: "User", thread: "Thread"):
+    @staticmethod
+    def add(user: "User", thread: "Thread"):
         new_sub = Subscription(user_id=user.id, thread_id=thread.id)
         thread.subscriber_count += 1
+        Notifications.notify(
+            NotifType.THREAD_JOINED,
+            user=user,
+            title=f"Welcome to {thread.name}",
+            sub_title=thread.description,
+            content=thread.join_message,
+            res_id=thread.id,
+            res_media_id=thread.logo_id,
+        )
         db.session.add(new_sub)
 
     def delete(self, thread: "Thread"):

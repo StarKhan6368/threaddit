@@ -6,6 +6,7 @@ from sqlalchemy.schema import ForeignKey
 
 from threaddit import db
 from threaddit.media.models import Media, OpType
+from threaddit.notifications.models import Notifications, NotifType
 
 if TYPE_CHECKING:
     from threaddit.messages.schemas import MessageFormType
@@ -19,7 +20,6 @@ class Messages(db.Model):
     receiver_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     content: Mapped[str] = mapped_column(nullable=False)
     media_id: Mapped[int | None] = mapped_column(ForeignKey("media.id"), nullable=True)
-    is_deleted: Mapped[bool] = mapped_column(default=False, nullable=False)
     sent_at: Mapped[datetime] = mapped_column(default=db.func.now(), nullable=False)
     seen_at: Mapped[datetime | None] = mapped_column(default=db.func.now(), nullable=True)
     edited_at: Mapped[datetime | None] = mapped_column(default=db.func.now(), nullable=True)
@@ -27,8 +27,8 @@ class Messages(db.Model):
     user_sender: Mapped["User"] = relationship(primaryjoin="Messages.sender_id == User.id")
     user_receiver: Mapped["User"] = relationship(primaryjoin="Messages.receiver_id == User.id")
 
-    @classmethod
-    def add(cls, sender: "User", receiver: "User", form: "MessageFormType"):
+    @staticmethod
+    def add(sender: "User", receiver: "User", form: "MessageFormType"):
         new_message = Messages(
             sender_id=sender.id,
             receiver_id=receiver.id,
@@ -37,6 +37,15 @@ class Messages(db.Model):
         if form["media"]:
             new_message.media = Media.add(f"/users/{sender.username}/messages/{new_message.id}", form=form)
         db.session.add(new_message)
+        Notifications.notify(
+            notif_type=NotifType.NEW_MESSAGE,
+            user=sender,
+            title=f"New message from {receiver.username}",
+            sub_title=None,
+            content=new_message.content,
+            res_id=new_message.id,
+            res_media_id=sender.avatar_id,
+        )
         return new_message
 
     # noinspection DuplicatedCode
@@ -50,18 +59,14 @@ class Messages(db.Model):
         elif not form["media_id"] and form["operation"] == OpType.ADD and not self.media_id:
             self.media = Media.add(f"users/{self.username}", form=form)
 
-    def patch(self, form: "MessageFormType"):
+    def update(self, form: "MessageFormType"):
         self.content = form["content"] or self.content
         if form["media"]:
             self._handle_media(form)
         # noinspection PyTypeChecker
         self.edited_at = datetime.now(tz=UTC)
 
-    def remove(self):
-        # noinspection PyTypeChecker
-        self.is_deleted = True
-        # noinspection PyTypeChecker
-        self.content = "**deleted**"
+    def delete(self):
         if self.media:
             self.media.delete()
         db.session.delete(self)

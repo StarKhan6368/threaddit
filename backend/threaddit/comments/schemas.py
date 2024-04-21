@@ -53,9 +53,9 @@ class CommentsPaginateSchema(ma.Schema):
         required=False, validate=validate.Range(min=1, error="Limit cannot be less than 1"), load_default=20
     )
 
-    # noinspection PyUnresolvedReferences, DuplicatedCode
+    # noinspection PyUnresolvedReferences, DuplicatedCode, PyUnusedLocal
     @post_load
-    def make_filters(self, data: dict, **_kwargs) -> "CommentsPaginateType":
+    def make_filters(self, data: dict, **kwargs) -> "CommentsPaginateType":  # noqa: ARG002
         match data["sort_by"]:
             case "top":
                 data["sort_by"] = Comments.karma.desc()
@@ -65,7 +65,7 @@ class CommentsPaginateSchema(ma.Schema):
                 data["sort_by"] = Comments.created_at.desc()
             case "old":
                 data["sort_by"] = Comments.created_at.asc()
-            case "hot":  # :TODO: FIX
+            case "hot":
                 data["sort_by"] = Comments.replies_count.desc()
             case "best":
                 data["sort_by"] = Comments.vote_ratio.desc()
@@ -85,6 +85,8 @@ class CommentSchema(ma.SQLAlchemyAutoSchema):
         exclude = ("user_id", "post_id", "parent_id", "media_id")
 
     media = fields.Nested(MediaSchema(), data_key="media")
+    has_upvoted = fields.Bool(dump_default=False)
+    has_saved = fields.Bool(dump_default=False)
     user = fields.Nested(UserLinkSchema(), data_key="author")
     _links = ma_fields.Hyperlinks(
         {
@@ -104,10 +106,12 @@ class CommentSchema(ma.SQLAlchemyAutoSchema):
     # noinspection PyUnusedLocal
     @post_dump(pass_original=True)
     def check_deleted(self, data: dict, original: "Comments", **kwargs):  # noqa: ARG002
-        if original.is_deleted:
+        placeholder = "**deleted**" if original.is_deleted else "**removed**" if original.is_removed else None
+        if original.is_deleted or original.is_removed:
             data["media"] = None
-            data["content"] = "**deleted**"
-            data["user"] = {"username": "**deleted**", "avatar": None}
+            data["content"] = placeholder
+            data["author"] = {"username": placeholder, "avatar": None}
+            data["_links"]["author"] = None
         return data
 
 

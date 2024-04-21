@@ -3,11 +3,12 @@ from typing import TYPE_CHECKING, TypedDict
 
 from flask_jwt_extended import current_user
 from flask_marshmallow import fields as ma_fields
-from marshmallow import ValidationError, fields, post_dump, pre_dump, pre_load, validate
+from marshmallow import ValidationError, fields, post_dump, post_load, pre_dump, pre_load, validate
 
 from threaddit import ma
 from threaddit.media.schemas import ImageSchema, MediaFormType, MediaSchema
 from threaddit.threads.models import Thread
+from threaddit.users.schemas import UserLinkSchema
 
 if TYPE_CHECKING:
     from flask_sqlalchemy.pagination import Pagination
@@ -25,6 +26,23 @@ class ThreadFormType(TypedDict):
 class PaginationType(TypedDict):
     limit: int
     page: int
+
+
+class FlairsType(TypedDict):
+    flairs: list[str]
+
+
+class ThreadFlairsSchema(ma.Schema):
+    flairs = fields.List(fields.String(required=True, validate=validate.Length(min=3, max=15)), required=True)
+
+    # noinspection PyUnusedLocal
+    @post_load
+    def check_flair(self, data: "FlairsType", **kwargs) -> "FlairsType":  # noqa: ARG002
+        for flair in data["flairs"]:
+            if re.match(r"^\s*$", flair):
+                error = f"Flair {flair} cannot be empty spaces"
+                raise ValidationError(error, field_name="flairs")
+        return data
 
 
 class ThreadFormSchema(ma.Schema):
@@ -73,6 +91,7 @@ class ThreadLinkSchema(ma.SQLAlchemyAutoSchema):
         fields = ("name", "id", "media", "is_subscribed", "subscriber_count", "logo")
 
     is_subscribed = fields.Bool()
+    logo = fields.Nested(MediaSchema())
 
 
 class ThreadBarSchema(ma.Schema):
@@ -95,16 +114,22 @@ class ThreadSchema(ma.SQLAlchemyAutoSchema):
     is_subscribed = fields.Bool()
     logo = fields.Nested(MediaSchema())
     banner = fields.Nested(MediaSchema())
+    flairs = fields.List(fields.String())
+    creator = fields.Nested(UserLinkSchema(), data_key="creator")
 
     _links = ma_fields.Hyperlinks(
         {
             "self": ma_fields.URLFor("threads.thread_get", values={"thread": "<id>"}),
             "posts": ma_fields.URLFor("posts.thread_posts", values={"thread": "<id>"}),
+            "comments": ma_fields.URLFor("comments.thread_comments_get", values={"thread": "<id>"}),
+            "moderators": ma_fields.URLFor("moderation.thread_moderators_get", values={"thread": "<id>"}),
+            "report_types": ma_fields.URLFor("reports.thread_report_types_get", values={"thread": "<id>"}),
         }
     )
 
+    # noinspection PyUnusedLocal
     @post_dump(pass_original=True)
-    def add_fields(self, data: dict, thread: "Thread", **kwargs):
+    def add_fields(self, data: dict, thread: "Thread", **kwargs):  # noqa: ARG002
         if current_user.is_admin or current_user.moderator_in(thread):
             data["join_message"] = thread.join_message
 

@@ -3,7 +3,7 @@ from typing import TypedDict
 
 from flask_jwt_extended import current_user
 from flask_marshmallow import fields as ma_fields
-from marshmallow import ValidationError, fields, post_load, validate
+from marshmallow import ValidationError, fields, post_dump, post_load, validate
 
 from threaddit import ma
 from threaddit.media.schemas import ImageSchema, MediaFormType, MediaSchema
@@ -61,6 +61,11 @@ class UserLinkSchema(ma.SQLAlchemyAutoSchema):
         fields = ("username", "media")
 
     media = fields.Nested(MediaSchema(), data_key="avatar")
+    _links = ma_fields.Hyperlinks(
+        {
+            "self": ma_fields.URLFor("users.user_get", values={"user": "<username>"}),
+        },
+    )
 
 
 class UserSchema(ma.SQLAlchemyAutoSchema):
@@ -74,14 +79,14 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
             "self": ma_fields.URLFor("users.user_get", values={"user": "<username>"}),
             "posts": ma_fields.URLFor("posts.user_posts_get", values={"user": "<username>"}),
             "comments": ma_fields.URLFor("comments.user_comments_get", values={"user": "<username>"}),
+            "saved_posts": ma_fields.URLFor("posts.user_saved_posts_get"),
+            "saved_comments": ma_fields.URLFor("comments.user_saved_comments_get"),
         },
     )
 
-    @post_load
-    def saved_res(self, data: dict, **_kwargs):
+    # noinspection PyUnusedLocal
+    @post_dump(pass_original=True)
+    def saved_res(self, data: dict, user: "User", **kwargs):  # noqa: ARG002
         if current_user:
-            data["_links"]["saved_posts"] = ma_fields.URLFor(
-                "posts.user_saved_posts_get", values={"user": "<username>"}
-            )
-            data["email"] = current_user.email
+            data["email"] = user.email
         return data

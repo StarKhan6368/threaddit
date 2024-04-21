@@ -16,7 +16,7 @@ class MessageFormType(MediaFormType):
 class MessageSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Messages
-        exclude = ("sender_id", "receiver_id", "is_deleted")
+        exclude = ("sender_id", "receiver_id")
 
     user_sender = fields.Nested(UserLinkSchema(), data_key="sender")
     user_receiver = fields.Nested(UserLinkSchema(), data_key="receiver")

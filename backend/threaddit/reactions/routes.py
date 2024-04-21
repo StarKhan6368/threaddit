@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-import sqlalchemy as sa
 from flask import Blueprint, abort, jsonify, request
 from flask_jwt_extended import current_user, jwt_required
 
@@ -11,88 +10,83 @@ from threaddit.reactions.schemas import ReactionSchema, ReactionType
 if TYPE_CHECKING:
     from threaddit.comments.models import Comments
     from threaddit.posts.models import Posts
+    from threaddit.threads.models import Thread
 
 reactions = Blueprint("reactions", __name__)
 reaction_schema = ReactionSchema()
 
 
-@reactions.route("/posts/<post_id:post>/reactions", methods=["POST"])
+@reactions.route("/threads/<thread_id:thread>/posts/<post_id:post>/reactions", methods=["POST"])
 @jwt_required()
-def add_reaction_post(post: "Posts"):
-    body: "ReactionType" = reaction_schema.load(request.json)
-    reaction = db.session.scalar(
-        sa.select(Reactions).where(Reactions.post_id == post.id, Reactions.user_id == current_user.id)
-    )
+def post_reaction_add(thread: "Thread", post: "Posts"):
+    reaction = Reactions.get_reaction(current_user, thread, post)
+    args: "ReactionType" = reaction_schema.load(request.args)
     if not reaction:
-        Reactions.add(is_upvote=body["is_upvote"], user=current_user, post=post)
+        Reactions.add(is_upvote=args["is_upvote"], user=current_user, post=post)
         db.session.commit()
-        return jsonify(message="Reaction added"), 201
-    return abort(400, {"message": "Reaction Already Exists"})
+        return jsonify(message=f"Post has been {'upvoted' if args['is_upvote'] else 'downvoted'} "), 201
+    return abort(400, {"message": "Post Reaction Already Exists"})
 
 
-@reactions.route("/posts/<post_id:post>/reactions", methods=["PATCH"])
+@reactions.route("/threads/<thread_id:thread>/posts/<post_id:post>/reactions", methods=["PATCH"])
 @jwt_required()
-def update_reaction_post(post: "Posts"):
-    body: "ReactionType" = reaction_schema.load(request.json)
-    reaction = db.session.scalar(
-        sa.select(Reactions).where(Reactions.post_id == post.id, Reactions.user_id == current_user.id)
-    )
+def post_reaction_update(thread: "Thread", post: "Posts"):
+    reaction = Reactions.get_reaction(current_user, thread, post)
+    args: "ReactionType" = reaction_schema.load(request.args)
     if reaction:
-        reaction.update(body["is_upvote"], post=post)
+        reaction.update(args["is_upvote"], post=post)
         db.session.commit()
-        return jsonify(message="Reaction updated"), 204
-    return abort(400, {"message": "Reaction Does Not Exist"})
+        return jsonify(message=f"Post has been {'upvoted' if args['is_upvote'] else 'downvoted'} "), 201
+    return abort(400, {"message": "Post Reaction Doesn't Exists"})
 
 
-@reactions.route("/posts/<post_id:post>/reactions", methods=["DELETE"])
+@reactions.route("/threads/<thread_id:thread>/posts/<post_id:post>/reactions", methods=["DELETE"])
 @jwt_required()
-def delete_reaction_post(post: "Posts"):
-    reaction = db.session.scalar(
-        sa.select(Reactions).where(Reactions.post_id == post.id, Reactions.user_id == current_user.id)
-    )
+def post_reaction_del(thread: "Thread", post: "Posts"):
+    reaction = Reactions.get_reaction(current_user, thread, post)
     if reaction:
         reaction.delete(post=post)
         db.session.commit()
-        return jsonify(message="Reaction deleted"), 200
-    return abort(400, {"message": "Reaction Does Not Exist"})
+        return jsonify(message="Post Reaction deleted"), 200
+    return abort(400, {"message": "Post Reaction Doesn't Exists"})
 
 
-@reactions.route("/posts/<post_id:post>/comments/<comment_id:comment>/reactions", methods=["POST"])
+@reactions.route(
+    "/threads/<thread_id:thread>/posts/<post_id:post>/comments/<comment_id:comment>/reactions", methods=["POST"]
+)
 @jwt_required()
-def add_reaction_comment(post: "Posts", comment: "Comments"):
-    body: "ReactionType" = reaction_schema.load(request.json)
-    reaction = db.session.scalar(
-        sa.select(Reactions).where(Reactions.comment_id == comment.id, Reactions.user_id == current_user.id)
-    )
+def comment_reaction_add(thread: "Thread", post: "Posts", comment: "Comments"):
+    reaction = Reactions.get_reaction(current_user, thread, post, comment)
+    args: "ReactionType" = reaction_schema.load(request.args)
     if reaction and not comment.is_deleted:
-        Reactions.add(user=current_user, is_upvote=body["is_upvote"], post=post, comment=comment)
+        Reactions.add(user=current_user, is_upvote=args["is_upvote"], post=post, comment=comment)
         db.session.commit()
-        return jsonify(message="Reaction added"), 200
-    return abort(400, {"message": "Reaction Already Exists or Comment Deleted"})
+        return jsonify(message=f"Comment has been {'upvoted' if args['is_upvote'] else 'downvoted'} "), 201
+    return abort(400, {"message": "Comment Reaction Already Exists"})
 
 
-@reactions.route("/posts/<post_id:post>/comments/<comment_id:comment>/reactions", methods=["PATCH"])
+@reactions.route(
+    "/threads/<thread_id:thread>/posts/<post_id:post>/comments/<comment_id:comment>/reactions", methods=["PATCH"]
+)
 @jwt_required()
-def update_reaction_comment(post: "Posts", comment: "Comments"):
-    body: "ReactionType" = reaction_schema.load(request.json)
-    reaction = db.session.scalar(
-        sa.select(Reactions).where(Reactions.comment_id == comment.id, Reactions.user_id == current_user.id)
-    )
+def comment_reaction_update(thread: "Thread", post: "Posts", comment: "Comments"):
+    reaction = Reactions.get_reaction(current_user, thread, post, comment)
+    args: "ReactionType" = reaction_schema.load(request.args)
     if reaction:
-        reaction.update(body["is_upvote"], post=post, comment=comment)
+        reaction.update(args["is_upvote"], post=post, comment=comment)
         db.session.commit()
-        return jsonify(message="Reaction updated"), 200
-    return abort(400, {"message": "Reaction Doesn't Exists"})
+        return jsonify(message=f"Comment has been {'upvoted' if args['is_upvote'] else 'downvoted'} "), 201
+    return abort(400, {"message": "Comment Reaction Doesn't Exists"})
 
 
-@reactions.route("/posts/<post_id:post>/comments/<comment_id:comment>/reactions", methods=["DELETE"])
+@reactions.route(
+    "/threads/<thread_id:thread>/posts/<post_id:post>/comments/<comment_id:comment>/reactions", methods=["DELETE"]
+)
 @jwt_required()
-def delete_reaction_comment(post: "Posts", comment: "Comments"):
-    reaction = db.session.scalar(
-        sa.select(Reactions).where(Reactions.comment_id == comment.id, Reactions.user_id == current_user.id)
-    )
+def comment_reaction_del(thread: "Thread", post: "Posts", comment: "Comments"):
+    reaction = Reactions.get_reaction(current_user, thread, post, comment)
     if reaction:
         reaction.delete(post=post, comment=comment)
         db.session.commit()
-        return jsonify(message="Reaction deleted"), 200
-    return abort(400, {"message": "Reaction Doesn't Exists"})
+        return jsonify(message="Comment Reaction deleted"), 200
+    return abort(400, {"message": "Comment Reaction Doesn't Exists"})

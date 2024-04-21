@@ -22,7 +22,7 @@ from threaddit.users.schemas import (
     UserSchema,
 )
 
-users = Blueprint("users", __name__, url_prefix="/users")
+users = Blueprint("users", __name__)
 login_schema = LoginSchema()
 register_schema = RegisterSchema()
 user_patch_schema = UserFormSchema()
@@ -30,7 +30,7 @@ user_schema = UserSchema()
 users_schema = UserSchema(many=True)
 
 
-@users.route("/login", methods=["POST"])
+@users.route("/users/login", methods=["POST"])
 def user_login():
     body: "LoginType" = login_schema.load(request.json)
     user = db.session.scalar(sa.select(User).where(User.email == body["email"]))
@@ -44,7 +44,7 @@ def user_login():
     ), 200
 
 
-@users.route("/refresh", methods=["POST"])
+@users.route("/me/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def user_refresh():
     identity = get_jwt_identity()
@@ -53,7 +53,7 @@ def user_refresh():
     return jsonify(access_token=access_token), 200
 
 
-@users.route("/logout", methods=["DELETE"])
+@users.route("/me/logout", methods=["DELETE"])
 @jwt_required(verify_type=False)
 def user_logout():
     token: dict = get_jwt()
@@ -62,7 +62,7 @@ def user_logout():
     return jsonify(message="Logged out"), 200
 
 
-@users.route("/register", methods=["POST"])
+@users.route("/users/register", methods=["POST"])
 def user_register():
     body: "RegisterType" = register_schema.load(request.json)
     check_name = db.session.scalar(sa.select(User).where(User.username == body["user_name"]))
@@ -91,12 +91,12 @@ def user_patch():
     return user_schema.dump(current_user), 200
 
 
-@users.route("/search/<user_name>", methods=["GET"])
+@users.route("/users/search/<user_name>", methods=["GET"])
 def users_search(user_name: str):
     users_list = db.session.scalars(sa.select(User).where(User.username.ilike(f"%{user_name}%"))).all()
     return users_schema.dump(users_list), 200
 
 
-@users.route("/<user_name:user>", methods=["GET"])
+@users.route("/users/<user_name:user>", methods=["GET"])
 def user_get(user: "User"):
     return user_schema.dump(user), 200

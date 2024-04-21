@@ -1,9 +1,12 @@
+import json
 import re
 from datetime import UTC, datetime, timedelta
+from json import JSONDecodeError
 from typing import TYPE_CHECKING, TypedDict
 
+from flask_marshmallow import fields as ma_fields
 from marshmallow import ValidationError, fields, post_load, pre_dump, pre_load, validate
-from sqlalchemy import UnaryExpression
+from sqlalchemy import BinaryExpression, UnaryExpression
 
 from threaddit import ma
 from threaddit.media.models import OpType
@@ -20,6 +23,9 @@ class PostFormType(TypedDict):
     title: str
     content: str
     media_list: list[MediaFormType]
+    flairs: list[str]
+    is_nsfw: bool
+    is_spoiler: bool
 
 
 class PostFeedType(TypedDict):
@@ -27,7 +33,9 @@ class PostFeedType(TypedDict):
     page: int
     offset: int
     sort_by: UnaryExpression
-    duration: UnaryExpression
+    duration: BinaryExpression
+    spoiler: BinaryExpression
+    nsfw: BinaryExpression
     feed_name: str
 
 
@@ -36,12 +44,33 @@ class PostSchema(ma.SQLAlchemyAutoSchema):
         model = Posts
         exclude = ("user_id",)
 
-    has_upvoted = fields.Bool(dump_default=False)  # :TODO: Fix this
-    saved = fields.Bool(dump_default=False)  # :TODO: Fix this
+    has_upvoted = fields.Bool(dump_default=False)
+    saved = fields.Bool(dump_default=False)
     media = fields.Nested(MediaSchema(), data_key="media_list", many=True)
+    flairs = fields.List(fields.String())
     karma = fields.Function(lambda post: post.upvotes - post.downvotes)
     user = fields.Nested(UserLinkSchema(), data_key="author")
     thread = fields.Nested(ThreadLinkSchema())
+    _links = ma_fields.Hyperlinks(
+        {
+            "self": ma_fields.URLFor("posts.post_get", values={"thread": "<thread_id>", "post": "<id>"}),
+            "comments": ma_fields.URLFor(
+                "comments.post_comments_get", values={"thread": "<thread_id>", "post": "<id>"}
+            ),
+            "author": ma_fields.URLFor("users.user_get", values={"user": "<user.username>"}),
+            "thread": ma_fields.URLFor("threads.thread_get", values={"thread": "<thread_id>"}),
+        }
+    )
+
+    # noinspection PyUnusedLocal
+    @post_load(pass_original=True)
+    def check_removed(self, data: dict, post: "Posts", **kwargs):  # noqa: ARG002
+        if post.is_removed:
+            data["title"] = "**REMOVED**"
+            data["content"] = None
+            data["media"] = None
+            data["author"] = {"username": "**REMOVED**", "avatar": None}
+        return data
 
 
 class PostResponseSchema(ma.Schema):
@@ -68,17 +97,17 @@ class PostFeedSchema(ma.Schema):
     duration = fields.Str(
         required=False, validate=validate.OneOf(["alltime", "day", "week", "month", "year"]), load_default="alltime"
     )
+    spoiler = fields.Boolean(required=False, load_default=False)
+    nsfw = fields.Boolean(required=False, load_default=False)
     feed_name = fields.Str(required=False, validate=validate.OneOf(["home", "all", "popular"]), load_default="home")
 
-    # noinspection PyUnusedLocal, DuplicatedCode
+    # noinspection PyUnresolvedReferences, DuplicatedCode, PyUnusedLocal
     @post_load
-    def make_filters(self, data, **kwargs) -> "PostFeedSchema":  # noqa: ARG002
+    def make_filters(self, data: "PostFeedType", **kwargs) -> "PostFeedType":  # noqa: ARG002
         match data["sort_by"]:
             case "top":
-                # noinspection PyUnresolvedReferences
                 data["sort_by"] = Posts.karma.desc()
             case "worst":
-                # noinspection PyUnresolvedReferences
                 data["sort_by"] = Posts.karma.asc()
             case "new":
                 data["sort_by"] = Posts.created_at.desc()
@@ -87,10 +116,8 @@ class PostFeedSchema(ma.Schema):
             case "hot":
                 data["sort_by"] = Posts.comment_count.desc()
             case "best":
-                # noinspection PyUnresolvedReferences
                 data["sort_by"] = Posts.vote_ratio.desc()
             case "controversial":
-                # noinspection PyUnresolvedReferences
                 data["sort_by"] = Posts.vote_ratio.asc()
             case _:
                 raise ValidationError("Invalid Sort by Request", field_name="sort_by")
@@ -109,6 +136,16 @@ class PostFeedSchema(ma.Schema):
             case _:
                 raise ValidationError("Invalid Duration Request", field_name="duration")
 
+        if data["spoiler"]:
+            data["spoiler"] = Posts.is_spoiler.in_([True, False])
+        else:
+            data["spoiler"] = Posts.is_spoiler.is_(False)
+
+        if data["nsfw"]:
+            data["nsfw"] = Posts.is_nsfw.in_([True, False])
+        else:
+            data["nsfw"] = Posts.is_nsfw.is_(False)
+
         data["offset"] = (data["page"] - 1) * data["limit"]
         return data
 
@@ -119,6 +156,9 @@ class PostFormSchema(ma.Schema):
         load_default=None,
         validate=[validate.Length(min=1, error="Title cannot be empty")],
     )
+    is_nsfw = fields.Boolean(required=False, load_default=False)
+    flairs = fields.List(fields.Str(), required=False, load_default=[])
+    is_spoiler = fields.Boolean(required=False, load_default=False)
     content = fields.Str(required=False, validate=validate.Length(min=0, max=500), load_default=None)
     media_list = fields.List(fields.Nested(ImgVidSchema()), required=True)
 
@@ -144,12 +184,19 @@ class PostFormSchema(ma.Schema):
 
         parsed = {}
         media_list = [{"media_type": None, "media": None} for _ in range(possible_count)]
+        pattern = r"^media_list\[(\d+)]\[(media_type|media|operation|media_id|index|is_nsfw|is_spoiler)]$"
 
         for key, value in data.items():
-            if key in ("title", "content"):
+            if key in {"title", "content", "is_nsfw", "is_spoiler"}:
                 parsed[key] = value
                 continue
-            if res := re.match(r"^media_list\[(\d+)]\[(media_type|media|operation|media_id|index)]$", key):
+            if key == "flairs":
+                try:
+                    parsed[key] = json.loads(value)
+                    continue
+                except JSONDecodeError as e:
+                    raise ValidationError("Invalid Flair Data", field_name="flairs") from e
+            if res := re.match(pattern, key):
                 try:
                     media_list[int(res.group(1))] |= {res.group(2): value}
                 except (IndexError, ValueError) as e:

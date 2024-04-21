@@ -10,4 +10,4 @@ class ReactionType(TypedDict):
 
 
 class ReactionSchema(ma.Schema):
-    is_upvote = fields.Bool(required=True)
+    is_upvote = fields.Bool(required=True, error_messages={"required": "Reaction(Bool) Required in Query Parameters"})

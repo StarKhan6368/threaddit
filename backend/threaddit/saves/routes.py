@@ -30,7 +30,7 @@ def user_saved_post_add(thread: "Thread", post: "Posts"):
 def user_saved_post_del(thread: "Thread", post: "Posts"):
     saved_post = Saves.get_save(current_user, thread, post)
     if not saved_post:
-        abort(400, {"message": "Post not saved"})
+        abort(400, {"message": "Post was not saved"})
     saved_post.delete(post)
     db.session.commit()
     return jsonify(message="Post unsaved"), 200
@@ -52,7 +52,7 @@ def user_saved_comment_add(thread: "Thread", post: "Posts", comment: "Comments")
 def user_saved_comment_del(thread: "Thread", post: "Posts", comment: "Comments"):
     saved_comment = Saves.get_save(current_user, thread, post, comment)
     if not saved_comment:
-        abort(400, {"message": "Comment not saved"})
-    saved_comment.delete(post,comment)
+        abort(400, {"message": "Comment was not saved"})
+    saved_comment.delete(post, comment)
     db.session.commit()
     return jsonify(message="Comment unsaved"), 200

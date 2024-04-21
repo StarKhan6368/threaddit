@@ -28,21 +28,25 @@ class Media(db.Model):
     media_type: Mapped["MediaType"] = mapped_column(ENUM(MediaType, name="media_enum"), nullable=False)
     media_url: Mapped[str] = mapped_column(nullable=False)
     cldr_id: Mapped[str | None] = mapped_column(nullable=True, unique=True)
+    is_nsfw: Mapped[bool] = mapped_column(default=False, nullable=False)
+    is_spoiler: Mapped[bool] = mapped_column(default=False, nullable=False)
     created_on: Mapped[datetime] = mapped_column(nullable=False, default=db.func.now())
 
     # noinspection PyTypeChecker
-    def __init__(self, media_type: "MediaType"):
+    def __init__(self, media_type: "MediaType", is_nsfw: bool, is_spoiler: bool):
         self.media_type = media_type
+        self.is_nsfw = is_nsfw
+        self.is_spoiler = is_spoiler
 
-    @classmethod
-    def add(cls, folder: str, form: "MediaFormType"):
-        new_media = Media(media_type=form["media"]["type"])
+    @staticmethod
+    def add(folder: str, form: "MediaFormType"):
+        new_media = Media(media_type=form["media"]["type"], is_nsfw=form["is_nsfw"], is_spoiler=form["is_spoiler"])
         Media._parse_media(folder, form, new_media)
         db.session.add(new_media)
         return new_media
 
-    @classmethod
-    def _parse_media(cls, folder: str, form: "MediaFormType", media: "Media"):
+    @staticmethod
+    def _parse_media(folder: str, form: "MediaFormType", media: "Media"):
         match form["media_type"]:
             case MediaType.URL:
                 media.media_url = form["media"]["source"]
@@ -53,6 +57,8 @@ class Media(db.Model):
                     return abort(500, "Something went wrong with Cloudinary. Please try again later.")
                 media.media_url = Media._cldr_to_url(form["media"]["type"], media.cldr_id)
         media.media_type = form["media"]["type"]
+        media.is_nsfw = form["is_nsfw"]
+        media.is_spoiler = form["is_spoiler"]
         return None
 
     def update(self, folder: str, form: "MediaFormType"):
@@ -78,8 +84,8 @@ class Media(db.Model):
         self.media_url = None
         return None
 
-    @classmethod
-    def _upload_media(cls, folder: str, form: "MediaFormType") -> str:
+    @staticmethod
+    def _upload_media(folder: str, form: "MediaFormType") -> str:
         file_name = secure_filename(form["media"]["source"].filename).rsplit(".")[0]
         uploaded_media = uploader.upload(
             form["media"]["source"],
