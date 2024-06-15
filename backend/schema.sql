@@ -441,3 +441,7 @@ ALTER TABLE ONLY public.user_roles
 
 ALTER TABLE ONLY public.user_roles
     ADD CONSTRAINT user_roles_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON UPDATE CASCADE ON DELETE CASCADE NOT VALID;
+
+INSERT INTO roles(name, slug) VALUES 
+	('Thread Moderator','mod'),
+	('Administrator', 'admin');

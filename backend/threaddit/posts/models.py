@@ -1,3 +1,4 @@
+from marshmallow import validate
 from threaddit import db, ma, app
 import uuid
 from flask import url_for
@@ -175,7 +176,7 @@ class PostValidator(ma.SQLAlchemySchema):
         model = Posts
 
     subthread_id = fields.Int(required=True, validate=[doesSubthreadExist])
-    title = fields.Str(required=True)
+    title = fields.Str(required=True, validate=validate.Length(min=1, max=30))
     content = fields.Str(required=False)
 
 
