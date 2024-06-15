@@ -10,4 +10,5 @@
 .env
 .venv
 __pycache__
+.vscode
 frontend/package-lock.json
