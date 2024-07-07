@@ -53,10 +53,12 @@ def server_status() -> dict[str, str]:
 
 # Import and Register Blueprints
 from threaddit.media.routes import media  # noqa: E402
+from threaddit.post.routes import posts  # noqa: E402
 from threaddit.thread.routes import threads  # noqa: E402
 from threaddit.user.routes import users  # noqa: E402
 
 api.register_blueprint(media)
+api.register_blueprint(posts)
 api.register_blueprint(threads)
 api.register_blueprint(users)
 

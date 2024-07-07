@@ -83,6 +83,43 @@ Table "threads" {
   }
 }
 
+Table "posts" {
+  "post_id" SERIAL [not null, increment]
+  "creator_id" INTEGER [not null]
+  "thread_id" INTEGER [not null]
+  "title" VARCHAR(126) [not null]
+  "content" TEXT [not null]
+  "upvote_count" INTEGER [not null, default: "0"]
+  "downvote_count" INTEGER [not null, default: "0"]
+  "comment_count" INTEGER [not null, default: "0"]
+  "save_count" INTEGER [not null, default: "0"]
+  "report_count" INTEGER [not null, default: "0"]
+  "is_nsfw" BOOLEAN [not null, default: false]
+  "is_spoiler" BOOLEAN [not null, default: false]
+  "is_sticky" BOOLEAN [not null, default: false]
+  "is_deleted" BOOLEAN [not null, default: false]
+  "is_removed" BOOLEAN [not null, default: false]
+  "is_locked" BOOLEAN [not null, default: false]
+  "flairs" "VARCHAR(16)[]" [not null, default: "{}"]
+  "search_vector" TSVECTOR [not null]
+  "created_on" TIMESTAMP [not null, default: `now()`]
+  "updated_on" TIMESTAMP
+
+  Indexes {
+    post_id [pk]
+    search_vector [type: gin, name: "ix_posts_search_vector"]
+  }
+}
+
+Table "post_media" {
+  "post_id" INTEGER [not null]
+  "media_id" INTEGER [not null]
+
+  Indexes {
+    (post_id, media_id) [pk]
+  }
+}
+
 Ref:"media"."media_id" - "users"."avatar_id" [update: cascade, delete: set null]
 
 Ref:"media"."media_id" - "users"."banner_id" [update: cascade, delete: set null]
@@ -94,3 +131,11 @@ Ref:"media"."media_id" - "threads"."banner_id" [update: cascade, delete: set nul
 Ref:"users"."user_id" - "threads"."creator_id" [update: cascade, delete: restrict]
 
 Ref:"media"."media_id" - "threads"."logo_id" [update: cascade, delete: set null]
+
+Ref:"users"."user_id" < "posts"."creator_id" [update: cascade, delete: restrict]
+
+Ref:"threads"."thread_id" < "posts"."thread_id" [update: cascade, delete: restrict]
+
+Ref:"media"."media_id" - "post_media"."media_id" [update: cascade, delete: cascade]
+
+Ref:"posts"."post_id" < "post_media"."post_id" [update: cascade, delete: cascade]
