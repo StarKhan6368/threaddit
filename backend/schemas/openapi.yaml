@@ -1,0 +1,45 @@
+info:
+  description: API Specifications for Threaddit Backend
+  contact:
+    name: StarKhan
+    email: starkhan6368@gmail.com
+    url: https://github.com/starkhan6368
+  license:
+    name: GNU General Public License v3.0
+    url: https://www.gnu.org/licenses/gpl-3.0.html
+  title: Threaddit API
+  version: '1.0'
+tags:
+- name: Health
+  description: Health Operations
+servers:
+- description: Development
+  url: http://localhost:5000
+- description: Production
+  url: https://threaddit.onrender.com
+paths:
+  /api/status:
+    get:
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+          description: Successful response
+      tags:
+      - Health
+      summary: Get Server Status.
+      description: Returns the status of the server.
+      operationId: get_server_status
+openapi: 3.1.0
+components:
+  schemas:
+    Status:
+      type: object
+      properties:
+        status:
+          type: string
+          description: The status of the server
+

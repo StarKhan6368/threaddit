@@ -1,0 +1,9 @@
+line-length = 120
+target-version = "py312"
+select = ["ALL"]
+ignore = [
+    "ANN201", # Missing return type annotation for public function
+    "D100",   # Missing docstring in public module
+    "D104",   # Missing docstring in public package
+    "COM812", # Trailing comma missing
+]
