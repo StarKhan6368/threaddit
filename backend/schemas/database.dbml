@@ -184,6 +184,22 @@ Table "saves" {
   }
 }
 
+Table "messages" {
+  "message_id" SERIAL [not null, increment]
+  "sender_id" INTEGER [not null]
+  "receiver_id" INTEGER [not null]
+  "media_id" INTEGER
+  "encrypted_content" TEXT [not null]
+  "created_on" TIMESTAMP [not null, default: `now()`]
+  "seen_at" TIMESTAMP
+  "updated_on" TIMESTAMP
+
+  Indexes {
+    message_id [pk]
+    (sender_id, receiver_id) [name: "ix_messages_sender_id"]
+  }
+}
+
 Ref:"media"."media_id" - "users"."avatar_id" [update: cascade, delete: set null]
 
 Ref:"media"."media_id" - "users"."banner_id" [update: cascade, delete: set null]
@@ -225,3 +241,9 @@ Ref:"comments"."comment_id" < "saves"."comment_id" [update: cascade, delete: res
 Ref:"users"."user_id" < "saves"."creator_id" [update: cascade, delete: restrict]
 
 Ref:"posts"."post_id" < "saves"."post_id" [update: cascade, delete: restrict]
+
+Ref:"media"."media_id" - "messages"."media_id" [update: cascade, delete: set null]
+
+Ref:"users"."user_id" < "messages"."receiver_id" [update: cascade, delete: restrict]
+
+Ref:"users"."user_id" < "messages"."sender_id" [update: cascade, delete: restrict]
