@@ -58,8 +58,39 @@ Table "users" {
   }
 }
 
+Table "threads" {
+  "thread_id" SERIAL [not null, increment]
+  "name" VARCHAR(16) [not null]
+  "description" TEXT
+  "flairs" "VARCHAR(16)[]" [not null, default: "{}"]
+  "join_message" VARCHAR(256) [not null, default: "Welcome to the Thread, Check the rules."]
+  "post_count" INTEGER [not null, default: "0"]
+  "comment_count" INTEGER [not null, default: "0"]
+  "subscription_count" INTEGER [not null, default: "0"]
+  "is_locked" BOOLEAN [not null, default: false]
+  "is_nsfw" BOOLEAN [not null, default: false]
+  "is_banned" BOOLEAN [not null, default: false]
+  "is_private" BOOLEAN [not null, default: false]
+  "creator_id" INTEGER [not null]
+  "logo_id" INTEGER
+  "banner_id" INTEGER
+  "created_on" TIMESTAMP [not null, default: `now()`]
+  "updated_on" TIMESTAMP
+
+  Indexes {
+    thread_id [pk]
+    name [unique, name: "ix_threads_name"]
+  }
+}
+
 Ref:"media"."media_id" - "users"."avatar_id" [update: cascade, delete: set null]
 
 Ref:"media"."media_id" - "users"."banner_id" [update: cascade, delete: set null]
 
 Ref "media_creator_id_fkey":"users"."user_id" < "media"."creator_id" [update: cascade, delete: restrict]
+
+Ref:"media"."media_id" - "threads"."banner_id" [update: cascade, delete: set null]
+
+Ref:"users"."user_id" - "threads"."creator_id" [update: cascade, delete: restrict]
+
+Ref:"media"."media_id" - "threads"."logo_id" [update: cascade, delete: set null]
