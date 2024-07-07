@@ -9,6 +9,11 @@ Enum "MediaType" {
   "URL"
 }
 
+Enum "VoteType" {
+  "UPVOTE"
+  "DOWNVOTE"
+}
+
 Table "alembic_version" {
   "version_num" VARCHAR(32) [not null]
 
@@ -151,6 +156,21 @@ Table "comments" {
   }
 }
 
+Table "votes" {
+  "vote_id" SERIAL [not null, increment]
+  "creator_id" INTEGER [not null]
+  "post_id" INTEGER [not null]
+  "comment_id" INTEGER
+  "vote_type" VoteType [not null]
+  "created_on" TIMESTAMP [not null, default: `now()`]
+  "updated_on" TIMESTAMP
+
+  Indexes {
+    vote_id [pk]
+    (post_id, creator_id, comment_id) [unique, name: "ix_votes_post_id"]
+  }
+}
+
 Ref:"media"."media_id" - "users"."avatar_id" [update: cascade, delete: set null]
 
 Ref:"media"."media_id" - "users"."banner_id" [update: cascade, delete: set null]
@@ -180,3 +200,9 @@ Ref:"comments"."comment_id" > "comments"."parent_id" [update: cascade, delete: r
 Ref:"posts"."post_id" < "comments"."post_id" [update: cascade, delete: restrict]
 
 Ref:"threads"."thread_id" < "comments"."thread_id" [update: cascade, delete: restrict]
+
+Ref:"comments"."comment_id" < "votes"."comment_id" [update: cascade, delete: restrict]
+
+Ref:"users"."user_id" < "votes"."creator_id" [update: cascade, delete: restrict]
+
+Ref:"posts"."post_id" < "votes"."post_id" [update: cascade, delete: restrict]
