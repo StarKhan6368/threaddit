@@ -53,8 +53,10 @@ def server_status() -> dict[str, str]:
 
 # Import and Register Blueprints
 from threaddit.media.routes import media  # noqa: E402
+from threaddit.user.routes import users  # noqa: E402
 
 api.register_blueprint(media)
+api.register_blueprint(users)
 
 # SqlAlchemy Searchable Configuration
 db.configure_mappers()

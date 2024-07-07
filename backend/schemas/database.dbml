@@ -19,6 +19,7 @@ Table "alembic_version" {
 
 Table "media" {
   "media_id" SERIAL [not null, increment]
+  "creator_id" INTEGER [not null]
   "name" TEXT [not null]
   "media_type" MediaType [not null]
   "url" TEXT [not null]
@@ -32,3 +33,33 @@ Table "media" {
     media_id [pk]
   }
 }
+
+Table "users" {
+  "user_id" SERIAL [not null, increment]
+  "name" VARCHAR(32) [not null]
+  "email" TEXT [not null]
+  "hashed_password" TEXT [not null]
+  "bio" VARCHAR(256)
+  "avatar_id" INTEGER
+  "banner_id" INTEGER
+  "is_nsfw" BOOLEAN [not null, default: false]
+  "post_count" INTEGER [not null, default: "0"]
+  "post_karma" INTEGER [not null, default: "0"]
+  "comment_count" INTEGER [not null, default: "0"]
+  "comment_karma" INTEGER [not null, default: "0"]
+  "last_seen" TIMESTAMP [not null, default: `now()`]
+  "created_on" TIMESTAMP [not null, default: `now()`]
+  "updated_on" TIMESTAMP
+
+  Indexes {
+    user_id [pk]
+    email [unique, name: "ix_users_email"]
+    name [unique, name: "ix_users_name"]
+  }
+}
+
+Ref:"media"."media_id" - "users"."avatar_id" [update: cascade, delete: set null]
+
+Ref:"media"."media_id" - "users"."banner_id" [update: cascade, delete: set null]
+
+Ref "media_creator_id_fkey":"users"."user_id" < "media"."creator_id" [update: cascade, delete: restrict]
