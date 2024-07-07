@@ -171,6 +171,19 @@ Table "votes" {
   }
 }
 
+Table "saves" {
+  "save_id" SERIAL [not null, increment]
+  "creator_id" INTEGER [not null]
+  "post_id" INTEGER [not null]
+  "comment_id" INTEGER
+  "created_on" TIMESTAMP [not null, default: `now()`]
+
+  Indexes {
+    save_id [pk]
+    (creator_id, post_id, comment_id) [unique, name: "ix_saves_creator_id"]
+  }
+}
+
 Ref:"media"."media_id" - "users"."avatar_id" [update: cascade, delete: set null]
 
 Ref:"media"."media_id" - "users"."banner_id" [update: cascade, delete: set null]
@@ -206,3 +219,9 @@ Ref:"comments"."comment_id" < "votes"."comment_id" [update: cascade, delete: res
 Ref:"users"."user_id" < "votes"."creator_id" [update: cascade, delete: restrict]
 
 Ref:"posts"."post_id" < "votes"."post_id" [update: cascade, delete: restrict]
+
+Ref:"comments"."comment_id" < "saves"."comment_id" [update: cascade, delete: restrict]
+
+Ref:"users"."user_id" < "saves"."creator_id" [update: cascade, delete: restrict]
+
+Ref:"posts"."post_id" < "saves"."post_id" [update: cascade, delete: restrict]
