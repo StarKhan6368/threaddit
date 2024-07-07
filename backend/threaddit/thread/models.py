@@ -52,7 +52,7 @@ class Threads(db.Model):
     created_on: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
     updated_on: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True, onupdate=func.now())
 
-    # Table Relationships
+    # Table Relations
     creator: Mapped["Users"] = relationship("Users", foreign_keys=[creator_id], lazy="raise", uselist=False)
     logo: Mapped["Media | None"] = relationship("Media", foreign_keys=[logo_id], lazy="joined", uselist=False)
     banner: Mapped["Media | None"] = relationship("Media", foreign_keys=[banner_id], lazy="joined", uselist=False)

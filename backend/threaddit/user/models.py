@@ -44,6 +44,6 @@ class Users(db.Model):
     created_on: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False, server_default=func.now())
     updated_on: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True), nullable=True, onupdate=func.now())
 
-    # Table Relationships
+    # Table Relations
     avatar: Mapped["Media | None"] = relationship("Media", foreign_keys=[avatar_id], lazy="joined", uselist=False)
     banner: Mapped["Media | None"] = relationship("Media", foreign_keys=[banner_id], lazy="joined", uselist=False)

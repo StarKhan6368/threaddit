@@ -120,6 +120,37 @@ Table "post_media" {
   }
 }
 
+Table "comments" {
+  "comment_id" SERIAL [not null, increment]
+  "creator_id" INTEGER [not null]
+  "thread_id" INTEGER [not null]
+  "post_id" INTEGER
+  "parent_id" INTEGER
+  "content" TEXT
+  "media_id" INTEGER
+  "upvote_count" INTEGER [not null, default: "0"]
+  "downvote_count" INTEGER [not null, default: "0"]
+  "replies_count" INTEGER [not null, default: "0"]
+  "save_count" INTEGER [not null, default: "0"]
+  "report_count" INTEGER [not null, default: "0"]
+  "depth" INTEGER [not null, default: "0"]
+  "is_nsfw" BOOLEAN [not null, default: false]
+  "is_spoiler" BOOLEAN [not null, default: false]
+  "is_sticky" BOOLEAN [not null, default: false]
+  "is_deleted" BOOLEAN [not null, default: false]
+  "is_removed" BOOLEAN [not null, default: false]
+  "is_locked" BOOLEAN [not null, default: false]
+  "created_on" TIMESTAMP [not null, default: `now()`]
+  "updated_on" TIMESTAMP
+  "search_vector" TSVECTOR [not null]
+
+  Indexes {
+    comment_id [pk]
+    search_vector [type: gin, name: "ix_comments_search_vector"]
+    (thread_id, post_id, comment_id) [unique, name: "ix_comments_thread_id"]
+  }
+}
+
 Ref:"media"."media_id" - "users"."avatar_id" [update: cascade, delete: set null]
 
 Ref:"media"."media_id" - "users"."banner_id" [update: cascade, delete: set null]
@@ -139,3 +170,13 @@ Ref:"threads"."thread_id" < "posts"."thread_id" [update: cascade, delete: restri
 Ref:"media"."media_id" - "post_media"."media_id" [update: cascade, delete: cascade]
 
 Ref:"posts"."post_id" < "post_media"."post_id" [update: cascade, delete: cascade]
+
+Ref:"users"."user_id" < "comments"."creator_id" [update: cascade, delete: restrict]
+
+Ref:"media"."media_id" - "comments"."media_id" [update: cascade, delete: set null]
+
+Ref:"comments"."comment_id" > "comments"."parent_id" [update: cascade, delete: restrict]
+
+Ref:"posts"."post_id" < "comments"."post_id" [update: cascade, delete: restrict]
+
+Ref:"threads"."thread_id" < "comments"."thread_id" [update: cascade, delete: restrict]
