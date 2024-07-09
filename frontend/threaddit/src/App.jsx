@@ -9,6 +9,7 @@ import Loader from "./components/Loader.jsx";
 import RequireAuth from "./components/PrivateRoute.jsx";
 import Login from "./pages/login/Login.jsx";
 import Register from "./pages/register/Register.jsx";
+import mixpanel from "mixpanel-browser";
 
 const Feed = lazy(() => import("./pages/feed/Feed.jsx"));
 const Profile = lazy(() => import("./pages/profile/Profile.jsx"));
@@ -86,6 +87,7 @@ const queryClient = new QueryClient({
 });
 
 export function App() {
+  mixpanel.init("ea80762cb49f3dc9e1531668bb8a2ed0")
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

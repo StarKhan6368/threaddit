@@ -1,13 +1,14 @@
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import * as PropType from "prop-types";
-import { Link } from "react-router-dom";
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
+import mixpanel from 'mixpanel-browser';
+import * as PropType from 'prop-types';
+import { Link } from 'react-router-dom';
 
 export function ThreadsSidebar() {
   const { data } = useQuery({
-    queryKey: ["threads/all"],
+    queryKey: ['threads/all'],
     queryFn: async () => {
-      return await axios.get("/api/threads").then((res) => res.data);
+      return await axios.get('/api/threads').then((res) => res.data);
     },
   });
   return (
@@ -50,13 +51,36 @@ function SideBarComponent({ threadList }) {
   return (
     <div className="flex flex-col space-y-4 w-48 list-none">
       {threadList?.slice(0, 10).map((thread) => (
-        <Link to={`/${thread.name}`} className="flex justify-between w-48 cursor-pointer" key={thread.name}>
-          <div className={`flex items-center space-x-3 ${!thread.logo && "pl-9"}`}>
-            {thread.logo && <img loading="lazy" width="auto" height="100%" src={thread.logo} alt="" className="object-cover w-6 h-6 rounded-full" />}
+        <Link
+          to={`/${thread.name}`}
+          className="flex justify-between w-48 cursor-pointer"
+          key={thread.name}
+          onClick={() =>
+            mixpanel.track('thread_clicked', {
+              Location: 'Navbar.jsx',
+              date: new Date().toISOString(),
+            })
+          }
+        >
+          <div
+            className={`flex items-center space-x-3 ${!thread.logo && 'pl-9'}`}
+          >
+            {thread.logo && (
+              <img
+                loading="lazy"
+                width="auto"
+                height="100%"
+                src={thread.logo}
+                alt=""
+                className="object-cover w-6 h-6 rounded-full"
+              />
+            )}
             <span className="truncate">{thread.name}</span>
           </div>
           <span className="p-1 px-2 text-sm font-semibold rounded-md bg-theme-gray-blue">
-            {thread.subscriberCount > 9 ? thread.subscriberCount : `0${thread.subscriberCount}`}
+            {thread.subscriberCount > 9
+              ? thread.subscriberCount
+              : `0${thread.subscriberCount}`}
           </span>
         </Link>
       ))}
