@@ -13,3 +13,4 @@ __pycache__
 .vscode
 frontend/package-lock.json
 **/dist*
+**/myenv*

@@ -34,7 +34,7 @@ export default function useComment({ children, comment }) {
       }
       await axios
         .post(
-          "https://threaddit.onrender.com/api/comments",
+          "https://elegant-manifestation-production.up.railway.app/api/comments",
           { post_id: postId, content: data, has_parent: true, parent_id: comment.comment_info.id },
           { headers: { "Content-Type": "application/json" } }
         )
@@ -47,7 +47,7 @@ export default function useComment({ children, comment }) {
   const { mutate: deleteComment } = useMutation({
     mutationFn: async (childId = null) => {
       if (window.confirm("Are you sure you want to delete this comment?")) {
-        axios.delete(`https://threaddit.onrender.com/api/comments/${childId || commentInfo.id}`).then(() => {
+        axios.delete(`https://elegant-manifestation-production.up.railway.app/api/comments/${childId || commentInfo.id}`).then(() => {
           if (childId) {
             setCommentChildren(commentChildren.filter((c) => c.comment.comment_info.id !== childId));
           } else {
@@ -68,7 +68,7 @@ export default function useComment({ children, comment }) {
       if (data.length === 0) {
         return;
       }
-      await axios.patch(`https://threaddit.onrender.com/api/comments/${commentInfo.id}`, { content: data }).then(() => {
+      await axios.patch(`https://elegant-manifestation-production.up.railway.app/api/comments/${commentInfo.id}`, { content: data }).then(() => {
         setCommentInfo({
           user_info: userInfo,
           current_user: currentUser,

@@ -8,7 +8,7 @@ export default defineConfig({
     host: true,
     proxy: {
       "/api": {
-        target: "https://threaddit.onrender.com",
+        target: "https://elegant-manifestation-production.up.railway.app",
         changeOrigin: true,
         secure: false,
         ws: true,

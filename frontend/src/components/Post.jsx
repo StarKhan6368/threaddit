@@ -214,7 +214,7 @@ export function Post({ post, isExpanded = false, postIndex, setCommentMode }) {
                 {...{
                   intitalVote: post?.current_user?.has_upvoted,
                   initialCount: post?.post_info.post_karma,
-                  url: "https://threaddit.onrender.com/api/reactions/post",
+                  url: "https://elegant-manifestation-production.up.railway.app/api/reactions/post",
                   contentID: post?.post_info.id,
                   type: "mobile",
                 }}

@@ -16,7 +16,7 @@ export function Register() {
   const [password, setPassword] = useState("");
   const { mutate, error, status } = useMutation({
     mutationFn: async () => {
-      return await axios.post("https://threaddit.onrender.com/api/user/register", { username, email, password }).then((res) => login(res.data));
+      return await axios.post("https://elegant-manifestation-production.up.railway.app/api/user/register", { username, email, password }).then((res) => login(res.data));
     },
     onSuccess: () => navigate("/home"),
   });

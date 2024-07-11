@@ -15,7 +15,7 @@ export function Login() {
   const navigate = useNavigate();
   const { mutate, status, error, reset } = useMutation({
     mutationFn: async () => {
-      return await axios.post("https://threaddit.onrender.com/api/user/login", { email, password }).then((res) => login(res.data));
+      return await axios.post("https://elegant-manifestation-production.up.railway.app/api/user/login", { email, password }).then((res) => login(res.data));
     },
     onSuccess: () => navigate("/home"),
   });

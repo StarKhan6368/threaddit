@@ -18,7 +18,7 @@ export function Profile() {
   const { data, isFetching: userIsFetching } = useQuery({
     queryKey: ["user", username],
     queryFn: async () => {
-      return await axios.get(`https://threaddit.onrender.com/api/user/${username}`).then((res) => res.data);
+      return await axios.get(`https://elegant-manifestation-production.up.railway.app/api/user/${username}`).then((res) => res.data);
     },
   });
   useEffect(() => {
@@ -31,7 +31,7 @@ export function Profile() {
         break;
       case "delete":
         if (window.confirm("Are you sure you want to delete your account?")) {
-          axios.delete(`https://threaddit.onrender.com/api/user`).then(() => logout());
+          axios.delete(`https://elegant-manifestation-production.up.railway.app/api/user`).then(() => logout());
         }
         setAction(false);
         break;

@@ -4,6 +4,7 @@ from flask_marshmallow import Marshmallow
 from marshmallow import ValidationError
 import cloudinary
 from flask_login import LoginManager
+from flask_cors import CORS
 from threaddit.config import (
     DATABASE_URI,
     SECRET_KEY,
@@ -17,6 +18,7 @@ app = Flask(
     static_folder="../../frontend/threaddit/dist",
     static_url_path="/",
 )
+CORS(app, origins="*")
 cloudinary.config(
     cloud_name=CLOUDINARY_NAME,
     api_key=CLOUDINARY_API_KEY,

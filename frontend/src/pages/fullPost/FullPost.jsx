@@ -15,11 +15,11 @@ export function FullPost() {
   const [commentMode, setCommentMode] = useState(false);
   const { data, isFetching } = useQuery({
     queryKey: ["post/comment", postId],
-    queryFn: async () => await axios.get(`https://threaddit.onrender.com/api/comments/post/${postId}`).then((res) => res.data),
+    queryFn: async () => await axios.get(`https://elegant-manifestation-production.up.railway.app/api/comments/post/${postId}`).then((res) => res.data),
   });
   const { mutate } = useMutation({
     mutationFn: async (data) => {
-      await axios.post(`https://threaddit.onrender.com/api/comments`, { post_id: postId, content: data }).then((res) => {
+      await axios.post(`https://elegant-manifestation-production.up.railway.app/api/comments`, { post_id: postId, content: data }).then((res) => {
         queryClient.setQueryData({ queryKey: ["post/comment", postId] }, (oldData) => {
           return { ...oldData, comment_info: [...oldData.comment_info, res.data.new_comment] };
         });

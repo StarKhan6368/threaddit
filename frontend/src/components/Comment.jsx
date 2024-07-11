@@ -133,7 +133,7 @@ export default function Comment({ children, comment, threadID, commentIndex, par
         <div className="flex items-center space-x-2 text-sm md:text-base">
           <Vote
             {...{
-              url: "https://threaddit.onrender.com/api/reactions/comment",
+              url: "https://elegant-manifestation-production.up.railway.app/api/reactions/comment",
               intitalVote: currentUser?.has_upvoted,
               initialCount: commentInfo.comment_karma,
               contentID: commentInfo.id,

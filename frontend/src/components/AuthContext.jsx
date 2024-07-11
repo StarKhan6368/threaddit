@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
     queryKey: ["user"],
     queryFn: async () => {
       return await axios
-        .get("https://threaddit.onrender.com/api/user")
+        .get("https://elegant-manifestation-production.up.railway.app/api/user")
         .then((res) => {
           localStorage.setItem("user", JSON.stringify(res.data));
           setUser(res.data);
@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
     queryClient.invalidateQueries();
   }
   function logout() {
-    axios.get("https://threaddit.onrender.com/api/user/logout").then(() => {
+    axios.get("https://elegant-manifestation-production.up.railway.app/api/user/logout").then(() => {
       localStorage.removeItem("user");
       queryClient.invalidateQueries();
       window.location.href = "/all";

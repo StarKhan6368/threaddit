@@ -23,3 +23,5 @@ SQLAlchemy==2.0.30
 typing_extensions==4.12.2
 urllib3==2.2.1
 Werkzeug==3.0.3
+Flask-Migrate==4.0.7
+Flask-Cors==4.0.1

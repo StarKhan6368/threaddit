@@ -26,7 +26,7 @@ export default function UpdateUser({ setModal }) {
       formData.append("avatar", media, media.name);
     }
     await axios
-      .patch("https://threaddit.onrender.com/api/user", formData, { headers: { "Content-Type": "multipart/form-data" } })
+      .patch("https://elegant-manifestation-production.up.railway.app/api/user", formData, { headers: { "Content-Type": "multipart/form-data" } })
       .then((res) => {
         setModal(false);
         queryClient.setQueryData({ queryKey: ["user", user.username] }, () => res.data);
