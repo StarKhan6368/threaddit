@@ -15,7 +15,7 @@ export function Inbox() {
   const { data } = useQuery({
     queryKey: ["inbox"],
     queryFn: async () => {
-      return await axios.get("/api/messages/inbox").then((res) => res.data);
+      return await axios.get("https://threaddit.onrender.com/api/messages/inbox").then((res) => res.data);
     },
   });
   useEffect(() => {
@@ -118,14 +118,14 @@ export function Chat({ sender, setCurChat, newChat = false }) {
   const { data, isFetching } = useQuery({
     queryKey: ["chat", sender.username],
     queryFn: async () => {
-      return await axios.get(`/api/messages/all/${sender.username}`).then((res) => res.data);
+      return await axios.get(`https://threaddit.onrender.com/api/messages/all/${sender.username}`).then((res) => res.data);
     },
     enabled: sender.username !== undefined,
   });
   const { mutate } = useMutation({
     mutationFn: async (params) => {
       return await axios
-        .post("/api/messages", { content: params.message, receiver: params.sender.username })
+        .post("https://threaddit.onrender.com/api/messages", { content: params.message, receiver: params.sender.username })
         .then((res) => res.data);
     },
     onSuccess: (data) => {

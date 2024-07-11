@@ -29,7 +29,7 @@ export default function InfinitePostsLayout({
     queryFn: async ({ pageParam = 0 }) => {
       return await axios
         .get(
-          `/api/${linkUrl}?limit=${20}&offset=${
+          `https://threaddit.onrender.com/api/${linkUrl}?limit=${20}&offset=${
             pageParam * 20
           }&sortby=${sortBy}&duration=${duration}`
         )

@@ -39,12 +39,12 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
     formData.append("subthread_id", thread.id);
     if (!isEdit) {
       await axios
-        .post("/api/post", formData, { headers: { "Content-Type": "multipart/form-data" } })
+        .post("https://threaddit.onrender.com/api/post", formData, { headers: { "Content-Type": "multipart/form-data" } })
         .then(() => setShowModal(false))
         .catch((err) => alert(`${err.message} check your fields, Title is mandatory`));
     } else {
       await axios
-        .patch(`/api/post/${postInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
+        .patch(`https://threaddit.onrender.com/api/post/${postInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
         .then((res) => {
           queryClient.setQueryData({ queryKey: ["post/comment", `${postInfo.id}`] }, (oldData) => {
             return { ...oldData, post_info: res.data.new_data };

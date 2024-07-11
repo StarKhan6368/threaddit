@@ -16,7 +16,7 @@ export default function ManageMods({ mods, threadId }) {
   const { data, isFetching } = useQuery({
     queryKey: ["search/user", search],
     queryFn: async ({ signal }) => {
-      return await axios.get(`/api/user/search/${search}`, { signal }).then((data) => data.data);
+      return await axios.get(`https://threaddit.onrender.com/api/user/search/${search}`, { signal }).then((data) => data.data);
     },
     enabled: search.length > 3,
   });
@@ -28,7 +28,7 @@ export default function ManageMods({ mods, threadId }) {
     mutationFn: async ({ username, isDelete = false }) => {
       if (isDelete) {
         return await axios
-          .delete(`/api/thread/mod/${threadId}/${username}`)
+          .delete(`https://threaddit.onrender.com/api/thread/mod/${threadId}/${username}`)
           .then((res) => {
             setModList(modList.filter((user) => user !== username));
             return res.data;
@@ -37,7 +37,7 @@ export default function ManageMods({ mods, threadId }) {
             alert(`${err.message} - ${err.response.data.message}, Only admins can remove thread creator`);
           });
       } else {
-        return await axios.put(`/api/thread/mod/${threadId}/${username}`).then((res) => {
+        return await axios.put(`https://threaddit.onrender.com/api/thread/mod/${threadId}/${username}`).then((res) => {
           setModList([...modList, username]);
           return res.data;
         });

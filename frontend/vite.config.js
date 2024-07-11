@@ -8,7 +8,7 @@ export default defineConfig({
     host: true,
     proxy: {
       "/api": {
-        target: "https://threaddit.onrender.com/",
+        target: "https://threaddit.onrender.com",
         changeOrigin: true,
         secure: false,
         ws: true,

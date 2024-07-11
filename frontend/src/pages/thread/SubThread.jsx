@@ -20,7 +20,7 @@ export function SubThread() {
   const { data, isFetching } = useQuery({
     queryKey: ["thread", params.threadName],
     queryFn: async () => {
-      return await axios.get(`/api/threads/${params.threadName}`).then((res) => res.data);
+      return await axios.get(`https://threaddit.onrender.com/api/threads/${params.threadName}`).then((res) => res.data);
     },
   });
   useEffect(() => { document.title = "t/" + params.threadName; return () => { document.title = "Threaddit" } }, [params.threadName]);
@@ -28,13 +28,13 @@ export function SubThread() {
   const { mutate } = useMutation({
     mutationFn: async (has_subscribed) => {
       if (has_subscribed) {
-        axios.delete(`/api/threads/subscription/${threadData.id}`).then(() =>
+        axios.delete(`https://threaddit.onrender.com/api/threads/subscription/${threadData.id}`).then(() =>
           queryClient.setQueryData({ queryKey: ["thread", params.threadName] }, (oldData) => {
             return { threadData: { ...oldData.threadData, has_subscribed: false } };
           })
         );
       } else {
-        axios.post(`/api/threads/subscription/${threadData.id}`).then(() =>
+        axios.post(`https://threaddit.onrender.com/api/threads/subscription/${threadData.id}`).then(() =>
           queryClient.setQueryData({ queryKey: ["thread", params.threadName] }, (oldData) => {
             return { threadData: { ...oldData.threadData, has_subscribed: true } };
           })

@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
     queryKey: ["user"],
     queryFn: async () => {
       return await axios
-        .get("/api/user")
+        .get("https://threaddit.onrender.com/api/user")
         .then((res) => {
           localStorage.setItem("user", JSON.stringify(res.data));
           setUser(res.data);
@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
     queryClient.invalidateQueries();
   }
   function logout() {
-    axios.get("api/user/logout").then(() => {
+    axios.get("https://threaddit.onrender.com/api/user/logout").then(() => {
       localStorage.removeItem("user");
       queryClient.invalidateQueries();
       window.location.href = "/all";

@@ -39,7 +39,7 @@ export default function MoreOptions({
   });
   async function handleDelte() {
     if (isAuthenticated) {
-      await axios.delete(`/api/post/${postInfo?.id}`);
+      await axios.delete(`https://threaddit.onrender.com/api/post/${postInfo?.id}`);
       if (location.pathname.includes("post")) {
         return navigate(-1);
       }
@@ -54,10 +54,10 @@ export default function MoreOptions({
       return alert("You must be logged in to save.");
     }
     if (postSaved) {
-      await axios.delete(`/api/posts/saved/${postInfo?.id}`);
+      await axios.delete(`https://threaddit.onrender.com/api/posts/saved/${postInfo?.id}`);
       setPostSaved(false);
     } else {
-      await axios.put(`/api/posts/saved/${postInfo?.id}`);
+      await axios.put(`https://threaddit.onrender.com/api/posts/saved/${postInfo?.id}`);
       setPostSaved(true);
     }
     queryClient.invalidateQueries({ queryKey: ["saved"] });

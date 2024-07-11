@@ -8,7 +8,7 @@ export function ThreadsSidebar() {
   const { data } = useQuery({
     queryKey: ['threads/all'],
     queryFn: async () => {
-      return await axios.get('/api/threads').then((res) => res.data);
+      return await axios.get('https://threaddit.onrender.com/api/threads').then((res) => res.data);
     },
   });
   return (

@@ -34,12 +34,12 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
     }
     if (!edit) {
       await axios
-        .post("/api/thread", formData, { headers: { "Content-Type": "multipart/form-data" } })
+        .post("https://threaddit.onrender.com/api/thread", formData, { headers: { "Content-Type": "multipart/form-data" } })
         .then(() => setShowModal(false))
         .catch((err) => alert(`${err.message} check your fields`));
     } else {
       await axios
-        .patch(`/api/thread/${ogInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
+        .patch(`https://threaddit.onrender.com/api/thread/${ogInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
         .then((res) => {
           setShowModal(false);
           queryClient.setQueryData({ queryKey: ["thread", `${ogInfo.name.slice(2)}`] }, () => res.data.new_data);

@@ -249,7 +249,7 @@ export function ThreadSearch({ callBackFunc, forPost = false }) {
       const promise = new Promise((resolve) => setTimeout(resolve, 500)).then(
         async () => {
           return await axios
-            .get(`/api/threads/search/${search}`, {
+            .get(`https://threaddit.onrender.com/api/threads/search/${search}`, {
               signal,
             })
             .then((data) => data.data);
