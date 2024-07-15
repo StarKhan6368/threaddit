@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import PropTypes from "prop-types";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import mixpanel from 'mixpanel-browser';
 import avatar from "../assets/avatar.png";
 import useComment from "../hooks/useComment";
 import { timeAgo } from "../pages/fullPost/utils";
@@ -83,7 +84,7 @@ export default function Comment({ children, comment, threadID, commentIndex, par
         <>
           <div className="flex items-center space-x-2 text-sm font-medium">
             <img loading="lazy" width="auto" height="100%" src={userInfo.user_avatar || avatar} alt="" className="object-cover w-5 h-5 rounded-full" />
-            <Link to={`/u/${userInfo.user_name}`} className="font-medium text-blue-600 hover:underline">
+            <Link to={`/u/${userInfo.user_name}`} className="font-medium text-blue-600 hover:underline" onClick={() => mixpanel.track('reply_user_clicked', { user_name: userInfo.user_name })}>
               {userInfo.user_name}
             </Link>
             <p>{timePassed}</p>

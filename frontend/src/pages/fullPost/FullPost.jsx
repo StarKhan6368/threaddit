@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import mixpanel from 'mixpanel-browser';
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { AnimatePresence } from "framer-motion";
@@ -9,6 +11,11 @@ import Loader from "../../components/Loader";
 import Post from "../../components/Post";
 
 export function FullPost() {
+  useEffect(() => {
+    if (data?.post_info?.title) {
+      mixpanel.track('post_page_opened', { 'post_title': data.post_info.title });
+    }
+  }, [data?.post_info?.title]);
   const queryClient = useQueryClient();
   const { user } = AuthConsumer();
   const { postId } = useParams();
