@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import mixpanel from 'mixpanel-browser';
 import axios from "axios";
 import { AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -47,20 +48,7 @@ export function Profile() {
         <div className="flex flex-col items-center w-full bg-theme-cultured">
           <div className="flex flex-col p-2 w-full bg-white rounded-md md:p-5">
             <div className="flex flex-col flex-1 justify-between items-center p-2 w-full rounded-md md:flex-row md:rounded-full bg-theme-cultured">
-              <img
-                src={data.avatar || avatar}
-                className="object-cover w-24 h-24 bg-white rounded-full cursor-pointer md:w-36 md:h-36"
-                alt=""
-                onClick={() =>
-                  setAction(
-                    <img
-                      src={data.avatar || avatar}
-                      className="object-cover w-11/12 max-h-5/6 md:w-max md:max-h-screen"
-                      alt=""
-                    />
-                  )
-                }
-              />
+              <img src={data.avatar || avatar} className="object-cover w-24 h-24 bg-white rounded-full cursor-pointer md:w-36 md:h-36" alt="" onClick={() => { setAction( <img src={data.avatar || avatar} className="object-cover w-11/12 max-h-5/6 md:w-max md:max-h-screen" alt="" /> ); mixpanel.track('user_profile_clicked', { username: data.username, karma: data.karma.user_karma }); }} />
               <div className="flex flex-col flex-1 items-center w-full md:p-2">
                 <h1 className="mt-2 text-lg font-semibold md:m-0">u/{data.username}</h1>
                 <p className="my-4 w-11/12 text-sm text-center md:my-2 md:text-base">{data?.bio}</p>
