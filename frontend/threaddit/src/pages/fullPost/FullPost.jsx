@@ -17,12 +17,13 @@ export function FullPost() {
     queryKey: ["post/comment", postId],
     queryFn: async () => await axios.get(`/api/comments/post/${postId}`).then((res) => res.data),
   });
-  const { mutate } = useMutation({
+  const { mutate: newComment } = useMutation({
     mutationFn: async (data) => {
-      await axios.post(`/api/comments`, { post_id: postId, content: data }).then((res) => {
-        queryClient.setQueryData({ queryKey: ["post/comment", postId] }, (oldData) => {
+      await axios.post("/api/comments", { post_id: postId, content: data }).then((res) => {
+        queryClient.setQueryData(["post/comment", postId], (oldData) => {
           return { ...oldData, comment_info: [...oldData.comment_info, res.data.new_comment] };
         });
+      }).finally(() => {
         setCommentMode(false);
       });
     },
@@ -44,7 +45,7 @@ export function FullPost() {
           <CommentMode
             user={user}
             defaultValue=""
-            callBackSubmit={mutate}
+            callBackSubmit={newComment}
             callBackCancel={() => setCommentMode(false)}
           />
         </div>

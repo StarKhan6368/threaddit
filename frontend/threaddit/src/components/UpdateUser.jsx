@@ -29,8 +29,8 @@ export default function UpdateUser({ setModal }) {
       .patch("/api/user", formData, { headers: { "Content-Type": "multipart/form-data" } })
       .then((res) => {
         setModal(false);
-        queryClient.setQueryData({ queryKey: ["user", user.username] }, () => res.data);
-        queryClient.setQueryData({ queryKey: ["user"] }, () => res.data);
+        queryClient.setQueryData(["user", user.username], () => res.data);
+        queryClient.setQueryData(["user"], () => res.data);
       })
       .catch((err) => alert(`${err.message} check your fields`));
   }

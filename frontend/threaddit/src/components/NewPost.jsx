@@ -38,7 +38,6 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
         formData.append("media", media, media.name);
       }
       formData.append("subthread_id", thread.id);
-      console.log(formData);
       if (!isEdit) {
         await axios
           .post("/api/post", formData, { headers: { "Content-Type": "multipart/form-data" } })
@@ -48,7 +47,7 @@ export default function NewPost({ setShowModal, isEdit = false, postInfo = {}, t
         await axios
           .patch(`/api/post/${postInfo.id}`, formData, { headers: { "Content-Type": "multipart/form-data" } })
           .then((res) => {
-            queryClient.setQueryData({ queryKey: ["post/comment", `${postInfo.id}`] }, (oldData) => {
+            queryClient.setQueryData(["post/comment", `${postInfo.id}`], (oldData) => {
               return { ...oldData, post_info: res.data.new_data };
             });
             setShowModal(false);

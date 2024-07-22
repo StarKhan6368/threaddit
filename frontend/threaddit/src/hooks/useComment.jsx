@@ -51,7 +51,7 @@ export default function useComment({ children, comment }) {
           if (childId) {
             setCommentChildren(commentChildren.filter((c) => c.comment.comment_info.id !== childId));
           } else {
-            queryClient.setQueryData({ queryKey: ["post/comment", postId] }, (oldData) => {
+            queryClient.setQueryData(["post/comment", postId], (oldData) => {
               return {
                 ...oldData,
                 comment_info: oldData.comment_info.filter((c) => c.comment.comment_info.id !== commentInfo.id),

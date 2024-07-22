@@ -130,12 +130,12 @@ export function Chat({ sender, setCurChat, newChat = false }) {
     },
     onSuccess: (data) => {
       setMessage("");
-      queryClient.setQueryData({ queryKey: ["chat", sender.username] }, (oldData) => {
+      queryClient.setQueryData(["chat", sender.username], (oldData) => {
         return [...oldData, data];
       });
-      queryClient.setQueryData({ queryKey: ["inbox"] }, (oldData) => {
+      queryClient.setQueryData(["inbox"], (oldData) => {
         return oldData.map((m) =>
-          m.sender == sender
+          m.sender === sender
             ? { ...m, content: data.content, created_at: data.created_a, message_id: data.message_id }
             : m
         );

@@ -29,13 +29,13 @@ export function SubThread() {
     mutationFn: async (has_subscribed) => {
       if (has_subscribed) {
         axios.delete(`/api/threads/subscription/${threadData.id}`).then(() =>
-          queryClient.setQueryData({ queryKey: ["thread", params.threadName] }, (oldData) => {
+          queryClient.setQueryData(["thread", params.threadName], (oldData) => {
             return { threadData: { ...oldData.threadData, has_subscribed: false } };
           })
         );
       } else {
         axios.post(`/api/threads/subscription/${threadData.id}`).then(() =>
-          queryClient.setQueryData({ queryKey: ["thread", params.threadName] }, (oldData) => {
+          queryClient.setQueryData(["thread", params.threadName], (oldData) => {
             return { threadData: { ...oldData.threadData, has_subscribed: true } };
           })
         );
