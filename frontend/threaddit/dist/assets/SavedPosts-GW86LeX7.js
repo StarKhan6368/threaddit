@@ -1,0 +1,1 @@
+import{r as t,j as e}from"./index-DaTgKwt7.js";import{I as r}from"./InfinitePosts-CqQlWJ3R.js";import"./Post-ULe8Qw_J.js";function o(){return t.useEffect(()=>(document.title="Threaddit | saved",()=>{document.title="Threaddit"})),e.jsx("div",{className:"flex items-center p-2 w-full",children:e.jsx(r,{apiQueryKey:"saved",linkUrl:"posts/saved",forSaved:!0})})}export{o as default};

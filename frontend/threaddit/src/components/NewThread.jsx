@@ -24,7 +24,7 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
     e?.preventDefault();
     const formData = new FormData();
     if (!edit) {
-      formData.append("name", `t/${subName}`);
+      formData.append("name", subName);
     }
     formData.append("content_type", mediaType);
     formData.append("content_url", imageUrl);
@@ -63,7 +63,7 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
           <p>{user.username}</p>
         </div>
       </div>
-      <form className="flex flex-col flex-1 justify-around p-3 space-y-5 w-full h-1/2 bg-white rounded-md">
+      <form className="flex flex-col flex-1 justify-around p-3 space-y-5 w-full h-1/2 bg-white rounded-md" onSubmit={handleSubmit}>
         {!edit && (
           <label htmlFor="name" className="flex flex-col space-y-1 md:space-y-0 md:space-x-2 md:flex-row">
             <span className="text-sm font-light">Subthread Name</span>
@@ -77,6 +77,8 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
               className="w-full border-b border-gray-800 focus:outline-none"
               required={true}
               maxLength={50}
+              minLength={3}
+              pattern="\w"
             />
           </label>
         )}
@@ -133,7 +135,7 @@ export function NewThread({ subThreadName, setShowModal, edit = false, ogInfo = 
           </span>
         )}
         <button
-          onClick={handleSubmit}
+          type="submit"
           className="py-2 font-semibold text-white rounded-md bg-theme-orange active:scale-95">
           Submit
         </button>

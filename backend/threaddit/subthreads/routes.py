@@ -1,5 +1,6 @@
 from threaddit.subthreads.models import Subthread, SubthreadInfo, Subscription
 from flask_login import current_user, login_required
+import re
 from threaddit.users.models import User
 from flask import Blueprint, jsonify, request
 from threaddit.models import UserRole
@@ -7,6 +8,7 @@ from threaddit import db
 from threaddit.auth.decorators import auth_role
 
 threads = Blueprint("threads", __name__, url_prefix="/api")
+thread_name_regex = re.compile(r"^\w{3,}$")
 
 
 @threads.route("/threads", methods=["GET"])
@@ -105,6 +107,8 @@ def del_subscription(tid):
 def new_thread():
     image = request.files.get("media")
     form_data = request.form.to_dict()
+    if not (name := form_data.get("name")) or not thread_name_regex.match(name):
+        return jsonify({"message": "Thread name is required"}), 400
     subthread = Subthread.add(form_data, image, current_user.id)
     if subthread:
         UserRole.add_moderator(current_user.id, subthread.id)
