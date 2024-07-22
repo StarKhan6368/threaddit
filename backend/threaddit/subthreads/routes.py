@@ -48,8 +48,9 @@ def get_subthreads():
     )
 
 
-@threads.route("/threads/search/<thread_name>", methods=["GET"])
-def subthread_search(thread_name):
+@threads.route("/threads/search", methods=["GET"])
+def subthread_search():
+    thread_name = request.args.get("name", default="", type=str)
     thread_name = f"%{thread_name}%"
     subthread_list = [
         subthread.as_dict() for subthread in SubthreadInfo.query.filter(SubthreadInfo.name.ilike(thread_name)).all()

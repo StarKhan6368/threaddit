@@ -168,7 +168,8 @@ export function ThreadSearch({ callBackFunc, forPost = false }) {
     queryFn: async ({ signal }) => {
       const promise = new Promise((resolve) => setTimeout(resolve, 500)).then(async () => {
         return await axios
-          .get(`/api/threads/search/${search}`, {
+          .get(`/api/threads/search`, {
+            params: { name: search },
             signal,
           })
           .then((data) => data.data);
